@@ -11,8 +11,15 @@ window.BIDLIFT_CONFIG = {
   PRO_PRICE_LIFETIME: "$49 once",
   STRIPE_PRO_MONTHLY_LINK: "", // e.g. "https://buy.stripe.com/your_monthly_link"
   STRIPE_LIFETIME_LINK: "",    // e.g. "https://buy.stripe.com/your_lifetime_link"
-  SUPPORT_EMAIL: "support@bidlift.app",
-  DEMO_UNLOCK_CODE: "FOUNDER2026",
+  SUPPORT_EMAIL: "hello@bidlift.app",
+  LICENSE_PREFIX: "BL-PRO-",
+  CURRENCIES: {
+    USD: { code: "USD", symbol: "$", label: "USD ($)" },
+    EUR: { code: "EUR", symbol: "€", label: "EUR (€)" },
+    GBP: { code: "GBP", symbol: "£", label: "GBP (£)" },
+    CAD: { code: "CAD", symbol: "CA$", label: "CAD (CA$)" },
+    AUD: { code: "AUD", symbol: "A$", label: "AUD (A$)" }
+  },
   STORAGE_KEYS: {
     DRAFTS: "bidlift_drafts_v1",
     CURRENT: "bidlift_current_v1",

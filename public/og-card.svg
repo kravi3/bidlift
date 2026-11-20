@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08172b"/>
+      <stop offset="55%" stop-color="#0f294a"/>
+      <stop offset="100%" stop-color="#1e3a5f"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c89d3c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1050" cy="110" r="240" fill="#c89d3c" opacity="0.08"/>
+  <circle cx="160" cy="560" r="220" fill="#38bdf8" opacity="0.06"/>
+
+  <!-- Brand Badge -->
+  <rect x="76" y="74" width="60" height="60" rx="16" fill="url(#gold)"/>
+  <path d="M108 86L93 106H105L103 122L120 101H107L108 86Z" fill="#08172b"/>
+  <text x="154" y="114" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="800" letter-spacing="-1">BidLift</text>
+
+  <!-- Main Headline -->
+  <text x="76" y="218" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="54" font-weight="800" letter-spacing="-1.5">Turn Flat Quotes Into</text>
+  <text x="76" y="284" fill="#fbbf24" font-family="system-ui, -apple-system, sans-serif" font-size="54" font-weight="800" letter-spacing="-1.5">+28% Bigger Deals</text>
+
+  <text x="76" y="346" fill="#cbd5e1" font-family="system-ui, -apple-system, sans-serif" font-size="25" font-weight="500">Interactive Good / Better / Best proposals with toggleable upsells,</text>
+  <text x="76" y="382" fill="#cbd5e1" font-family="system-ui, -apple-system, sans-serif" font-size="25" font-weight="500">SHA-256 verified e-signatures, and instant deposit checkout.</text>
+
+  <!-- Trust Pills -->
+  <rect x="76" y="438" width="248" height="48" rx="24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.22)"/>
+  <text x="200" y="469" text-anchor="middle" fill="#34d399" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700">Zero Server PII</text>
+
+  <rect x="342" y="438" width="278" height="48" rx="24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.22)"/>
+  <text x="481" y="469" text-anchor="middle" fill="#fbbf24" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700">Launch in 60 Seconds</text>
+
+  <!-- Preview Cards Illustration on Right -->
+  <rect x="706" y="138" width="136" height="270" rx="16" fill="#132b4c" stroke="#334155" stroke-width="2"/>
+  <text x="774" y="182" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="16" font-weight="700">GOOD</text>
+  <text x="774" y="222" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="26" font-weight="800">$2,400</text>
+  <rect x="726" y="256" width="96" height="10" rx="5" fill="#334155"/>
+  <rect x="726" y="280" width="84" height="10" rx="5" fill="#334155"/>
+  <rect x="726" y="304" width="90" height="10" rx="5" fill="#334155"/>
+
+  <rect x="858" y="106" width="154" height="314" rx="18" fill="#1b3a63" stroke="#fbbf24" stroke-width="3"/>
+  <rect x="879" y="92" width="112" height="26" rx="13" fill="#fbbf24"/>
+  <text x="935" y="110" text-anchor="middle" fill="#08172b" font-family="system-ui, sans-serif" font-size="12" font-weight="800">MOST POPULAR</text>
+  <text x="935" y="156" text-anchor="middle" fill="#e2e8f0" font-family="system-ui, sans-serif" font-size="17" font-weight="800">BETTER</text>
+  <text x="935" y="202" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="30" font-weight="800">$3,850</text>
+  <rect x="880" y="238" width="110" height="12" rx="6" fill="#475569"/>
+  <rect x="880" y="264" width="96" height="12" rx="6" fill="#475569"/>
+  <rect x="880" y="290" width="106" height="12" rx="6" fill="#475569"/>
+  <rect x="880" y="348" width="110" height="42" rx="10" fill="#10b981"/>
+  <text x="935" y="375" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="15" font-weight="800">+ Upsells</text>
+
+  <rect x="1028" y="138" width="136" height="270" rx="16" fill="#132b4c" stroke="#334155" stroke-width="2"/>
+  <text x="1096" y="182" text-anchor="middle" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="16" font-weight="700">BEST</text>
+  <text x="1096" y="222" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="26" font-weight="800">$5,400</text>
+  <rect x="1048" y="256" width="96" height="10" rx="5" fill="#334155"/>
+  <rect x="1048" y="280" width="84" height="10" rx="5" fill="#334155"/>
+  <rect x="1048" y="304" width="90" height="10" rx="5" fill="#334155"/>
+
+  <text x="76" y="572" fill="#94a3b8" font-family="monospace" font-size="20" font-weight="600">bidlift-5ias.onrender.com</text>
+</svg>

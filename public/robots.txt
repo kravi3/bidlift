@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bidlift-5ias.onrender.com/sitemap.xml

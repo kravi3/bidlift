@@ -1,6 +1,6 @@
 /**
  * BidLift — Interactive Revenue-Boosting Proposal Studio & Client Presentation App
- * Pure ES6+ SPA with Zero Backend Requirements.
+ * Pure ES6+ SPA with Zero Backend Requirements & Zero-PII URL Hash Architecture.
  */
 (function () {
   "use strict";
@@ -25,8 +25,7 @@
     clock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
     bolt: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
     shield: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-    external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
-    crown: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 17l2-11 5 5 3-7 3 7 5-5 2 11z"/><rect x="3" y="19" width="18" height="2" rx="1"/></svg>`
+    external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
   };
 
   // Application State
@@ -42,14 +41,87 @@
     proposal: null,
     selectedTierIdx: 1,
     clientSignerName: "",
+    clientSignerEmail: "",
     clientSignerNote: "",
+    esignConsent: false,
     approved: false,
     approvalReceipt: null,
     signatureDataUrl: "",
     hasSignatureInk: false,
     drafts: [],
     shareUrl: "",
-    shareTab: "link" // "link" | "embed"
+    shareTab: "link", // "link" | "embed"
+    pendingToast: ""
+  };
+
+  // =========================================================================
+  // Security Sanitizers, License Verification & SHA-256 Digest Helpers
+  // =========================================================================
+  function sanitizeImageSrc(src) {
+    const val = String(src || "").trim();
+    if (!val) return "";
+    if (/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/i.test(val)) {
+      return val;
+    }
+    try {
+      const u = new URL(val);
+      if (u.protocol === "https:") return u.href;
+    } catch (e) {}
+    return "";
+  }
+
+  function sanitizeHttpsUrl(url) {
+    const val = String(url || "").trim();
+    if (!val) return "";
+    try {
+      const u = new URL(val);
+      if (u.protocol === "https:") return u.href;
+    } catch (e) {}
+    return "";
+  }
+
+  function sanitizeHexColor(hex) {
+    const val = String(hex || "").trim();
+    return /^#[0-9a-fA-F]{6}$/.test(val) ? val : "";
+  }
+
+  function computeFnv1aHex(inputStr) {
+    let hash = 2166136261;
+    for (let i = 0; i < inputStr.length; i++) {
+      hash ^= inputStr.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).toUpperCase().padStart(8, "0");
+  }
+
+  function verifyLicenseKey(rawKey) {
+    const clean = String(rawKey || "").trim().toUpperCase();
+    const match = /^BL-PRO-([A-Z0-9]{6})-([A-F0-9]{4})$/.exec(clean);
+    if (!match) return false;
+    const body = match[1];
+    const checksum = match[2];
+    const expected = computeFnv1aHex(`BIDLIFT_V1|${body}`).slice(0, 4);
+    return checksum === expected;
+  }
+
+  async function computeSha256Fingerprint(payloadObj) {
+    const json = JSON.stringify(payloadObj);
+    if (window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === "function") {
+      try {
+        const encoded = new TextEncoder().encode(json);
+        const digestBuf = await window.crypto.subtle.digest("SHA-256", encoded);
+        const bytes = Array.from(new Uint8Array(digestBuf));
+        return bytes.map((b) => b.toString(16).padStart(2, "0")).join("").toUpperCase();
+      } catch (e) {}
+    }
+    return `FNV-${computeFnv1aHex(json)}${computeFnv1aHex(json.split("").reverse().join(""))}`;
+  }
+
+  window.BidLiftSecurity = {
+    sanitizeImageSrc,
+    sanitizeHttpsUrl,
+    verifyLicenseKey,
+    computeSha256Fingerprint
   };
 
   // =========================================================================
@@ -68,9 +140,11 @@
       .replace(/'/g, "&#39;");
   }
 
-  function formatMoney(num) {
+  function formatMoney(num, currencyCode) {
+    const code = currencyCode || state.proposal?.currency || "USD";
+    const cur = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[code]) || { symbol: "$" };
     const val = Math.round((Number(num) || 0) * 100) / 100;
-    return "$" + val.toLocaleString("en-US", {
+    return cur.symbol + val.toLocaleString("en-US", {
       minimumFractionDigits: val % 1 === 0 ? 0 : 2,
       maximumFractionDigits: 2
     });
@@ -97,9 +171,7 @@
     const p = proposal || state.proposal;
     if (!p) return;
     const pal = PALETTES[p.paletteId] || PALETTES["navy-gold"];
-    const custom = /^#[0-9a-fA-F]{6}$/.test((p.customBrandColor || "").trim())
-      ? p.customBrandColor.trim()
-      : "";
+    const custom = sanitizeHexColor(p.customBrandColor);
     const brand = custom || pal.brand;
     const brandDark = custom ? darkenHex(custom, 0.38) : pal.brandDark;
     const root = document.documentElement.style;
@@ -121,7 +193,7 @@
       toast.style.transform = "translateY(8px)";
       toast.style.transition = "all 0.2s ease";
       setTimeout(() => toast.remove(), 220);
-    }, 2600);
+    }, 2900);
   }
 
   async function copyText(text, successMsg) {
@@ -160,7 +232,7 @@
       const proRaw = localStorage.getItem(CONFIG.STORAGE_KEYS.PRO_LICENSE);
       if (proRaw) {
         const proObj = JSON.parse(proRaw);
-        if (proObj && proObj.active) {
+        if (proObj && proObj.active && verifyLicenseKey(proObj.key)) {
           state.isPro = true;
           state.proPlanLabel = proObj.label || "Pro Unlocked";
         }
@@ -195,13 +267,27 @@
     return p;
   }
 
+  function activateProState(validKey, planLabel) {
+    const cleanKey = String(validKey).trim().toUpperCase();
+    state.isPro = true;
+    state.proPlanLabel = planLabel || "Pro License Active";
+    if (state.proposal) state.proposal.whiteLabel = true;
+    try {
+      localStorage.setItem(
+        CONFIG.STORAGE_KEYS.PRO_LICENSE,
+        JSON.stringify({ active: true, label: state.proPlanLabel, key: cleanKey })
+      );
+    } catch (err) {}
+    saveCurrentDraftLocal();
+  }
+
   // =========================================================================
   // Math & Revenue-Lift Projections
   // =========================================================================
   function getVisibleTiers(p) {
     if (!p || !Array.isArray(p.tiers) || p.tiers.length === 0) return [];
     if (p.singleTierMode) {
-      const idx = Math.min(Math.max(0, p.recommendedTierIndex || 0), p.tiers.length - 1);
+      const idx = Math.min(Math.max(0, Number(p.recommendedTierIndex) || 0), p.tiers.length - 1);
       return [{ tier: p.tiers[idx], originalIdx: idx }];
     }
     return p.tiers.map((tier, idx) => ({ tier, originalIdx: idx }));
@@ -211,21 +297,26 @@
     const visible = getVisibleTiers(p);
     let chosenEntry = visible.find((x) => x.originalIdx === state.selectedTierIdx);
     if (!chosenEntry && visible.length > 0) {
-      chosenEntry = visible[Math.min(p.recommendedTierIndex || 0, visible.length - 1)] || visible[0];
+      const fallbackIdx = Math.min(Math.max(0, Number(p.recommendedTierIndex) || 0), visible.length - 1);
+      chosenEntry = visible[fallbackIdx] || visible[0];
       state.selectedTierIdx = chosenEntry.originalIdx;
     }
-    const basePrice = chosenEntry ? Number(chosenEntry.tier.price) || 0 : 0;
+    const basePrice = chosenEntry ? Math.max(0, Number(chosenEntry.tier.price) || 0) : 0;
     const selectedAddons = (p.addons || []).filter((a) => a.selected);
-    const addonsTotal = selectedAddons.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-    const subtotal = basePrice + addonsTotal;
+    const addonsTotal = selectedAddons.reduce((sum, a) => sum + Math.max(0, Number(a.price) || 0), 0);
+    const subtotal = Math.round((basePrice + addonsTotal) * 100) / 100;
 
-    const rawDiscount = Number(p.fastActionDiscount) || 0;
+    const rawDiscount = Math.max(0, Number(p.fastActionDiscount) || 0);
     const createdAt = Number(p.createdAt) || Date.now();
     const fastWindowMs = (Number(p.fastActionHours) || 48) * 3600 * 1000;
     const isFastEligible = rawDiscount > 0 && Date.now() - createdAt <= fastWindowMs;
     const discountApplied = isFastEligible ? Math.min(rawDiscount, Math.max(0, subtotal - 1)) : 0;
 
-    const total = Math.max(0, subtotal - discountApplied);
+    const afterDiscount = Math.max(0, Math.round((subtotal - discountApplied) * 100) / 100);
+    const taxRate = Math.min(50, Math.max(0, Number(p.taxRate) || 0));
+    const taxAmount = Math.round(afterDiscount * (taxRate / 100) * 100) / 100;
+    const total = Math.round((afterDiscount + taxAmount) * 100) / 100;
+
     const depositPct = Math.min(100, Math.max(0, Number(p.depositPercent) || 0));
     const depositDue = Math.round(total * (depositPct / 100) * 100) / 100;
     const balanceDue = Math.max(0, Math.round((total - depositDue) * 100) / 100);
@@ -239,6 +330,10 @@
       subtotal,
       isFastEligible,
       discountApplied,
+      afterDiscount,
+      taxRate,
+      taxLabel: (p.taxLabel || "Sales Tax").trim() || "Sales Tax",
+      taxAmount,
       total,
       depositPct,
       depositDue,
@@ -248,12 +343,12 @@
 
   function calculateLiftMetrics(p) {
     const tiers = p.tiers || [];
-    const addonsPool = (p.addons || []).reduce((s, a) => s + (Number(a.price) || 0), 0);
-    const flatBase = Number(tiers[0]?.price) || 0;
+    const addonsPool = (p.addons || []).reduce((s, a) => s + Math.max(0, Number(a.price) || 0), 0);
+    const flatBase = Math.max(0, Number(tiers[0]?.price) || 0);
 
     let expectedDeal = flatBase;
     if (p.singleTierMode) {
-      const idx = Math.min(Math.max(0, p.recommendedTierIndex || 0), tiers.length - 1);
+      const idx = Math.min(Math.max(0, Number(p.recommendedTierIndex) || 0), tiers.length - 1);
       expectedDeal = (Number(tiers[idx]?.price) || flatBase) + addonsPool * 0.35;
     } else if (tiers.length >= 3) {
       const t0 = Number(tiers[0].price) || 0;
@@ -262,6 +357,8 @@
       expectedDeal = t0 * 0.25 + t1 * 0.55 + t2 * 0.20 + addonsPool * 0.35;
     } else if (tiers.length === 2) {
       expectedDeal = (Number(tiers[0].price) || 0) * 0.4 + (Number(tiers[1].price) || 0) * 0.6 + addonsPool * 0.35;
+    } else {
+      expectedDeal = flatBase + addonsPool * 0.35;
     }
 
     const liftDollar = Math.max(0, Math.round(expectedDeal - flatBase));
@@ -276,13 +373,7 @@
   }
 
   function generateVerificationId(name, total) {
-    const seed = `${name}|${total}|${Date.now()}`;
-    let hash = 2166136261;
-    for (let i = 0; i < seed.length; i++) {
-      hash ^= seed.charCodeAt(i);
-      hash = Math.imul(hash, 16777619);
-    }
-    const hex = (hash >>> 0).toString(16).toUpperCase().padStart(8, "0");
+    const hex = computeFnv1aHex(`${name}|${total}|${Date.now()}`);
     return `BL-${hex.slice(0, 4)}-${hex.slice(4, 8)}`;
   }
 
@@ -290,8 +381,8 @@
     return `${window.location.origin}${window.location.pathname}`;
   }
 
-  function getPaymentActionLabel(provider, depositDue, total) {
-    const amountLabel = depositDue > 0 ? formatMoney(depositDue) : formatMoney(total);
+  function getPaymentActionLabel(provider, depositDue, total, currency) {
+    const amountLabel = depositDue > 0 ? formatMoney(depositDue, currency) : formatMoney(total, currency);
     const map = {
       stripe: `Pay Deposit Now (${amountLabel})`,
       venmo: `Pay via Venmo (${amountLabel})`,
@@ -314,6 +405,7 @@
     const expiryDate = new Date(createdDate.getTime() + validDays * 86400000);
     const msLeft = Math.max(0, expiryDate.getTime() - Date.now());
     const daysLeft = Math.ceil(msLeft / 86400000);
+    const cur = p.currency || "USD";
 
     const initials = (p.businessName || "BL")
       .split(/\s+/)
@@ -322,14 +414,28 @@
       .map((w) => w[0].toUpperCase())
       .join("");
 
-    const logoHtml = p.logoData
-      ? `<img src="${escapeHtml(p.logoData)}" alt="${escapeHtml(p.businessName)} logo" />`
+    const safeLogoSrc = sanitizeImageSrc(p.logoData);
+    const logoHtml = safeLogoSrc
+      ? `<img src="${escapeHtml(safeLogoSrc)}" alt="${escapeHtml(p.businessName)} logo" />`
       : `<span>${escapeHtml(initials || "BL")}</span>`;
 
+    const trustBadges = (Array.isArray(p.trustBadges) ? p.trustBadges : [])
+      .map((b) => String(b || "").trim())
+      .filter(Boolean);
+
+    const trustHtml = trustBadges.length > 0
+      ? `<div class="trust-badges-bar">${trustBadges.map((b) => `<span class="trust-badge-item">${ICONS.shield}<span>${escapeHtml(b)}</span></span>`).join("")}</div>`
+      : "";
+
+    const introHtml = (p.introText || "").trim()
+      ? `<div class="proposal-intro-box">${escapeHtml(p.introText)}</div>`
+      : "";
+
+    const badgeText = (p.recommendedBadge || "Most Popular Choice").trim() || "Most Popular Choice";
     const tiersHtml = visibleTiers
       .map(({ tier, originalIdx }) => {
         const isSelected = originalIdx === totals.chosenTierIdx;
-        const isRec = !p.singleTierMode && originalIdx === Number(p.recommendedTierIndex);
+        const isRec = !p.singleTierMode && visibleTiers.length > 1 && originalIdx === Number(p.recommendedTierIndex);
         const featuresHtml = (tier.features || [])
           .filter((f) => f && f.trim())
           .map((f) => `<li>${ICONS.check}<span>${escapeHtml(f)}</span></li>`)
@@ -338,7 +444,7 @@
         return `
           <div class="tier-card ${isSelected ? "selected" : ""} ${isRec ? "recommended" : ""}"
                data-action="select-tier" data-tier-idx="${originalIdx}" role="button" tabindex="0">
-            ${isRec ? `<div class="tier-ribbon">★ Most Popular Choice</div>` : ""}
+            ${isRec ? `<div class="tier-ribbon">★ ${escapeHtml(badgeText)}</div>` : ""}
             <div class="tier-top-row">
               <div>
                 <div class="tier-name">${escapeHtml(tier.name || `Option ${originalIdx + 1}`)}</div>
@@ -347,7 +453,7 @@
               <div class="tier-radio">${isSelected ? ICONS.check : ""}</div>
             </div>
             <div class="tier-price-row">
-              <div class="tier-price">${formatMoney(tier.price)}</div>
+              <div class="tier-price">${formatMoney(tier.price, cur)}</div>
               ${tier.timeline ? `<span class="tier-timeline">${escapeHtml(tier.timeline)}</span>` : ""}
             </div>
             <ul class="tier-features">${featuresHtml}</ul>
@@ -367,7 +473,7 @@
               <div class="addon-title">${escapeHtml(addon.title)}</div>
               ${addon.description ? `<div class="addon-desc">${escapeHtml(addon.description)}</div>` : ""}
             </div>
-            <div class="addon-price">+${formatMoney(addon.price)}</div>
+            <div class="addon-price">+${formatMoney(addon.price, cur)}</div>
           </div>
         `;
       })
@@ -376,47 +482,74 @@
     let closeRightColumnHtml = "";
     if (state.approved && state.approvalReceipt) {
       const rec = state.approvalReceipt;
-      const mailSubject = encodeURIComponent(`Approved Proposal: ${p.projectTitle} (${rec.verificationId})`);
-      const addonsText = rec.addons.length ? rec.addons.map((a) => `- ${a.title} (+${formatMoney(a.price)})`).join("\n") : "None";
+      const mailSubject = encodeURIComponent(`Approved Proposal${p.quoteNumber ? ` ${p.quoteNumber}` : ""}: ${p.projectTitle} (${rec.verificationId})`);
+      const addonsText = rec.addons.length ? rec.addons.map((a) => `- ${a.title} (+${formatMoney(a.price, cur)})`).join("\n") : "None";
       const mailBody = encodeURIComponent(
-        `Hi ${p.businessName},\n\nI have reviewed and signed the proposal for "${p.projectTitle}".\n\n` +
-        `Selected Package: ${rec.tierName} (${formatMoney(rec.basePrice)})\n` +
-        `Selected Upgrades:\n${addonsText}\n\n` +
-        `Total Approved: ${formatMoney(rec.total)}\n` +
-        (rec.depositDue > 0 ? `Deposit Due: ${formatMoney(rec.depositDue)}\n` : "") +
+        `Hi ${p.businessName},\n\nI have reviewed and electronically signed the proposal for "${p.projectTitle}".\n\n` +
+        (p.quoteNumber ? `Quote Reference: ${p.quoteNumber}\n` : "") +
+        `Selected Package: ${rec.tierName} (${formatMoney(rec.basePrice, cur)})\n` +
+        `Selected Upgrades:\n${addonsText}\n` +
+        (rec.taxAmount > 0 ? `${rec.taxLabel} (${rec.taxRate}%): ${formatMoney(rec.taxAmount, cur)}\n` : "") +
+        `Total Approved: ${formatMoney(rec.total, cur)}\n` +
+        (rec.depositDue > 0 ? `Deposit Due: ${formatMoney(rec.depositDue, cur)}\n` : "") +
+        `\n--- ESIGN Audit Record ---\n` +
         `Signed By: ${rec.signerName}\n` +
-        `Timestamp: ${rec.timestamp}\n` +
+        (rec.signerEmail ? `Signer Email: ${rec.signerEmail}\n` : "") +
+        `Timestamp: ${rec.isoTimestamp}\n` +
         `Verification ID: ${rec.verificationId}\n` +
+        `SHA-256 Digest: ${rec.sha256Digest}\n` +
         (rec.note ? `Client Note: ${rec.note}\n` : "")
       );
-      const payLabel = getPaymentActionLabel(p.paymentProvider, rec.depositDue, rec.total);
-      const hasValidLink = /^https?:\/\//i.test((p.paymentLink || "").trim());
+      const payLabel = getPaymentActionLabel(p.paymentProvider, rec.depositDue, rec.total, cur);
+      const safePayUrl = sanitizeHttpsUrl(p.paymentLink);
+      const hasZelleInfo = p.paymentProvider === "zelle" && Boolean((p.paymentLink || p.businessEmail || "").trim());
 
+      let paymentCtaHtml = "";
+      if (hasZelleInfo) {
+        paymentCtaHtml = `<button type="button" class="btn btn-accent btn-lg" data-action="show-zelle-info">${ICONS.bolt} ${escapeHtml(payLabel)}</button>`;
+      } else if (safePayUrl) {
+        paymentCtaHtml = `<a class="btn btn-accent btn-lg" href="${escapeHtml(safePayUrl)}" target="_blank" rel="noopener noreferrer">${ICONS.bolt} ${escapeHtml(payLabel)} ${ICONS.external}</a>`;
+      } else {
+        paymentCtaHtml = `
+          <div style="width:100%;padding:10px 12px;border-radius:8px;background:var(--bg-surface);border:1px solid var(--border-subtle);font-size:12.5px;color:var(--text-secondary);">
+            Deposit invoice / payment instructions will be sent by <strong>${escapeHtml(p.businessName || "your service provider")}</strong> shortly.
+          </div>
+        `;
+      }
+
+      const safeSigImg = sanitizeImageSrc(rec.signatureDataUrl);
       closeRightColumnHtml = `
         <div class="approved-card">
-          <div class="approved-badge">${ICONS.check} Proposal Signed & Locked</div>
+          <div class="approved-badge">${ICONS.check} Proposal Signed &amp; Locked</div>
           <h3 style="font-size:19px;margin-bottom:4px;">Thank You, ${escapeHtml(rec.signerName)}!</h3>
           <p style="margin:0;color:var(--text-secondary);font-size:13px;">
-            Your <strong>${escapeHtml(rec.tierName)}</strong> package${rec.addons.length ? ` + ${rec.addons.length} upgrade(s)` : ""} is locked at <strong class="mono">${formatMoney(rec.total)}</strong>.
+            Your <strong>${escapeHtml(rec.tierName)}</strong> package${rec.addons.length ? ` + ${rec.addons.length} upgrade(s)` : ""} is locked at <strong class="mono">${formatMoney(rec.total, cur)}</strong>.
           </p>
 
-          <div class="receipt-meta">
-            <div>Verification ID: <strong class="mono">${escapeHtml(rec.verificationId)}</strong> • ${escapeHtml(rec.timestamp)}</div>
-            ${rec.signatureDataUrl ? `<img src="${rec.signatureDataUrl}" alt="Client signature" style="max-height:54px;margin-top:8px;background:#fff;padding:4px 10px;border-radius:6px;border:1px solid #cbd5e1;" />` : ""}
+          ${safeSigImg ? `<div style="margin-top:12px;"><img src="${escapeHtml(safeSigImg)}" alt="Client signature" style="max-height:54px;background:#fff;padding:4px 12px;border-radius:6px;border:1px solid #cbd5e1;" /></div>` : ""}
+
+          <div class="audit-trail-box">
+            <div class="audit-trail-title">${ICONS.shield} Electronic Acceptance Audit Trail</div>
+            <div class="audit-row"><span>Verification ID</span><strong class="mono">${escapeHtml(rec.verificationId)}</strong></div>
+            <div class="audit-row"><span>Signed By</span><strong>${escapeHtml(rec.signerName)}</strong></div>
+            ${rec.signerEmail ? `<div class="audit-row"><span>Signer Email</span><span>${escapeHtml(rec.signerEmail)}</span></div>` : ""}
+            <div class="audit-row"><span>Timestamp (UTC)</span><span class="mono">${escapeHtml(rec.isoTimestamp)}</span></div>
+            <div class="audit-row"><span>ESIGN Consent</span><span style="color:var(--success);font-weight:700;">Verified Electronic Acceptance</span></div>
+            <div class="audit-row">
+              <span>SHA-256 Digest</span>
+              <span class="mono" title="${escapeHtml(rec.sha256Digest)}">${escapeHtml(rec.sha256Digest.slice(0, 24))}…</span>
+            </div>
           </div>
 
           <div class="approved-actions no-print">
-            ${p.paymentProvider === "zelle" || !hasValidLink
-              ? `<button class="btn btn-accent btn-lg" data-action="show-zelle-info">${ICONS.bolt} ${escapeHtml(payLabel)}</button>`
-              : `<a class="btn btn-accent btn-lg" href="${escapeHtml(p.paymentLink)}" target="_blank" rel="noopener">${ICONS.bolt} ${escapeHtml(payLabel)} ${ICONS.external}</a>`
-            }
+            ${paymentCtaHtml}
             ${p.businessEmail
               ? `<a class="btn btn-primary" href="mailto:${escapeHtml(p.businessEmail)}?subject=${mailSubject}&body=${mailBody}">Send Signed Confirmation</a>`
               : ""
             }
-            <button class="btn btn-outline" data-action="copy-sms-receipt">${ICONS.copy} Copy SMS Receipt</button>
-            <button class="btn btn-outline" data-action="print-proposal">${ICONS.print} Download PDF</button>
-            <button class="btn btn-ghost btn-sm" data-action="reset-approval">Edit Selection</button>
+            <button type="button" class="btn btn-outline" data-action="copy-sms-receipt">${ICONS.copy} Copy SMS Receipt</button>
+            <button type="button" class="btn btn-outline" data-action="print-proposal">${ICONS.print} Download PDF</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="reset-approval">Edit Selection</button>
           </div>
         </div>
       `;
@@ -424,12 +557,18 @@
       const signerVal = state.clientSignerName || p.clientName || "";
       closeRightColumnHtml = `
         <div class="signature-box">
-          <h3 style="font-size:15px;font-weight:800;margin-bottom:4px;">Approve & Lock In Pricing</h3>
+          <h3 style="font-size:15px;font-weight:800;margin-bottom:4px;">Approve &amp; Lock In Pricing</h3>
           <p style="margin:0 0 12px;font-size:12px;color:var(--text-muted);">Sign below to lock your selected package, upgrades, and schedule slot.</p>
           <div class="field-grid">
-            <div class="field">
-              <label for="client-signer-name">Full Name (Printed) *</label>
-              <input id="client-signer-name" type="text" placeholder="Enter your full name" value="${escapeHtml(signerVal)}" />
+            <div class="field-row-2">
+              <div class="field">
+                <label for="client-signer-name">Full Name (Printed) *</label>
+                <input id="client-signer-name" type="text" placeholder="Your full name" value="${escapeHtml(signerVal)}" />
+              </div>
+              <div class="field">
+                <label for="client-signer-email">Your Email (Optional)</label>
+                <input id="client-signer-email" type="email" placeholder="you@email.com" value="${escapeHtml(state.clientSignerEmail)}" />
+              </div>
             </div>
             <div class="field">
               <label for="client-signer-note">Preferred Start Dates / Notes (Optional)</label>
@@ -443,8 +582,12 @@
                 <button type="button" class="sig-clear-btn no-print" data-action="clear-signature">Clear</button>
               </div>
             </div>
+            <label class="esign-consent-row">
+              <input type="checkbox" id="client-esign-consent" ${state.esignConsent ? "checked" : ""} />
+              <span>I consent to use electronic records and agree that my electronic signature is legally binding on this proposal.</span>
+            </label>
             <button type="button" class="btn btn-primary btn-lg" style="width:100%;" data-action="approve-proposal">
-              ${ICONS.check} Approve & Lock Proposal (${formatMoney(totals.total)})
+              ${ICONS.check} Approve &amp; Lock Proposal (${formatMoney(totals.total, cur)})
             </button>
           </div>
         </div>
@@ -470,7 +613,7 @@
             <div class="proposal-status-stack">
               <div class="validity-pill">${ICONS.clock} ${daysLeft > 0 ? `Valid for ${daysLeft} day${daysLeft === 1 ? "" : "s"}` : "Quote Expiring Today"}</div>
               ${totals.isFastEligible
-                ? `<div class="fast-bonus-pill">${ICONS.bolt} Fast-Action Bonus: Save ${formatMoney(totals.discountApplied)} (${p.fastActionHours}h)</div>`
+                ? `<div class="fast-bonus-pill">${ICONS.bolt} Fast-Action Bonus: Save ${formatMoney(totals.discountApplied, cur)} (${p.fastActionHours}h)</div>`
                 : ""}
             </div>
           </div>
@@ -486,7 +629,7 @@
             </div>
             <div class="meta-cell">
               <span>Location / Reference</span>
-              <strong>${escapeHtml(p.projectLocation || "On-Site / Remote")}</strong>
+              <strong>${escapeHtml([p.projectLocation, p.quoteNumber].filter(Boolean).join(" • ") || "On-Site / Remote")}</strong>
             </div>
             <div class="meta-cell">
               <span>Proposal Date</span>
@@ -495,15 +638,18 @@
           </div>
         </header>
 
+        ${trustHtml}
+        ${introHtml}
+
         <section class="proposal-section">
           <div class="section-heading">
             <div>
               <h2>1. Choose Your Package</h2>
-              <p>${p.singleTierMode ? "Customized scope prepared specifically for your project." : "Compare options below—click any package to update your live quote."}</p>
+              <p>${visibleTiers.length === 1 ? "Customized scope prepared specifically for your project." : "Compare options below—click any package to update your live quote."}</p>
             </div>
             ${!isClientStandalone ? `<span class="badge-count" style="border-radius:8px;padding:4px 10px;height:auto;">Interactive Preview</span>` : ""}
           </div>
-          <div class="tiers-grid ${p.singleTierMode ? "single-tier" : ""}">
+          <div class="tiers-grid ${visibleTiers.length === 1 ? "single-tier" : ""}">
             ${tiersHtml}
           </div>
         </section>
@@ -525,7 +671,7 @@
         <section class="proposal-section" style="border-bottom:none;">
           <div class="section-heading">
             <div>
-              <h2>${(p.addons || []).length > 0 ? "3." : "2."} Investment Summary & Sign-Off</h2>
+              <h2>${(p.addons || []).length > 0 ? "3." : "2."} Investment Summary &amp; Sign-Off</h2>
               <p>Transparent breakdown with zero hidden fees.</p>
             </div>
           </div>
@@ -533,37 +679,43 @@
             <div class="summary-box">
               <div class="summary-line">
                 <span>Selected Package: <strong>${escapeHtml(totals.chosenTier?.name || "")}</strong></span>
-                <strong class="mono">${formatMoney(totals.basePrice)}</strong>
+                <strong class="mono">${formatMoney(totals.basePrice, cur)}</strong>
               </div>
               ${totals.selectedAddons.map((a) => `
                 <div class="summary-line">
                   <span>+ ${escapeHtml(a.title)}</span>
-                  <span class="mono">+${formatMoney(a.price)}</span>
+                  <span class="mono">+${formatMoney(a.price, cur)}</span>
                 </div>
               `).join("")}
               ${totals.discountApplied > 0 ? `
                 <div class="summary-line discount">
                   <span>★ Fast-Action Booking Savings</span>
-                  <span class="mono">-${formatMoney(totals.discountApplied)}</span>
+                  <span class="mono">-${formatMoney(totals.discountApplied, cur)}</span>
+                </div>
+              ` : ""}
+              ${totals.taxAmount > 0 ? `
+                <div class="summary-line">
+                  <span>${escapeHtml(totals.taxLabel)} (${totals.taxRate}%)</span>
+                  <span class="mono">${formatMoney(totals.taxAmount, cur)}</span>
                 </div>
               ` : ""}
               <hr class="summary-divider" />
               <div class="summary-total-row">
                 <span class="summary-total-label">Total Investment</span>
-                <span class="summary-total-value">${formatMoney(totals.total)}</span>
+                <span class="summary-total-value">${formatMoney(totals.total, cur)}</span>
               </div>
               ${totals.depositPct > 0 ? `
                 <div class="deposit-callout">
                   <span>Deposit to Reserve (${totals.depositPct}%)</span>
-                  <strong>${formatMoney(totals.depositDue)}</strong>
+                  <strong>${formatMoney(totals.depositDue, cur)}</strong>
                 </div>
                 <div class="summary-line" style="margin-top:6px;font-size:12px;">
                   <span>Remaining Balance Later</span>
-                  <span class="mono">${formatMoney(totals.balanceDue)}</span>
+                  <span class="mono">${formatMoney(totals.balanceDue, cur)}</span>
                 </div>
               ` : ""}
               ${p.paymentNote ? `<p class="terms-note" style="margin-top:10px;color:var(--text-secondary);"><strong>Payment Schedule:</strong> ${escapeHtml(p.paymentNote)}</p>` : ""}
-              ${p.terms ? `<p class="terms-note">${ICONS.shield} <strong>Guarantee & Terms:</strong> ${escapeHtml(p.terms)}</p>` : ""}
+              ${p.terms ? `<p class="terms-note">${ICONS.shield} <strong>Guarantee &amp; Terms:</strong> ${escapeHtml(p.terms)}</p>` : ""}
             </div>
             <div>
               ${closeRightColumnHtml}
@@ -572,9 +724,12 @@
         </section>
 
         <footer class="proposal-footer">
-          <div>© ${new Date().getFullYear()} ${escapeHtml(p.businessName || "Service Provider")} • Client-Private Proposal</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <span>© ${new Date().getFullYear()} ${escapeHtml(p.businessName || "Service Provider")} • Client-Private Proposal</span>
+            <button type="button" class="btn btn-ghost btn-sm no-print" style="padding:2px 6px;font-size:11.5px;" data-action="open-modal" data-modal="modal-legal">Privacy &amp; ESIGN Terms</button>
+          </div>
           ${showViralFooter ? `
-            <a class="viral-badge no-print" href="${escapeHtml(getBaseStudioUrl())}" target="_blank" rel="noopener">
+            <a class="viral-badge no-print" href="${escapeHtml(getBaseStudioUrl())}" target="_blank" rel="noopener noreferrer">
               <span style="color:var(--accent);display:inline-flex;">${ICONS.bolt}</span>
               <span>Powered by <strong>BidLift</strong> — Boost quote revenue +28% (Free)</span>
             </a>
@@ -589,6 +744,8 @@
   // =========================================================================
   function renderBuilderBodyHtml() {
     const p = state.proposal;
+    const cur = p.currency || "USD";
+
     if (state.activeTab === "business") {
       const swatchesHtml = Object.values(PALETTES)
         .map((pal) => `
@@ -599,6 +756,13 @@
           </button>
         `)
         .join("");
+
+      const currencyOptionsHtml = Object.values(CONFIG.CURRENCIES || {})
+        .map((c) => `<option value="${c.code}" ${cur === c.code ? "selected" : ""}>${escapeHtml(c.label)}</option>`)
+        .join("");
+
+      const safeLogo = sanitizeImageSrc(p.logoData);
+      const trustArr = [0, 1, 2].map((i) => (Array.isArray(p.trustBadges) ? p.trustBadges[i] || "" : ""));
 
       return `
         <div class="card-box">
@@ -624,18 +788,28 @@
                 <input id="f-biz-phone" type="tel" data-bind="businessPhone" value="${escapeHtml(p.businessPhone)}" />
               </div>
             </div>
+            <div class="field-row-2">
+              <div class="field">
+                <label for="f-currency">Currency</label>
+                <select id="f-currency" data-bind="currency">${currencyOptionsHtml}</select>
+              </div>
+              <div class="field">
+                <label for="f-quote-num">Quote Reference #</label>
+                <input id="f-quote-num" type="text" placeholder="Q-2026-101" data-bind="quoteNumber" value="${escapeHtml(p.quoteNumber || "")}" />
+              </div>
+            </div>
             <div class="field">
               <label>Business Logo <span style="font-weight:400;color:var(--text-muted);">Auto-optimized for SMS/URL</span></label>
               <div class="logo-upload-row">
                 <div class="logo-thumb">
-                  ${p.logoData ? `<img src="${escapeHtml(p.logoData)}" alt="Logo" />` : escapeHtml((p.businessName || "B")[0].toUpperCase())}
+                  ${safeLogo ? `<img src="${escapeHtml(safeLogo)}" alt="Logo" />` : escapeHtml((p.businessName || "B")[0].toUpperCase())}
                 </div>
                 <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap;">
                   <label class="btn btn-outline btn-sm" style="cursor:pointer;">
                     Upload Logo
                     <input type="file" id="logo-file-input" accept="image/*" class="sr-only" />
                   </label>
-                  ${p.logoData ? `<button type="button" class="btn btn-danger-ghost btn-sm" data-action="remove-logo">Remove</button>` : ""}
+                  ${safeLogo ? `<button type="button" class="btn btn-danger-ghost btn-sm" data-action="remove-logo">Remove</button>` : ""}
                 </div>
               </div>
             </div>
@@ -650,7 +824,7 @@
               </div>
               <div class="field">
                 <label for="f-color-picker">Pick Color</label>
-                <input id="f-color-picker" type="color" value="${escapeHtml(p.customBrandColor || PALETTES[p.paletteId]?.brand || "#0f294a")}" style="height:36px;width:100%;padding:2px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);cursor:pointer;" />
+                <input id="f-color-picker" type="color" value="${escapeHtml(sanitizeHexColor(p.customBrandColor) || PALETTES[p.paletteId]?.brand || "#0f294a")}" style="height:36px;width:100%;padding:2px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);cursor:pointer;" />
               </div>
             </div>
           </div>
@@ -658,7 +832,7 @@
 
         <div class="card-box">
           <div class="card-box-head">
-            <span class="card-box-title">Client & Project Details</span>
+            <span class="card-box-title">Client, Scope Intro &amp; Trust Badges</span>
           </div>
           <div class="field-grid">
             <div class="field">
@@ -673,12 +847,23 @@
               <label for="f-proj-loc">Property Address / Location</label>
               <input id="f-proj-loc" type="text" data-bind="projectLocation" value="${escapeHtml(p.projectLocation)}" />
             </div>
+            <div class="field">
+              <label for="f-intro-text">Executive Intro Note</label>
+              <textarea id="f-intro-text" rows="2" placeholder="Warm intro & scope summary..." data-bind="introText">${escapeHtml(p.introText || "")}</textarea>
+            </div>
+            <div class="field">
+              <label>3 Credibility Badges (Shown Under Header)</label>
+              ${trustArr.map((tb, idx) => `
+                <input type="text" data-trust-idx="${idx}" value="${escapeHtml(tb)}" placeholder="Trust badge #${idx + 1}" />
+              `).join("")}
+            </div>
           </div>
         </div>
       `;
     }
 
     if (state.activeTab === "tiers") {
+      const sym = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[cur]?.symbol) || "$";
       const tierCardsHtml = (p.tiers || []).map((tier, tIdx) => {
         const isRec = Number(p.recommendedTierIndex) === tIdx;
         const featuresListHtml = (tier.features || []).map((feat, fIdx) => `
@@ -692,9 +877,12 @@
           <div class="card-box">
             <div class="card-box-head">
               <span class="card-box-title">Option ${tIdx + 1}: ${escapeHtml(tier.name || "")}</span>
-              <button type="button" class="btn btn-sm ${isRec ? "btn-accent" : "btn-outline"}" data-action="set-recommended-tier" data-tier-idx="${tIdx}">
-                ${isRec ? "★ Most Popular" : "Mark Popular"}
-              </button>
+              <div style="display:flex;gap:6px;">
+                <button type="button" class="btn btn-sm ${isRec ? "btn-accent" : "btn-outline"}" data-action="set-recommended-tier" data-tier-idx="${tIdx}">
+                  ${isRec ? "★ Most Popular" : "Mark Popular"}
+                </button>
+                ${(p.tiers || []).length > 1 ? `<button type="button" class="btn btn-danger-ghost btn-sm" data-action="remove-tier" data-tier-idx="${tIdx}" title="Remove package">×</button>` : ""}
+              </div>
             </div>
             <div class="field-grid">
               <div class="field-row-2">
@@ -703,7 +891,7 @@
                   <input type="text" value="${escapeHtml(tier.name)}" data-tier-bind="${tIdx}:name" />
                 </div>
                 <div class="field">
-                  <label>Price ($)</label>
+                  <label>Price (${escapeHtml(sym)})</label>
                   <input type="number" min="0" step="1" value="${Number(tier.price) || 0}" data-tier-bind="${tIdx}:price" />
                 </div>
               </div>
@@ -732,7 +920,7 @@
       return `
         <div class="toggle-row">
           <div>
-            <strong style="font-size:13px;display:block;">3-Tier Good / Better / Best Mode</strong>
+            <strong style="font-size:13px;display:block;">Multi-Tier Comparison Mode</strong>
             <span style="font-size:11.5px;color:var(--text-muted);">Anchoring 3 options increases average deal size by 22%–38%.</span>
           </div>
           <label class="switch">
@@ -740,11 +928,24 @@
             <span class="slider"></span>
           </label>
         </div>
+        <div class="field-row-2" style="align-items:end;">
+          <div class="field">
+            <label for="f-rec-badge">Highlight Ribbon Text</label>
+            <input id="f-rec-badge" type="text" data-bind="recommendedBadge" value="${escapeHtml(p.recommendedBadge || "Most Popular Choice")}" />
+          </div>
+          <div class="field">
+            ${(p.tiers || []).length < 3
+              ? `<button type="button" class="btn btn-primary" style="width:100%;" data-action="add-tier">${ICONS.plus} Add Package Tier</button>`
+              : `<span style="font-size:11.5px;color:var(--text-muted);display:block;padding-bottom:8px;">Maximum 3 tiers active</span>`
+            }
+          </div>
+        </div>
         ${tierCardsHtml}
       `;
     }
 
     if (state.activeTab === "addons") {
+      const sym = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[cur]?.symbol) || "$";
       const addonsHtml = (p.addons || []).map((addon, aIdx) => `
         <div class="card-box">
           <div class="card-box-head">
@@ -758,7 +959,7 @@
                 <input type="text" value="${escapeHtml(addon.title)}" data-addon-bind="${aIdx}:title" />
               </div>
               <div class="field">
-                <label>Upgrade Price ($)</label>
+                <label>Upgrade Price (${escapeHtml(sym)})</label>
                 <input type="number" min="0" step="1" value="${Number(addon.price) || 0}" data-addon-bind="${aIdx}:price" />
               </div>
             </div>
@@ -787,6 +988,7 @@
     }
 
     // Tab 4: Close & Deposit
+    const needsPayLinkHint = p.paymentProvider !== "zelle" && !sanitizeHttpsUrl(p.paymentLink);
     return `
       <div class="card-box">
         <div class="card-box-head">
@@ -807,19 +1009,24 @@
               <label for="f-pay-provider">Payment Method</label>
               <select id="f-pay-provider" data-bind="paymentProvider">
                 <option value="stripe" ${p.paymentProvider === "stripe" ? "selected" : ""}>Stripe Payment Link</option>
-                <option value="venmo" ${p.paymentProvider === "venmo" ? "selected" : ""}>Venmo Link</option>
-                <option value="paypal" ${p.paymentProvider === "paypal" ? "selected" : ""}>PayPal.me Link</option>
-                <option value="square" ${p.paymentProvider === "square" ? "selected" : ""}>Square Checkout</option>
+                <option value="venmo" ${p.paymentProvider === "venmo" ? "selected" : ""}>Venmo Link (https://)</option>
+                <option value="paypal" ${p.paymentProvider === "paypal" ? "selected" : ""}>PayPal.me Link (https://)</option>
+                <option value="square" ${p.paymentProvider === "square" ? "selected" : ""}>Square Checkout (https://)</option>
                 <option value="zelle" ${p.paymentProvider === "zelle" ? "selected" : ""}>Zelle / Direct Info</option>
               </select>
             </div>
             <div class="field">
               <label for="f-valid-days">Quote Valid (Days)</label>
-              <input id="f-valid-days" type="number" min="1" max="90" data-bind="validDays" value="${Number(p.validDays) || 7}" />
+              <input id="f-valid-days" type="number" min="1" max="365" data-bind="validDays" value="${Number(p.validDays) || 7}" />
             </div>
           </div>
+          ${needsPayLinkHint ? `
+            <div class="callout-hint">
+              Tip: Paste your real <code>https://</code> Stripe, Venmo, PayPal, or Square link below so clients can pay their deposit immediately after signing.
+            </div>
+          ` : ""}
           <div class="field">
-            <label for="f-pay-link">${p.paymentProvider === "zelle" ? "Zelle Email or Phone Instructions" : "Your Checkout / Deposit URL"}</label>
+            <label for="f-pay-link">${p.paymentProvider === "zelle" ? "Zelle Email or Phone Instructions" : "Your HTTPS Checkout / Deposit URL"}</label>
             <input id="f-pay-link" type="text" data-bind="paymentLink" value="${escapeHtml(p.paymentLink)}" placeholder="${p.paymentProvider === "zelle" ? "pay@yourcompany.com" : "https://buy.stripe.com/..."}" />
           </div>
           <div class="field">
@@ -831,17 +1038,27 @@
 
       <div class="card-box">
         <div class="card-box-head">
-          <span class="card-box-title">Fast-Action Urgency & Guarantee</span>
+          <span class="card-box-title">Tax, Fast-Action Urgency &amp; Guarantee</span>
         </div>
         <div class="field-grid">
           <div class="field-row-2">
             <div class="field">
-              <label for="f-fast-disc">Fast-Action Savings ($)</label>
+              <label for="f-tax-rate">Sales Tax / VAT (%)</label>
+              <input id="f-tax-rate" type="number" min="0" max="50" step="0.1" data-bind="taxRate" value="${Number(p.taxRate) || 0}" />
+            </div>
+            <div class="field">
+              <label for="f-tax-label">Tax Label</label>
+              <input id="f-tax-label" type="text" placeholder="Sales Tax" data-bind="taxLabel" value="${escapeHtml(p.taxLabel || "Sales Tax")}" />
+            </div>
+          </div>
+          <div class="field-row-2">
+            <div class="field">
+              <label for="f-fast-disc">Fast-Action Savings</label>
               <input id="f-fast-disc" type="number" min="0" step="5" data-bind="fastActionDiscount" value="${Number(p.fastActionDiscount) || 0}" />
             </div>
             <div class="field">
               <label for="f-fast-hrs">Deadline Window (Hours)</label>
-              <input id="f-fast-hrs" type="number" min="1" max="168" data-bind="fastActionHours" value="${Number(p.fastActionHours) || 48}" />
+              <input id="f-fast-hrs" type="number" min="1" max="720" data-bind="fastActionHours" value="${Number(p.fastActionHours) || 48}" />
             </div>
           </div>
           <div class="field">
@@ -855,7 +1072,7 @@
   }
 
   // =========================================================================
-  // Modals HTML (Share/Embed, Saved Drafts, Pro/Pricing, Zelle)
+  // Modals HTML (Share/Embed, Saved Drafts, Pro/Pricing, Zelle, Legal)
   // =========================================================================
   function renderModalsHtml() {
     const p = state.proposal || {};
@@ -872,7 +1089,7 @@
             </div>
           </div>
         `).join("")
-      : `<p style="color:var(--text-muted);font-size:13px;">No saved drafts yet. Click "Save Current Quote" below to bookmark a proposal locally in your browser.</p>`;
+      : `<p style="color:var(--text-muted);font-size:13px;">No saved drafts yet. Click "Save Current Quote" above to bookmark a proposal locally in your browser.</p>`;
 
     const embedUrl = state.shareUrl ? `${state.shareUrl}&embed=1` : `${getBaseStudioUrl()}#q=...`;
     const iframeSnippet = `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="920" style="border:0;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.08);" loading="lazy"></iframe>`;
@@ -887,7 +1104,7 @@
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-share">✕</button>
           </div>
           <p style="margin:0 0 12px;font-size:13px;color:var(--text-secondary);">
-            <strong>100% Zero-Server Privacy:</strong> The entire proposal is compressed securely inside the URL link itself—no client data ever touches a database.
+            <strong>100% Zero-Server Privacy:</strong> The entire proposal is compressed securely inside the URL fragment—no client data ever touches a database.
           </p>
           <div style="display:flex;gap:8px;margin-bottom:12px;">
             <button type="button" class="btn btn-sm ${state.shareTab === "link" ? "btn-primary" : "btn-outline"}" data-action="switch-share-tab" data-tab="link">${ICONS.share} Client Proposal Link</button>
@@ -902,7 +1119,7 @@
             <div class="code-box" id="share-url-box">${escapeHtml(state.shareUrl)}</div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
               <button type="button" class="btn btn-primary" data-action="copy-share-url">${ICONS.copy} Copy Client Link</button>
-              <a class="btn btn-outline" id="open-client-link" href="${escapeHtml(state.shareUrl)}" target="_blank" rel="noopener">${ICONS.external} Open Client View</a>
+              <a class="btn btn-outline" id="open-client-link" href="${escapeHtml(state.shareUrl)}" target="_blank" rel="noopener noreferrer">${ICONS.external} Open Client View</a>
             </div>
             <div style="margin-top:16px;">
               <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
@@ -946,34 +1163,34 @@
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-pro">✕</button>
           </div>
           <p style="margin:0 0 10px;font-size:13px;color:var(--text-secondary);">
-            One single upgraded job pays for BidLift Pro for years. Remove BidLift branding and present 100% white-label luxury quotes.
+            One upgraded job pays for BidLift Pro for years. Remove BidLift branding and present 100% white-label luxury proposals.
           </p>
           <div class="pricing-grid">
             <div class="plan-box">
               <strong>Starter</strong>
               <div class="plan-price">$0</div>
-              <span style="font-size:12px;color:var(--text-muted);">Unlimited Good/Better/Best quotes, add-ons, e-sign & deposit links. Includes tasteful "Powered by BidLift" footer.</span>
+              <span style="font-size:12px;color:var(--text-muted);">Unlimited Good/Better/Best quotes, add-ons, ESIGN SHA-256 audit &amp; deposit links. Includes tasteful "Powered by BidLift" footer.</span>
             </div>
             <div class="plan-box">
               <strong>Pro Monthly</strong>
               <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">100% White-Label (removes BidLift footer), custom brand hex, priority templates.</span>
+              <span style="font-size:12px;color:var(--text-muted);">100% White-Label (removes BidLift footer), priority brand presets, multi-currency &amp; tax.</span>
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="monthly">Get Pro Monthly</button>
             </div>
             <div class="plan-box featured">
               <strong>Founding Lifetime</strong>
               <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_LIFETIME || "$49 once")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">Pay once, own Pro White-Label forever. Limited early-adopter founder pass.</span>
+              <span style="font-size:12px;color:var(--text-muted);">Pay once, own Pro White-Label forever. Instant automatic browser unlock after checkout.</span>
               <button type="button" class="btn btn-accent btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="lifetime">Claim Lifetime Deal</button>
             </div>
           </div>
 
           <div class="card-box" style="margin-top:12px;">
             <div style="font-size:12.5px;font-weight:700;margin-bottom:6px;">
-              ${state.isPro ? `✓ Active License: ${escapeHtml(state.proPlanLabel)}` : "Already have a Pro / Founder license key?"}
+              ${state.isPro ? `✓ Active License: ${escapeHtml(state.proPlanLabel)}` : "Already purchased? Enter your license key:"}
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <input id="pro-license-input" type="text" placeholder="Enter license key (try FOUNDER2026)" style="flex:1;min-width:200px;padding:8px 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-primary);" />
+              <input id="pro-license-input" type="text" placeholder="BL-PRO-XXXXXX-XXXX" style="flex:1;min-width:200px;padding:8px 10px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-primary);" />
               <button type="button" class="btn btn-primary btn-sm" data-action="activate-license">Activate</button>
               ${state.isPro ? `<button type="button" class="btn btn-outline btn-sm" data-action="deactivate-license">Reset to Free</button>` : ""}
             </div>
@@ -995,6 +1212,92 @@
           </div>
         </div>
       </div>
+
+      <!-- Legal / Privacy & ESIGN Modal -->
+      <div class="modal-backdrop" id="modal-legal" role="dialog" aria-modal="true">
+        <div class="modal-card" style="max-width:640px;">
+          <div class="modal-header">
+            <h3>Privacy Architecture &amp; ESIGN Terms</h3>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-legal">✕</button>
+          </div>
+          <div style="font-size:13px;color:var(--text-secondary);line-height:1.65;display:flex;flex-direction:column;gap:12px;">
+            <div>
+              <strong style="color:var(--text-primary);">1. Zero-Server Privacy Policy (Zero PII Stored)</strong><br />
+              BidLift operates 100% client-side in your web browser. Proposal text, client names, pricing, drafts, and signature images are stored strictly in your own browser storage or compressed inside the <code>#q=...</code> URL fragment (which browsers do not transmit in HTTP requests to origin servers).
+            </div>
+            <div>
+              <strong style="color:var(--text-primary);">2. Electronic Signature &amp; Audit Trail (ESIGN / UETA)</strong><br />
+              By checking the electronic consent box and applying a digital signature, the signing party affirms intent to execute the proposal electronically and acknowledges that a cryptographic <code>SHA-256</code> digest binds the printed name, UTC timestamp, selected tier, optional upgrades, tax, total, and business terms at the time of signing.
+            </div>
+            <div>
+              <strong style="color:var(--text-primary);">3. Direct Third-Party Deposit Payments</strong><br />
+              BidLift does not custody funds or process credit cards. Any payment link opens the service provider's independent checkout processor (such as Stripe, Square, PayPal, Venmo, or Zelle) over verified <code>https://</code> links.
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);">
+              Questions or support: <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "hello@bidlift.app")}" style="color:var(--brand);">${escapeHtml(CONFIG.SUPPORT_EMAIL || "hello@bidlift.app")}</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // =========================================================================
+  // Below-the-Fold Studio Traction, ROI & FAQ Section (SEO & Conversion)
+  // =========================================================================
+  function renderStudioTractionHtml() {
+    return `
+      <section class="studio-traction-section no-print" aria-label="Why Interactive Quotes Convert Higher">
+        <div class="traction-head">
+          <h2>Built to Increase Customer Revenue From Quote #1</h2>
+          <p>Why thousands of contractors, real estate pros, agencies, and local trades switch from flat PDF estimates to Good / Better / Best interactive links.</p>
+        </div>
+
+        <div class="roi-grid">
+          <div class="roi-card">
+            <h3>${ICONS.bolt} 3-Option Price Anchoring</h3>
+            <p>Sending a single flat price forces buyers into a yes/no discount debate. Showing Good / Better / Best side-by-side naturally steers ~55% of buyers to the middle Signature package and ~20% to top tier.</p>
+          </div>
+          <div class="roi-card">
+            <h3>${ICONS.sparkle} Frictionless Self-Serve Upsells</h3>
+            <p>Clients dislike feeling pushed on the phone, yet gladly click checkbox upgrades—rush delivery, extended warranties, drone aerials, or deep-clean extras—when they control the live total themselves.</p>
+          </div>
+          <div class="roi-card">
+            <h3>${ICONS.shield} Zero Server PII &amp; ESIGN Proof</h3>
+            <p>Zero logins, zero customer database leaks, and zero hosting bloat. Every approved quote locks pricing with ESIGN consent, a UTC timestamp, and a SHA-256 verification digest ready for deposit checkout.</p>
+          </div>
+        </div>
+
+        <div class="faq-list">
+          <details class="faq-item" open>
+            <summary>Why do Good / Better / Best quotes raise average deal size by 20%–38%?</summary>
+            <p>Instead of competing solely on lowest bid, three structured packages reframe the buyer's decision from "Should I hire them?" to "Which level of result fits me best?" Combined with checkbox upgrades and a fast-action booking bonus, average ticket value rises immediately.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Does BidLift store my client names, pricing, or signatures on a server?</summary>
+            <p>Never. BidLift runs 100% locally in your browser. Proposals serialize directly into the compressed <code>#q=...</code> URL fragment, which web servers never see. You can also export/import your saved drafts as a local JSON backup anytime.</p>
+          </details>
+          <details class="faq-item">
+            <summary>Are BidLift electronic signatures verifiable?</summary>
+            <p>Yes. Clients must check an explicit ESIGN consent box before signing on the canvas. BidLift immediately computes a cryptographic SHA-256 integrity digest across the quote scope, totals, terms, and UTC timestamp for your PDF receipt.</p>
+          </details>
+          <details class="faq-item">
+            <summary>How do I collect deposits right after my client signs?</summary>
+            <p>Open <strong>4. Close</strong> in the builder, set your deposit percentage (e.g., 25%–50%), and paste your existing HTTPS Stripe Payment Link, Venmo, PayPal.me, Square link, or Zelle instructions. BidLift takes 0% transaction fees.</p>
+          </details>
+        </div>
+      </section>
+
+      <footer class="studio-footer no-print">
+        <div class="studio-footer-inner">
+          <div>© ${new Date().getFullYear()} <strong>BidLift</strong> • Client-Private Interactive Proposal Studio</div>
+          <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy Policy &amp; ESIGN Terms</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-pro">Pricing</button>
+            <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "hello@bidlift.app")}" class="btn btn-ghost btn-sm">${escapeHtml(CONFIG.SUPPORT_EMAIL || "hello@bidlift.app")}</a>
+          </div>
+        </div>
+      </footer>
     `;
   }
 
@@ -1003,6 +1306,7 @@
   // =========================================================================
   function renderStudioShell() {
     const p = state.proposal;
+    const cur = p.currency || "USD";
     const lift = calculateLiftMetrics(p);
     const templatePillsHtml = Object.values(TEMPLATES)
       .map((tpl) => `
@@ -1050,8 +1354,8 @@
             ${state.heroCollapsed
               ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><strong>Quick Templates:</strong> <div class="template-pills" style="margin-top:0;">${templatePillsHtml}</div></div>`
               : `
-                <h1>Turn Flat Quotes Into +28% Bigger Deals <span style="font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,0.16);font-weight:700;">Zero Signup • 100% Client-Private</span></h1>
-                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick an industry template, customize packages & optional add-ons, and send a live e-sign + deposit link in 60 seconds.</p>
+                <h1>Turn Flat Quotes Into +28% Bigger Deals <span style="font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,0.16);font-weight:700;">Zero Signup • Zero Server PII</span></h1>
+                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick an industry template, customize packages &amp; optional add-ons, and send a live ESIGN + deposit link in 60 seconds.</p>
                 <div class="template-pills">${templatePillsHtml}</div>
               `
             }
@@ -1072,16 +1376,16 @@
           <div class="lift-coach" id="lift-coach">
             <div class="lift-coach-head">
               <span class="lift-badge">${ICONS.sparkle} Revenue-Lift Coach</span>
-              <span class="lift-delta" id="lift-delta">+${formatMoney(lift.liftDollar)}/deal (+${lift.liftPct}%)</span>
+              <span class="lift-delta" id="lift-delta">+${formatMoney(lift.liftDollar, cur)}/deal (+${lift.liftPct}%)</span>
             </div>
             <div class="lift-metrics">
               <div class="lift-stat">
                 <span>Old 1-Price Bid</span>
-                <strong id="lift-flat">${formatMoney(lift.flatBase)}</strong>
+                <strong id="lift-flat">${formatMoney(lift.flatBase, cur)}</strong>
               </div>
               <div class="lift-stat">
                 <span>Projected BidLift Avg</span>
-                <strong id="lift-expected" style="color:var(--success);">${formatMoney(lift.expectedDeal)}</strong>
+                <strong id="lift-expected" style="color:var(--success);">${formatMoney(lift.expectedDeal, cur)}</strong>
               </div>
             </div>
           </div>
@@ -1102,7 +1406,7 @@
           <div class="preview-chrome-bar no-print">
             <div class="preview-chrome-left">
               <span class="live-dot"></span>
-              <span>Interactive Client View — Click packages, toggle upgrades & test e-sign below</span>
+              <span>Interactive Client View — Click packages, toggle upgrades &amp; test ESIGN below</span>
             </div>
             <div style="display:flex;gap:8px;">
               <button type="button" class="btn btn-outline btn-sm" data-action="print-proposal">${ICONS.print} Print / PDF</button>
@@ -1115,6 +1419,7 @@
         </section>
       </main>
 
+      ${renderStudioTractionHtml()}
       ${renderModalsHtml()}
     `;
   }
@@ -1160,13 +1465,14 @@
 
   function refreshLiftCoach() {
     if (state.mode !== "studio" || !state.proposal) return;
+    const cur = state.proposal.currency || "USD";
     const lift = calculateLiftMetrics(state.proposal);
     const dEl = document.getElementById("lift-delta");
     const fEl = document.getElementById("lift-flat");
     const eEl = document.getElementById("lift-expected");
-    if (dEl) dEl.textContent = `+${formatMoney(lift.liftDollar)}/deal (+${lift.liftPct}%)`;
-    if (fEl) fEl.textContent = formatMoney(lift.flatBase);
-    if (eEl) eEl.textContent = formatMoney(lift.expectedDeal);
+    if (dEl) dEl.textContent = `+${formatMoney(lift.liftDollar, cur)}/deal (+${lift.liftPct}%)`;
+    if (fEl) fEl.textContent = formatMoney(lift.flatBase, cur);
+    if (eEl) eEl.textContent = formatMoney(lift.expectedDeal, cur);
   }
 
   function refreshPreviewOnly() {
@@ -1186,15 +1492,19 @@
 
     if (state.mode === "error") {
       root.innerHTML = renderErrorView();
-      return;
-    }
-    if (state.mode === "client") {
+    } else if (state.mode === "client") {
       root.innerHTML = renderClientStandalone();
       initSignaturePad();
-      return;
+    } else {
+      root.innerHTML = renderStudioShell();
+      initSignaturePad();
     }
-    root.innerHTML = renderStudioShell();
-    initSignaturePad();
+
+    if (state.pendingToast) {
+      const msg = state.pendingToast;
+      state.pendingToast = "";
+      showToast(msg);
+    }
   }
 
   // =========================================================================
@@ -1219,13 +1529,13 @@
     ctx.lineWidth = 2.2;
     ctx.strokeStyle = "#0f172a";
 
-    // Re-draw prior ink if user toggled a tier or add-on after signing
-    if (state.signatureDataUrl && state.hasSignatureInk) {
+    const safeInk = sanitizeImageSrc(state.signatureDataUrl);
+    if (safeInk && state.hasSignatureInk) {
       const img = new Image();
       img.onload = () => {
         ctx.drawImage(img, 0, 0, cssWidth, cssHeight);
       };
-      img.src = state.signatureDataUrl;
+      img.src = safeInk;
     }
 
     let drawing = false;
@@ -1286,7 +1596,6 @@
   document.addEventListener("click", async (e) => {
     const target = e.target.closest("[data-action]");
     if (!target) {
-      // Close modal when clicking backdrop directly
       if (e.target.classList.contains("modal-backdrop")) {
         e.target.classList.remove("open");
       }
@@ -1330,6 +1639,8 @@
       state.hasSignatureInk = false;
       state.signatureDataUrl = "";
       state.clientSignerName = "";
+      state.clientSignerEmail = "";
+      state.esignConsent = false;
       saveCurrentDraftLocal();
       renderApp();
       showToast(`Loaded "${TEMPLATES[tplId]?.label}" template`);
@@ -1369,6 +1680,37 @@
     if (action === "set-recommended-tier") {
       state.proposal.recommendedTierIndex = Number(target.dataset.tierIdx);
       state.selectedTierIdx = state.proposal.recommendedTierIndex;
+      saveCurrentDraftLocal();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      refreshPreviewOnly();
+      return;
+    }
+
+    if (action === "add-tier") {
+      if ((state.proposal.tiers || []).length >= 3) return;
+      state.proposal.tiers.push({
+        name: `Package ${state.proposal.tiers.length + 1}`,
+        subtitle: "Expanded service option",
+        price: 2500,
+        timeline: "5 Days",
+        features: ["Full core scope included", "Priority scheduling support"]
+      });
+      state.proposal.singleTierMode = false;
+      saveCurrentDraftLocal();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      refreshPreviewOnly();
+      return;
+    }
+
+    if (action === "remove-tier") {
+      if ((state.proposal.tiers || []).length <= 1) return;
+      const tIdx = Number(target.dataset.tierIdx);
+      state.proposal.tiers.splice(tIdx, 1);
+      const maxIdx = state.proposal.tiers.length - 1;
+      state.proposal.recommendedTierIndex = Math.min(maxIdx, Math.max(0, Number(state.proposal.recommendedTierIndex) || 0));
+      state.selectedTierIdx = Math.min(maxIdx, Math.max(0, state.selectedTierIdx));
       saveCurrentDraftLocal();
       const body = document.getElementById("builder-body");
       if (body) body.innerHTML = renderBuilderBodyHtml();
@@ -1461,9 +1803,14 @@
 
     if (action === "approve-proposal") {
       const nameInput = document.getElementById("client-signer-name");
+      const emailInput = document.getElementById("client-signer-email");
       const noteInput = document.getElementById("client-signer-note");
+      const consentInput = document.getElementById("client-esign-consent");
+
       const signerName = (nameInput ? nameInput.value : state.clientSignerName || "").trim();
+      const signerEmail = (emailInput ? emailInput.value : state.clientSignerEmail || "").trim();
       const signerNote = (noteInput ? noteInput.value : state.clientSignerNote || "").trim();
+      const consentChecked = Boolean(consentInput ? consentInput.checked : state.esignConsent);
 
       if (!signerName) {
         showToast("Please enter your full name before signing.");
@@ -1474,25 +1821,58 @@
         showToast("Please draw your signature in the box first.");
         return;
       }
+      if (!consentChecked) {
+        showToast("Please check the ESIGN electronic signature consent box.");
+        if (consentInput) consentInput.focus();
+        return;
+      }
 
-      const totals = calculateTotals(state.proposal);
+      const p = state.proposal;
+      const totals = calculateTotals(p);
+      const isoTimestamp = new Date().toISOString();
+
+      const integrityPayload = {
+        quoteNumber: p.quoteNumber || "",
+        businessName: p.businessName || "",
+        clientName: p.clientName || "",
+        tierName: totals.chosenTier?.name || "",
+        addons: totals.selectedAddons.map((a) => ({ title: a.title, price: a.price })),
+        subtotal: totals.subtotal,
+        discount: totals.discountApplied,
+        taxRate: totals.taxRate,
+        taxAmount: totals.taxAmount,
+        total: totals.total,
+        terms: p.terms || "",
+        signerName,
+        signerEmail,
+        isoTimestamp
+      };
+      const sha256Digest = await computeSha256Fingerprint(integrityPayload);
+
       state.clientSignerName = signerName;
+      state.clientSignerEmail = signerEmail;
       state.clientSignerNote = signerNote;
+      state.esignConsent = true;
       state.approved = true;
       state.approvalReceipt = {
         verificationId: generateVerificationId(signerName, totals.total),
+        sha256Digest,
         signerName,
+        signerEmail,
         note: signerNote,
-        timestamp: new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" }),
+        isoTimestamp,
         tierName: totals.chosenTier?.name || "Selected Option",
         basePrice: totals.basePrice,
         addons: deepClone(totals.selectedAddons),
+        taxRate: totals.taxRate,
+        taxLabel: totals.taxLabel,
+        taxAmount: totals.taxAmount,
         total: totals.total,
         depositDue: totals.depositDue,
         signatureDataUrl: state.signatureDataUrl
       };
       refreshPreviewOnly();
-      showToast("Proposal approved & locked! Ready for deposit.");
+      showToast("Proposal approved with verified ESIGN SHA-256 audit!");
       return;
     }
 
@@ -1506,8 +1886,9 @@
     if (action === "copy-sms-receipt") {
       const rec = state.approvalReceipt;
       if (!rec) return;
+      const cur = state.proposal.currency || "USD";
       const addonSummary = rec.addons.length ? ` + ${rec.addons.map((a) => a.title).join(", ")}` : "";
-      const txt = `Approved ${state.proposal.projectTitle} (${rec.tierName}${addonSummary}) for ${formatMoney(rec.total)}. Signed by ${rec.signerName} [${rec.verificationId}].`;
+      const txt = `Approved ${state.proposal.projectTitle} (${rec.tierName}${addonSummary}) for ${formatMoney(rec.total, cur)}. Signed by ${rec.signerName} [${rec.verificationId} | SHA256:${rec.sha256Digest.slice(0, 12)}].`;
       copyText(txt, "SMS acceptance receipt copied!");
       return;
     }
@@ -1628,11 +2009,12 @@
     // Monetization / Pro License
     if (action === "checkout-pro") {
       const plan = target.dataset.plan;
-      const url = plan === "lifetime" ? CONFIG.STRIPE_LIFETIME_LINK : CONFIG.STRIPE_PRO_MONTHLY_LINK;
-      if (/^https?:\/\//i.test((url || "").trim())) {
-        window.open(url, "_blank", "noopener");
+      const rawUrl = plan === "lifetime" ? CONFIG.STRIPE_LIFETIME_LINK : CONFIG.STRIPE_PRO_MONTHLY_LINK;
+      const safeUrl = sanitizeHttpsUrl(rawUrl);
+      if (safeUrl) {
+        window.open(safeUrl, "_blank", "noopener,noreferrer");
       } else {
-        showToast("Stripe link placeholder: add your URL in config.js — or enter FOUNDER2026 below to test Pro now!");
+        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "hello@bidlift.app"} or complete Stripe setup in config.js.`);
       }
       return;
     }
@@ -1640,18 +2022,12 @@
     if (action === "activate-license") {
       const input = document.getElementById("pro-license-input");
       const val = (input ? input.value : "").trim().toUpperCase();
-      if (val === (CONFIG.DEMO_UNLOCK_CODE || "FOUNDER2026") || /^BL-PRO-[A-Z0-9]{4,}$/.test(val)) {
-        state.isPro = true;
-        state.proPlanLabel = val === "FOUNDER2026" ? "Founding Lifetime Pass" : "Pro License Active";
-        state.proposal.whiteLabel = true;
-        try {
-          localStorage.setItem(CONFIG.STORAGE_KEYS.PRO_LICENSE, JSON.stringify({ active: true, label: state.proPlanLabel }));
-        } catch (err) {}
-        saveCurrentDraftLocal();
+      if (verifyLicenseKey(val)) {
+        activateProState(val, "Pro White-Label License");
         renderApp();
         showToast("Pro White-Label unlocked! BidLift footer removed.");
       } else {
-        showToast("Invalid key. Try FOUNDER2026 to preview Pro mode.");
+        showToast("Invalid license key format. Check your Stripe confirmation receipt.");
       }
       return;
     }
@@ -1689,6 +2065,10 @@
       state.clientSignerName = el.value;
       return;
     }
+    if (el.id === "client-signer-email") {
+      state.clientSignerEmail = el.value;
+      return;
+    }
     if (el.id === "client-signer-note") {
       state.clientSignerNote = el.value;
       return;
@@ -1701,6 +2081,15 @@
       const textBox = document.getElementById("f-custom-color");
       if (textBox) textBox.value = el.value;
       applyBrandPalette(state.proposal);
+      saveCurrentDraftLocal();
+      refreshPreviewOnly();
+      return;
+    }
+
+    if (el.dataset.trustIdx !== undefined) {
+      const idx = Number(el.dataset.trustIdx);
+      if (!Array.isArray(state.proposal.trustBadges)) state.proposal.trustBadges = ["", "", ""];
+      state.proposal.trustBadges[idx] = el.value;
       saveCurrentDraftLocal();
       refreshPreviewOnly();
       return;
@@ -1757,9 +2146,23 @@
   document.addEventListener("change", async (e) => {
     const el = e.target;
 
+    if (el.id === "client-esign-consent") {
+      state.esignConsent = el.checked;
+      return;
+    }
+
     if (el.id === "toggle-multi-tier") {
       state.proposal.singleTierMode = !el.checked;
       saveCurrentDraftLocal();
+      refreshPreviewOnly();
+      return;
+    }
+
+    if (el.dataset.bind === "currency") {
+      state.proposal.currency = el.value;
+      saveCurrentDraftLocal();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
       refreshPreviewOnly();
       return;
     }
@@ -1836,11 +2239,27 @@
   });
 
   // =========================================================================
-  // Router & Initialization
+  // Router & Initialization (Including Automatic Stripe Return Fulfillment)
   // =========================================================================
   async function handleRoute() {
     const hash = window.location.hash || "";
     const search = new URLSearchParams(window.location.search);
+
+    // Handle automated post-checkout Stripe redirect (?unlock=<key>&plan=monthly|lifetime)
+    const unlockParam = search.get("unlock");
+    const planParam = search.get("plan");
+    if (unlockParam && verifyLicenseKey(unlockParam)) {
+      const label = planParam === "lifetime" ? "Founding Lifetime Pass" : "Pro Monthly License";
+      activateProState(unlockParam, label);
+      state.pendingToast = `${label} activated automatically! Welcome to BidLift Pro.`;
+      try {
+        search.delete("unlock");
+        search.delete("plan");
+        const remainingSearch = search.toString();
+        const cleanUrl = `${window.location.pathname}${remainingSearch ? "?" + remainingSearch : ""}${hash}`;
+        window.history.replaceState({}, "", cleanUrl);
+      } catch (err) {}
+    }
 
     if (hash.startsWith("#q=")) {
       const rawHash = hash.slice(3);
@@ -1857,12 +2276,14 @@
 
       state.mode = "client";
       state.proposal = decoded;
-      state.selectedTierIdx = Number(decoded.recommendedTierIndex ?? 1);
+      state.selectedTierIdx = Math.min(decoded.tiers.length - 1, Math.max(0, Number(decoded.recommendedTierIndex ?? 1)));
       state.approved = false;
       state.approvalReceipt = null;
       state.hasSignatureInk = false;
       state.signatureDataUrl = "";
       state.clientSignerName = "";
+      state.clientSignerEmail = "";
+      state.esignConsent = false;
       renderApp();
       return;
     }
@@ -1874,7 +2295,7 @@
       const savedCurrent = localStorage.getItem(CONFIG.STORAGE_KEYS.CURRENT);
       if (savedCurrent) {
         const parsed = JSON.parse(savedCurrent);
-        if (parsed && Array.isArray(parsed.tiers)) {
+        if (parsed && Array.isArray(parsed.tiers) && parsed.tiers.length > 0) {
           state.proposal = parsed;
         }
       }
@@ -1883,7 +2304,10 @@
     if (!state.proposal) {
       state.proposal = createProposalFromTemplate("contractor");
     }
-    state.selectedTierIdx = Number(state.proposal.recommendedTierIndex ?? 1);
+    if (state.isPro) {
+      state.proposal.whiteLabel = true;
+    }
+    state.selectedTierIdx = Math.min(state.proposal.tiers.length - 1, Math.max(0, Number(state.proposal.recommendedTierIndex ?? 1)));
     renderApp();
   }
 

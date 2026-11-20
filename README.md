@@ -9,12 +9,16 @@
 * **Website Embed Ready**: Generate a responsive `<iframe>` embed snippet to turn any business website into an interactive package configurator.
 
 ## 5-Minute Live Monetization Setup
-1. Log into [Stripe Dashboard → Payment Links](https://dashboard.stripe.com/payment-links) (or Lemon Squeezy).
+1. Log into [Stripe Dashboard → Payment Links](https://dashboard.stripe.com/payment-links).
 2. Create two products:
-   * **BidLift Pro Monthly** (`$19/month`) — White-label quotes (removes BidLift footer) + custom brand colors.
+   * **BidLift Pro Monthly** (`$19/month`) — White-label quotes (removes BidLift footer) + full customization.
    * **BidLift Founding Lifetime** (`$49 one-time`) — Permanent white-label access.
-3. Set each Payment Link's confirmation redirect or post-purchase note to display the Pro License Key (any key matching `BL-PRO-XXXX` or `FOUNDER2026`).
-4. Paste both URLs into [`public/config.js`](public/config.js):
+3. Under **After payment → Redirect customers to your website**, set the exact automatic-unlock confirmation URLs:
+   * **Pro Monthly Redirect URL:**
+     `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-M9X4K2-C99D&plan=monthly`
+   * **Founding Lifetime Redirect URL:**
+     `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-L7Q8R5-CF8A&plan=lifetime`
+4. Paste both generated Stripe Payment Link URLs into [`public/config.js`](public/config.js):
    ```js
    STRIPE_PRO_MONTHLY_LINK: "https://buy.stripe.com/your_monthly_link",
    STRIPE_LIFETIME_LINK: "https://buy.stripe.com/your_lifetime_link",
@@ -24,6 +28,6 @@
 ## Local Development
 Serve `public/` using Python's built-in HTTP server:
 ```bash
-python3 -m http.server 8091 --directory public
+python3 -m http.server 8092 --directory public
 ```
-Then open `http://localhost:8091/`.
+Then open `http://localhost:8092/`.

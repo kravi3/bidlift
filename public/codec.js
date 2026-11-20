@@ -4,6 +4,8 @@
  * so zero client/business PII ever touches a backend server.
  */
 window.BidLiftCodec = (function () {
+  const MAX_ENCODED_CHARS = 32000;
+
   function bytesToBase64Url(bytes) {
     let binary = "";
     const chunkSize = 0x8000;
@@ -26,41 +28,50 @@ window.BidLiftCodec = (function () {
 
   function minifyProposal(p) {
     return {
-      v: 1,
-      bn: p.businessName || "",
-      bt: p.businessTagline || "",
-      be: p.businessEmail || "",
-      bp: p.businessPhone || "",
-      ld: p.logoData || "",
-      pi: p.paletteId || "navy-gold",
-      cb: p.customBrandColor || "",
-      cn: p.clientName || "",
-      pt: p.projectTitle || "",
-      pl: p.projectLocation || "",
-      vd: Number(p.validDays) || 7,
-      fad: Number(p.fastActionDiscount) || 0,
-      fah: Number(p.fastActionHours) || 48,
-      dp: Number(p.depositPercent) || 0,
-      pp: p.paymentProvider || "stripe",
-      plnk: p.paymentLink || "",
-      pn: p.paymentNote || "",
-      tr: p.terms || "",
+      v: 2,
+      bn: String(p.businessName || "").slice(0, 120),
+      bt: String(p.businessTagline || "").slice(0, 180),
+      be: String(p.businessEmail || "").slice(0, 120),
+      bp: String(p.businessPhone || "").slice(0, 60),
+      ld: String(p.logoData || "").slice(0, 12000),
+      pi: String(p.paletteId || "navy-gold").slice(0, 40),
+      cb: String(p.customBrandColor || "").slice(0, 20),
+      cu: String(p.currency || "USD").slice(0, 6),
+      tx: Math.min(50, Math.max(0, Number(p.taxRate) || 0)),
+      txl: String(p.taxLabel || "Sales Tax").slice(0, 40),
+      qn: String(p.quoteNumber || "").slice(0, 40),
+      cn: String(p.clientName || "").slice(0, 120),
+      pt: String(p.projectTitle || "").slice(0, 160),
+      pl: String(p.projectLocation || "").slice(0, 160),
+      in: String(p.introText || "").slice(0, 600),
+      rb: String(p.recommendedBadge || "Most Popular Choice").slice(0, 40),
+      tb: Array.isArray(p.trustBadges)
+        ? p.trustBadges.slice(0, 3).map((b) => String(b || "").slice(0, 60))
+        : [],
+      vd: Math.min(365, Math.max(1, Number(p.validDays) || 7)),
+      fad: Math.max(0, Number(p.fastActionDiscount) || 0),
+      fah: Math.min(720, Math.max(1, Number(p.fastActionHours) || 48)),
+      dp: Math.min(100, Math.max(0, Number(p.depositPercent) || 0)),
+      pp: String(p.paymentProvider || "stripe").slice(0, 30),
+      plnk: String(p.paymentLink || "").slice(0, 400),
+      pn: String(p.paymentNote || "").slice(0, 300),
+      tr: String(p.terms || "").slice(0, 1000),
       st: Boolean(p.singleTierMode),
-      rt: Number(p.recommendedTierIndex ?? 1),
+      rt: Math.max(0, Math.min(2, Number(p.recommendedTierIndex ?? 1))),
       ct: Number(p.createdAt || Date.now()),
       wh: Boolean(p.whiteLabel),
-      ti: (p.tiers || []).map((t) => ({
-        n: t.name || "",
-        s: t.subtitle || "",
-        p: Number(t.price) || 0,
-        d: t.timeline || "",
-        f: Array.isArray(t.features) ? t.features : []
+      ti: (Array.isArray(p.tiers) ? p.tiers : []).slice(0, 3).map((t) => ({
+        n: String(t.name || "").slice(0, 80),
+        s: String(t.subtitle || "").slice(0, 140),
+        p: Math.max(0, Number(t.price) || 0),
+        d: String(t.timeline || "").slice(0, 50),
+        f: (Array.isArray(t.features) ? t.features : []).slice(0, 15).map((f) => String(f || "").slice(0, 180))
       })),
-      ad: (p.addons || []).map((a) => ({
-        id: a.id || "",
-        t: a.title || "",
-        d: a.description || "",
-        p: Number(a.price) || 0,
+      ad: (Array.isArray(p.addons) ? p.addons : []).slice(0, 25).map((a) => ({
+        id: String(a.id || "").slice(0, 40),
+        t: String(a.title || "").slice(0, 100),
+        d: String(a.description || "").slice(0, 220),
+        p: Math.max(0, Number(a.price) || 0),
         s: Boolean(a.selected)
       }))
     };
@@ -68,47 +79,62 @@ window.BidLiftCodec = (function () {
 
   function expandProposal(m) {
     if (!m || typeof m !== "object") return null;
-    // Support un-minified objects as well
-    if (m.tiers && Array.isArray(m.tiers)) return m;
+    if (m.tiers && Array.isArray(m.tiers)) {
+      return {
+        ...m,
+        tiers: m.tiers.slice(0, 3),
+        addons: (Array.isArray(m.addons) ? m.addons : []).slice(0, 25)
+      };
+    }
+    const tiers = Array.isArray(m.ti)
+      ? m.ti.slice(0, 3).map((t) => ({
+          name: String(t.n || ""),
+          subtitle: String(t.s || ""),
+          price: Math.max(0, Number(t.p) || 0),
+          timeline: String(t.d || ""),
+          features: Array.isArray(t.f) ? t.f.slice(0, 15).map((f) => String(f || "")) : []
+        }))
+      : [];
+    if (tiers.length === 0) return null;
+
     return {
-      id: m.id || "shared",
-      businessName: m.bn || "",
-      businessTagline: m.bt || "",
-      businessEmail: m.be || "",
-      businessPhone: m.bp || "",
-      logoData: m.ld || "",
-      paletteId: m.pi || "navy-gold",
-      customBrandColor: m.cb || "",
-      clientName: m.cn || "",
-      projectTitle: m.pt || "",
-      projectLocation: m.pl || "",
+      id: "shared",
+      businessName: String(m.bn || ""),
+      businessTagline: String(m.bt || ""),
+      businessEmail: String(m.be || ""),
+      businessPhone: String(m.bp || ""),
+      logoData: String(m.ld || ""),
+      paletteId: String(m.pi || "navy-gold"),
+      customBrandColor: String(m.cb || ""),
+      currency: String(m.cu || "USD"),
+      taxRate: Math.min(50, Math.max(0, Number(m.tx) || 0)),
+      taxLabel: String(m.txl || "Sales Tax"),
+      quoteNumber: String(m.qn || ""),
+      clientName: String(m.cn || ""),
+      projectTitle: String(m.pt || ""),
+      projectLocation: String(m.pl || ""),
+      introText: String(m.in || ""),
+      recommendedBadge: String(m.rb || "Most Popular Choice"),
+      trustBadges: Array.isArray(m.tb) ? m.tb.slice(0, 3).map((b) => String(b || "")) : [],
       validDays: m.vd ?? 7,
       fastActionDiscount: m.fad ?? 0,
       fastActionHours: m.fah ?? 48,
       depositPercent: m.dp ?? 0,
-      paymentProvider: m.pp || "stripe",
-      paymentLink: m.plnk || "",
-      paymentNote: m.pn || "",
-      terms: m.tr || "",
+      paymentProvider: String(m.pp || "stripe"),
+      paymentLink: String(m.plnk || ""),
+      paymentNote: String(m.pn || ""),
+      terms: String(m.tr || ""),
       singleTierMode: Boolean(m.st),
-      recommendedTierIndex: m.rt ?? 1,
-      createdAt: m.ct || Date.now(),
+      recommendedTierIndex: Math.min(tiers.length - 1, Math.max(0, Number(m.rt ?? 1))),
+      createdAt: Number(m.ct) || Date.now(),
       whiteLabel: Boolean(m.wh),
-      tiers: Array.isArray(m.ti)
-        ? m.ti.map((t) => ({
-            name: t.n || "",
-            subtitle: t.s || "",
-            price: Number(t.p) || 0,
-            timeline: t.d || "",
-            features: Array.isArray(t.f) ? t.f : []
-          }))
-        : [],
+      tiers,
       addons: Array.isArray(m.ad)
-        ? m.ad.map((a, idx) => ({
-            id: a.id || `addon-${idx}`,
-            title: a.t || "",
-            description: a.d || "",
-            price: Number(a.p) || 0,
+        ? m.ad.slice(0, 25).map((a, idx) => ({
+            id: String(a.id || `addon-${idx}`),
+            title: String(a.t || ""),
+            description: String(a.d || ""),
+            price: Math.max(0, Number(a.p) || 0),
             selected: Boolean(a.s)
           }))
         : []
@@ -151,11 +177,16 @@ window.BidLiftCodec = (function () {
 
   async function decodeProposal(encodedStr) {
     if (!encodedStr || typeof encodedStr !== "string") return null;
+    if (encodedStr.length > MAX_ENCODED_CHARS) {
+      console.warn("[BidLiftCodec] Encoded proposal payload exceeds safe limit.");
+      return null;
+    }
     try {
       const clean = encodedStr.trim();
       if (clean.startsWith("z1_")) {
         const raw = base64UrlToBytes(clean.slice(3));
         const decompressed = await decompressStream(raw, "deflate-raw");
+        if (decompressed.byteLength > 120000) return null;
         const jsonStr = new TextDecoder().decode(decompressed);
         return expandProposal(JSON.parse(jsonStr));
       }
@@ -164,7 +195,6 @@ window.BidLiftCodec = (function () {
         const jsonStr = new TextDecoder().decode(raw);
         return expandProposal(JSON.parse(jsonStr));
       }
-      // Fallback attempt raw base64url json
       const raw = base64UrlToBytes(clean);
       const jsonStr = new TextDecoder().decode(raw);
       return expandProposal(JSON.parse(jsonStr));
@@ -175,8 +205,8 @@ window.BidLiftCodec = (function () {
   }
 
   /**
-   * Downscale an uploaded logo image file to a lightweight Data URL (max 160px, ~<=8KB)
-   * so URL hashes remain compact and shareable across SMS / WhatsApp / Email.
+   * Downscale an uploaded logo image file to a lightweight raster Data URL (max 160px)
+   * using canvas re-encoding (automatically strips any SVG scripts and shrinks URL size).
    */
   function downscaleLogoFile(file) {
     return new Promise((resolve, reject) => {
@@ -205,10 +235,8 @@ window.BidLiftCodec = (function () {
           ctx.clearRect(0, 0, w, h);
           ctx.drawImage(img, 0, 0, w, h);
 
-          // Try WebP first (supports alpha + tiny size), fall back to JPEG
           let dataUrl = canvas.toDataURL("image/webp", 0.72);
           if (!dataUrl.startsWith("data:image/webp") || dataUrl.length > 10500) {
-            // Draw onto white background for clean JPEG
             const jpgCanvas = document.createElement("canvas");
             jpgCanvas.width = w;
             jpgCanvas.height = h;
