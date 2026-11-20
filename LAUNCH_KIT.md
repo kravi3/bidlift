@@ -30,7 +30,7 @@ Live URL: `https://bidlift-5ias.onrender.com`
   - Client-side e-signature pad + PDF receipt export
   - 100% browser-private (zero login required to start)
 * **First Maker Comment:**
-  Explain why anchoring 3 options + self-serve add-ons raises close value without pushy sales tactics, and share your `FOUNDER2026` code or \$49 lifetime founder offer if desired!
+  Explain why anchoring 3 options + self-serve add-ons raises close value without pushy sales tactics, and invite makers to try the free tier or upgrade to the \$99/year Pro Annual plan (Save 56%) for 100% white-label quotes!
 
 ---
 

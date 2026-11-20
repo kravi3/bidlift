@@ -1174,14 +1174,14 @@
             <div class="plan-box">
               <strong>Pro Monthly</strong>
               <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">100% White-Label (removes BidLift footer), priority brand presets, multi-currency &amp; tax.</span>
+              <span style="font-size:12px;color:var(--text-muted);">100% White-Label (removes BidLift footer), priority brand presets, multi-currency &amp; tax. Cancel anytime.</span>
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="monthly">Get Pro Monthly</button>
             </div>
             <div class="plan-box featured">
-              <strong>Founding Lifetime</strong>
-              <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_LIFETIME || "$49 once")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">Pay once, own Pro White-Label forever. Instant automatic browser unlock after checkout.</span>
-              <button type="button" class="btn btn-accent btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="lifetime">Claim Lifetime Deal</button>
+              <strong>Pro Annual <span style="font-size:11px;color:var(--success);font-weight:700;">(Save 56%)</span></strong>
+              <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")}</div>
+              <span style="font-size:12px;color:var(--text-muted);">~$8.25/mo billed annually. 100% White-Label + instant browser unlock after checkout.</span>
+              <button type="button" class="btn btn-accent btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="annual">Get Pro Annual</button>
             </div>
           </div>
 
@@ -2009,12 +2009,12 @@
     // Monetization / Pro License
     if (action === "checkout-pro") {
       const plan = target.dataset.plan;
-      const rawUrl = plan === "lifetime" ? CONFIG.STRIPE_LIFETIME_LINK : CONFIG.STRIPE_PRO_MONTHLY_LINK;
+      const rawUrl = plan === "annual" ? CONFIG.CHECKOUT_PRO_ANNUAL_LINK : CONFIG.CHECKOUT_PRO_MONTHLY_LINK;
       const safeUrl = sanitizeHttpsUrl(rawUrl);
       if (safeUrl) {
         window.open(safeUrl, "_blank", "noopener,noreferrer");
       } else {
-        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "hello@bidlift.app"} or complete Stripe setup in config.js.`);
+        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "hello@bidlift.app"} or complete Lemon Squeezy setup in config.js.`);
       }
       return;
     }
@@ -2027,7 +2027,7 @@
         renderApp();
         showToast("Pro White-Label unlocked! BidLift footer removed.");
       } else {
-        showToast("Invalid license key format. Check your Stripe confirmation receipt.");
+        showToast("Invalid license key format. Check your order confirmation receipt.");
       }
       return;
     }
@@ -2245,11 +2245,11 @@
     const hash = window.location.hash || "";
     const search = new URLSearchParams(window.location.search);
 
-    // Handle automated post-checkout Stripe redirect (?unlock=<key>&plan=monthly|lifetime)
+    // Handle automated post-checkout redirect (?unlock=<key>&plan=monthly|annual)
     const unlockParam = search.get("unlock");
     const planParam = search.get("plan");
     if (unlockParam && verifyLicenseKey(unlockParam)) {
-      const label = planParam === "lifetime" ? "Founding Lifetime Pass" : "Pro Monthly License";
+      const label = planParam === "annual" ? "Pro Annual License" : "Pro Monthly License";
       activateProState(unlockParam, label);
       state.pendingToast = `${label} activated automatically! Welcome to BidLift Pro.`;
       try {
