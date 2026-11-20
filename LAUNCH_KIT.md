@@ -1,6 +1,6 @@
 # BidLift — Zero-Budget Day-1 Organic Launch Kit
 
-Replace `[YOUR_LIVE_URL]` with your deployed Render URL before posting.
+Live URL: `https://bidlift-5ias.onrender.com`
 
 ---
 
@@ -13,7 +13,7 @@ Replace `[YOUR_LIVE_URL]` with your deployed Render URL before posting.
 >
 > Service businesses (contractors, agencies, stagers, photographers) routinely lose 20–30% of deal size by emailing flat, single-price PDFs that force clients into a yes/no price debate.
 >
-> I built **BidLift** (`[YOUR_LIVE_URL]`) to solve two problems cleanly:
+> I built **BidLift** (`https://bidlift-5ias.onrender.com`) to solve two problems cleanly:
 > 1. **Higher AOV**: Clients compare Good / Better / Best tiers side-by-side and toggle optional upgrades themselves, plus see a fast-action bonus and e-sign + pay a deposit in 60 seconds.
 > 2. **Zero-server privacy**: Instead of storing anyone's client names, emails, or pricing in a database, BidLift compresses the entire proposal state via native `CompressionStream('deflate-raw')` into the `#q=` URL fragment (plus client-side canvas logo downscaling). Nothing ever leaves the browser.
 >
@@ -44,7 +44,7 @@ Replace `[YOUR_LIVE_URL]` with your deployed Render URL before posting.
 >
 > Switching to a "Good / Better / Best" format with a few optional check-box add-ons completely changed that—roughly half of clients pick the middle tier, ~20% pick top tier, and almost everyone checks at least one upgrade when they don't feel pressured on a phone call.
 >
-> Existing proposal tools wanted \$29–\$65/mo + mandatory logins just to send a simple link, so I built a lightweight web studio called **BidLift** (`[YOUR_LIVE_URL]`):
+> Existing proposal tools wanted \$29–\$65/mo + mandatory logins just to send a simple link, so I built a lightweight web studio called **BidLift** (`https://bidlift-5ias.onrender.com`):
 > - Pick an industry template (Remodel, Landscaping, Cleaning, Agency, Real Estate Staging, Photo/Video)
 > - Edit your 3 packages & add-ons with a live calculator showing how much extra revenue each deal averages
 > - Click "Share Client Link" — it puts the whole quote in a link you can text or email (zero signup, no server storing your clients' info)
@@ -61,7 +61,7 @@ Replace `[YOUR_LIVE_URL]` with your deployed Render URL before posting.
 > Send Good / Better / Best + self-serve upgrades $\rightarrow$ client picks their comfort zone AND clicks extra add-ons themselves (+20% to +38% higher ticket).
 >
 > I just launched **BidLift** so you can build & text an interactive e-sign + deposit proposal in 60 seconds—no login, no client data stored on a server:
-> `[YOUR_LIVE_URL]`
+> `https://bidlift-5ias.onrender.com`
 
 ---
 
