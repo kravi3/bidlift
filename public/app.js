@@ -2014,7 +2014,7 @@
       if (safeUrl) {
         window.open(safeUrl, "_blank", "noopener,noreferrer");
       } else {
-        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "hello@bidlift.app"} or complete Lemon Squeezy setup in config.js.`);
+        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "hello@bidlift.app"} or complete Polar.sh checkout setup in config.js.`);
       }
       return;
     }

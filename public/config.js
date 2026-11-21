@@ -1,17 +1,16 @@
 /**
  * BidLift Configuration & Monetization Settings
  * ---------------------------------------------
- * Update CHECKOUT_PRO_MONTHLY_LINK and CHECKOUT_PRO_ANNUAL_LINK with your live
- * Lemon Squeezy checkout URLs (e.g., https://yourstore.lemonsqueezy.com/buy/...)
- * or Stripe Payment Links.
+ * Live Polar.sh Merchant-of-Record Checkout Links ($0/month upfront,
+ * automatic US/global sales tax & VAT compliance, Stripe Connect payouts).
  */
 window.BIDLIFT_CONFIG = {
   APP_NAME: "BidLift",
   TAGLINE: "Interactive Good / Better / Best Proposals That Boost Revenue",
   PRO_PRICE_MONTHLY: "$19/mo",
   PRO_PRICE_ANNUAL: "$99/yr",
-  CHECKOUT_PRO_MONTHLY_LINK: "", // e.g. "https://bidlift.lemonsqueezy.com/buy/..."
-  CHECKOUT_PRO_ANNUAL_LINK: "",  // e.g. "https://bidlift.lemonsqueezy.com/buy/..."
+  CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_CmzuvzfKFA3NJsP5hBbWpQg1EwRRLmGfxaQuO0yifJp",
+  CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
   SUPPORT_EMAIL: "hello@bidlift.app",
   LICENSE_PREFIX: "BL-PRO-",
   CURRENCIES: {

@@ -8,24 +8,16 @@
 * **Built-In Viral Growth Loop**: Every free quote carries a tasteful `"Powered by BidLift — Boost quote revenue +28% (Free)"` link back to the studio, turning your customers' clients into new SaaS signups automatically.
 * **Website Embed Ready**: Generate a responsive `<iframe>` embed snippet to turn any business website into an interactive package configurator.
 
-## 5-Minute Live Monetization Setup (Lemon Squeezy — \$0/mo, Automated Tax & VAT)
-Lemon Squeezy acts as your Merchant of Record (\$0/month upfront, `5% + \$0.50` deducted only from actual sales), automatically calculating and filing all US state sales taxes (including Washington) and global VAT/GST for you.
+## Live Monetization Architecture (Polar.sh — \$0/mo, Automated Tax & VAT)
+[Polar.sh](https://polar.sh) (Polar Software, Inc., a US Delaware corp running on Stripe Connect) acts as Merchant of Record (`$0/month` Starter plan; `5% + $0.50` per domestic US sale, `+1.5%` on international cards), automatically calculating and filing US state sales taxes (including Washington) and global VAT/GST.
 
-1. Log into [Lemon Squeezy](https://app.lemonsqueezy.com) and create your store (e.g., **BidLift**).
-2. Create two subscription products:
-   * **BidLift Pro Monthly** (`$19/month`) — White-label quotes (removes BidLift footer), priority brand presets, multi-currency & tax.
-   * **BidLift Pro Annual (Save 56%)** (`$99/year`, ~$8.25/mo) — Sustainable recurring annual plan with full white-label access.
-3. Under each product's **Confirmation / After-purchase Redirect URL**, set:
-   * **Pro Monthly Redirect URL:**
-     `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-M9X4K2-C99D&plan=monthly`
-   * **Pro Annual Redirect URL:**
-     `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-A7Y8R5-DF5A&plan=annual`
-4. Paste both generated checkout URLs into [`public/config.js`](public/config.js):
-   ```js
-   CHECKOUT_PRO_MONTHLY_LINK: "https://yourstore.lemonsqueezy.com/buy/...",
-   CHECKOUT_PRO_ANNUAL_LINK: "https://yourstore.lemonsqueezy.com/buy/...",
-   ```
-5. Commit and push—Render deploys in ~15 seconds.
+Live wired Checkout Links in [`public/config.js`](public/config.js):
+* **BidLift Pro Monthly (`$19/month`)**
+  * Checkout Link: `https://buy.polar.sh/polar_cl_CmzuvzfKFA3NJsP5hBbWpQg1EwRRLmGfxaQuO0yifJp`
+  * Success Redirect URL: `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-M9X4K2-C99D&plan=monthly`
+* **BidLift Pro Annual (`$99/year`, Save 56% — ~$8.25/mo)**
+  * Checkout Link: `https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk`
+  * Success Redirect URL: `https://bidlift-5ias.onrender.com/?unlock=BL-PRO-A7Y8R5-DF5A&plan=annual`
 
 ## Local Development
 Serve `public/` using Python's built-in HTTP server:
