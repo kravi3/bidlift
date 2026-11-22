@@ -15,7 +15,7 @@ window.BIDLIFT_CONFIG = {
   LICENSE_PREFIX: "BL-PRO-",
   ANALYTICS: {
     PROVIDER: "posthog",
-    POSTHOG_PROJECT_KEY: "", // Paste phc_... token from PostHog Project Settings
+    POSTHOG_PROJECT_KEY: "phc_oLaVNBcBBDBxGZUSsgLdDbpbSoXSPikzyuMFZY6MoRGD",
     POSTHOG_HOST: "https://us.i.posthog.com"
   },
   CURRENCIES: {
