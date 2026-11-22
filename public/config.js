@@ -13,6 +13,11 @@ window.BIDLIFT_CONFIG = {
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
   SUPPORT_EMAIL: "bidliftco@gmail.com",
   LICENSE_PREFIX: "BL-PRO-",
+  ANALYTICS: {
+    PROVIDER: "posthog",
+    POSTHOG_PROJECT_KEY: "", // Paste phc_... token from PostHog Project Settings
+    POSTHOG_HOST: "https://us.i.posthog.com"
+  },
   CURRENCIES: {
     USD: { code: "USD", symbol: "$", label: "USD ($)" },
     EUR: { code: "EUR", symbol: "€", label: "EUR (€)" },

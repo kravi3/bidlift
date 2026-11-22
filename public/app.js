@@ -9,6 +9,16 @@
   const PALETTES = window.BIDLIFT_PALETTES || {};
   const TEMPLATES = window.BIDLIFT_TEMPLATES || {};
   const CODEC = window.BidLiftCodec;
+  const ANALYTICS = window.BidLiftAnalytics;
+  let studioLoadTracked = false;
+
+  function trackEvent(name, props) {
+    try {
+      if (ANALYTICS && typeof ANALYTICS.track === "function") {
+        ANALYTICS.track(name, props);
+      }
+    } catch (e) {}
+  }
 
   const ICONS = {
     check: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
@@ -1223,7 +1233,7 @@
           <div style="font-size:13px;color:var(--text-secondary);line-height:1.65;display:flex;flex-direction:column;gap:12px;">
             <div>
               <strong style="color:var(--text-primary);">1. Zero-Server Privacy Policy (Zero PII Stored)</strong><br />
-              BidLift operates 100% client-side in your web browser. Proposal text, client names, pricing, drafts, and signature images are stored strictly in your own browser storage or compressed inside the <code>#q=...</code> URL fragment (which browsers do not transmit in HTTP requests to origin servers).
+              BidLift operates 100% client-side in your web browser. Proposal text, client names, pricing, drafts, and signature images are stored strictly in your own browser storage or compressed inside the <code>#q=...</code> URL fragment (which browsers do not transmit in HTTP requests to origin servers). Optional cookie-free, strictly anonymous aggregate event counters (zero PII, zero client names, zero pricing, zero <code>#q=</code> fragments) may be recorded to measure template and conversion funnel reliability.
             </div>
             <div>
               <strong style="color:var(--text-primary);">2. Electronic Signature &amp; Audit Trail (ESIGN / UETA)</strong><br />
@@ -1643,6 +1653,7 @@
       state.esignConsent = false;
       saveCurrentDraftLocal();
       renderApp();
+      trackEvent("template_selected", { template_id: tplId });
       showToast(`Loaded "${TEMPLATES[tplId]?.label}" template`);
       return;
     }
@@ -1777,6 +1788,9 @@
     if (action === "select-tier") {
       if (state.approved) return;
       state.selectedTierIdx = Number(target.dataset.tierIdx);
+      if (state.mode === "client") {
+        trackEvent("client_tier_changed", { tier_index: state.selectedTierIdx });
+      }
       refreshPreviewOnly();
       return;
     }
@@ -1786,7 +1800,12 @@
       const aIdx = Number(target.dataset.addonIdx);
       if (state.proposal.addons[aIdx]) {
         state.proposal.addons[aIdx].selected = !state.proposal.addons[aIdx].selected;
-        if (state.mode === "studio") saveCurrentDraftLocal();
+        if (state.mode === "studio") {
+          saveCurrentDraftLocal();
+        } else if (state.mode === "client") {
+          const selectedCount = (state.proposal.addons || []).filter((a) => a.selected).length;
+          trackEvent("client_addon_toggled", { selected_addons_count: selectedCount });
+        }
         refreshPreviewOnly();
       }
       return;
@@ -1872,6 +1891,11 @@
         signatureDataUrl: state.signatureDataUrl
       };
       refreshPreviewOnly();
+      trackEvent("proposal_signed", {
+        tier_index: totals.chosenTierIdx,
+        selected_addons_count: totals.selectedAddons.length,
+        has_deposit_cta: Boolean(sanitizeHttpsUrl(p.paymentLink) || p.paymentProvider === "zelle")
+      });
       showToast("Proposal approved with verified ESIGN SHA-256 audit!");
       return;
     }
@@ -1904,6 +1928,13 @@
       const encoded = await CODEC.encodeProposal(state.proposal);
       state.shareUrl = `${getBaseStudioUrl()}#q=${encoded}`;
       renderApp();
+      trackEvent("share_link_created", {
+        share_mode: state.shareTab,
+        tier_count: (state.proposal.tiers || []).length,
+        addon_count: (state.proposal.addons || []).length,
+        currency: state.proposal.currency || "USD",
+        has_deposit_link: Boolean(sanitizeHttpsUrl(state.proposal.paymentLink) || state.proposal.paymentProvider === "zelle")
+      });
       const modal = document.getElementById("modal-share");
       if (modal) modal.classList.add("open");
       return;
@@ -1945,6 +1976,9 @@
     if (action === "open-modal") {
       const m = document.getElementById(target.dataset.modal);
       if (m) m.classList.add("open");
+      if (target.dataset.modal === "modal-pro") {
+        trackEvent("pro_modal_opened");
+      }
       return;
     }
 
@@ -2008,7 +2042,8 @@
 
     // Monetization / Pro License
     if (action === "checkout-pro") {
-      const plan = target.dataset.plan;
+      const plan = target.dataset.plan === "annual" ? "annual" : "monthly";
+      trackEvent("pro_checkout_clicked", { plan });
       const rawUrl = plan === "annual" ? CONFIG.CHECKOUT_PRO_ANNUAL_LINK : CONFIG.CHECKOUT_PRO_MONTHLY_LINK;
       const safeUrl = sanitizeHttpsUrl(rawUrl);
       if (safeUrl) {
@@ -2024,6 +2059,7 @@
       const val = (input ? input.value : "").trim().toUpperCase();
       if (verifyLicenseKey(val)) {
         activateProState(val, "Pro White-Label License");
+        trackEvent("pro_unlocked", { method: "manual", plan: val.startsWith("BL-PRO-A") ? "annual" : "monthly" });
         renderApp();
         showToast("Pro White-Label unlocked! BidLift footer removed.");
       } else {
@@ -2249,8 +2285,10 @@
     const unlockParam = search.get("unlock");
     const planParam = search.get("plan");
     if (unlockParam && verifyLicenseKey(unlockParam)) {
-      const label = planParam === "annual" ? "Pro Annual License" : "Pro Monthly License";
+      const normalizedPlan = planParam === "annual" ? "annual" : "monthly";
+      const label = normalizedPlan === "annual" ? "Pro Annual License" : "Pro Monthly License";
       activateProState(unlockParam, label);
+      trackEvent("pro_unlocked", { method: "redirect", plan: normalizedPlan });
       state.pendingToast = `${label} activated automatically! Welcome to BidLift Pro.`;
       try {
         search.delete("unlock");
@@ -2285,6 +2323,11 @@
       state.clientSignerEmail = "";
       state.esignConsent = false;
       renderApp();
+      trackEvent("client_quote_viewed", {
+        is_embed: state.embedMode,
+        tier_count: getVisibleTiers(decoded).length,
+        addon_count: (decoded.addons || []).length
+      });
       return;
     }
 
@@ -2309,6 +2352,10 @@
     }
     state.selectedTierIdx = Math.min(state.proposal.tiers.length - 1, Math.max(0, Number(state.proposal.recommendedTierIndex ?? 1)));
     renderApp();
+    if (!studioLoadTracked) {
+      studioLoadTracked = true;
+      trackEvent("studio_loaded", { template_id: state.proposal.id || "custom" });
+    }
   }
 
   window.addEventListener("hashchange", handleRoute);
