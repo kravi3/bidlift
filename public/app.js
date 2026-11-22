@@ -1234,7 +1234,7 @@
               BidLift does not custody funds or process credit cards. Any payment link opens the service provider's independent checkout processor (such as Stripe, Square, PayPal, Venmo, or Zelle) over verified <code>https://</code> links.
             </div>
             <div style="font-size:12px;color:var(--text-muted);">
-              Questions or support: <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "kravi3@hotmail.com")}" style="color:var(--brand);">${escapeHtml(CONFIG.SUPPORT_EMAIL || "kravi3@hotmail.com")}</a>
+              Questions or support: <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}" style="color:var(--brand);">${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}</a>
             </div>
           </div>
         </div>
@@ -1294,7 +1294,7 @@
           <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy Policy &amp; ESIGN Terms</button>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-pro">Pricing</button>
-            <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "kravi3@hotmail.com")}" class="btn btn-ghost btn-sm">${escapeHtml(CONFIG.SUPPORT_EMAIL || "kravi3@hotmail.com")}</a>
+            <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}" class="btn btn-ghost btn-sm">${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}</a>
           </div>
         </div>
       </footer>
@@ -2014,7 +2014,7 @@
       if (safeUrl) {
         window.open(safeUrl, "_blank", "noopener,noreferrer");
       } else {
-        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "kravi3@hotmail.com"} or complete Polar.sh checkout setup in config.js.`);
+        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com"} or complete Polar.sh checkout setup in config.js.`);
       }
       return;
     }

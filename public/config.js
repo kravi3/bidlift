@@ -11,7 +11,7 @@ window.BIDLIFT_CONFIG = {
   PRO_PRICE_ANNUAL: "$99/yr",
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_CmzuvzfKFA3NJsP5hBbWpQg1EwRRLmGfxaQuO0yifJp",
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
-  SUPPORT_EMAIL: "kravi3@hotmail.com",
+  SUPPORT_EMAIL: "bidliftco@gmail.com",
   LICENSE_PREFIX: "BL-PRO-",
   CURRENCIES: {
     USD: { code: "USD", symbol: "$", label: "USD ($)" },
