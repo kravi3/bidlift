@@ -9,6 +9,7 @@ window.BidLiftAnalytics = (function () {
 
   const SESSION_KEY = "bidlift_anon_sid";
   const LOCAL_METRICS_KEY = "bidlift_local_metrics_v1";
+  const ENTRY_SOURCE_KEY = "bidlift_entry_source";
 
   const ALLOWED_PROPS = new Set([
     "template_id",
@@ -24,7 +25,10 @@ window.BidLiftAnalytics = (function () {
     "plan",
     "method",
     "referrer_host",
-    "viewport_class"
+    "viewport_class",
+    "entry_source",
+    "entry_template",
+    "has_financing"
   ]);
 
   function getSessionDistinctId() {
@@ -61,11 +65,27 @@ window.BidLiftAnalytics = (function () {
     return "desktop";
   }
 
+  function getEntrySource() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      const rawRef = (params.get("ref") || "").trim().toLowerCase();
+      if (/^[a-z0-9_-]{1,40}$/.test(rawRef)) {
+        sessionStorage.setItem(ENTRY_SOURCE_KEY, rawRef);
+        return rawRef;
+      }
+      return sessionStorage.getItem(ENTRY_SOURCE_KEY) || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   function sanitizeProps(rawProps) {
     const out = {
       referrer_host: getSafeReferrerHost(),
       viewport_class: getViewportClass()
     };
+    const entrySrc = getEntrySource();
+    if (entrySrc) out.entry_source = entrySrc;
     if (!rawProps || typeof rawProps !== "object") return out;
     for (const key of Object.keys(rawProps)) {
       if (!ALLOWED_PROPS.has(key)) continue;

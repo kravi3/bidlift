@@ -60,6 +60,10 @@ window.BidLiftCodec = (function () {
       rt: Math.max(0, Math.min(2, Number(p.recommendedTierIndex ?? 1))),
       ct: Number(p.createdAt || Date.now()),
       wh: Boolean(p.whiteLabel),
+      fe: Boolean(p.financingEnabled),
+      fm: Math.min(180, Math.max(3, Number(p.financingMonths) || 60)),
+      fa: p.financingApr === undefined ? 9.99 : Math.min(36, Math.max(0, Number(p.financingApr) || 0)),
+      fu: String(p.financingUrl || "").slice(0, 400),
       ti: (Array.isArray(p.tiers) ? p.tiers : []).slice(0, 3).map((t) => ({
         n: String(t.name || "").slice(0, 80),
         s: String(t.subtitle || "").slice(0, 140),
@@ -161,6 +165,10 @@ window.BidLiftCodec = (function () {
       recommendedTierIndex: Math.min(tiers.length - 1, Math.max(0, Number(m.rt ?? 1))),
       createdAt: Number(m.ct) || Date.now(),
       whiteLabel: Boolean(m.wh),
+      financingEnabled: Boolean(m.fe),
+      financingMonths: Math.min(180, Math.max(3, Number(m.fm) || 60)),
+      financingApr: m.fa === undefined ? 9.99 : Math.min(36, Math.max(0, Number(m.fa) || 0)),
+      financingUrl: String(m.fu || ""),
       tiers,
       addons: Array.isArray(m.ad)
         ? m.ad.slice(0, 25).map((a, idx) => ({

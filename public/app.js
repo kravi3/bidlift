@@ -44,6 +44,7 @@
   const state = {
     mode: "studio", // "studio" | "client" | "error"
     embedMode: false,
+    demoPreviewReturn: false,
     mobileView: "builder", // "builder" | "preview"
     activeTab: "business", // "business" | "tiers" | "addons" | "close"
     heroCollapsed: false,
@@ -304,6 +305,10 @@
 
   function normalizeProposalServices(p) {
     if (!p || typeof p !== "object") return p;
+    p.financingEnabled = Boolean(p.financingEnabled);
+    p.financingMonths = Math.min(180, Math.max(3, Number(p.financingMonths) || 60));
+    p.financingApr = p.financingApr === undefined ? 9.99 : Math.min(36, Math.max(0, Number(p.financingApr) || 0));
+    p.financingUrl = String(p.financingUrl || "");
     if (Array.isArray(p.tiers)) {
       p.tiers = p.tiers.map((tier) => {
         const items = Array.isArray(tier.lineItems)
@@ -482,6 +487,60 @@
     return map[provider] || `Pay Deposit Now (${amountLabel})`;
   }
 
+  function computeMonthlyPayment(principal, months, apr) {
+    const amt = Math.max(0, Number(principal) || 0);
+    const term = Math.min(180, Math.max(3, Math.round(Number(months) || 60)));
+    const annualRate = apr === undefined ? 9.99 : Math.min(36, Math.max(0, Number(apr) || 0));
+    if (amt <= 0) return 0;
+    if (annualRate <= 0) return Math.ceil(amt / term);
+    const r = annualRate / 100 / 12;
+    const factor = Math.pow(1 + r, term);
+    return Math.ceil((amt * r * factor) / (factor - 1));
+  }
+
+  function applyFlatBudgetScaling(proposal, flatAmount) {
+    const flat = Number(flatAmount);
+    if (!proposal || !Array.isArray(proposal.tiers) || !Number.isFinite(flat) || flat < 100 || flat > 500000) {
+      return proposal;
+    }
+    const baseT0 = Math.max(1, Number(proposal.tiers[0]?.price) || flat);
+    const targets = [
+      Math.round(flat),
+      Math.round((flat * 1.28) / 10) * 10,
+      Math.round((flat * 1.62) / 10) * 10
+    ];
+    if (targets[1] <= targets[0]) targets[1] = Math.round(flat * 1.28);
+    if (targets[2] <= targets[1]) targets[2] = Math.round(flat * 1.62);
+    const ratio = flat / baseT0;
+
+    proposal.tiers.forEach((tier, tIdx) => {
+      const origPrice = Math.max(1, Number(tier.price) || baseT0);
+      const tierTarget = targets[tIdx] || Math.round((origPrice * ratio) / 10) * 10;
+      if (Array.isArray(tier.lineItems) && tier.lineItems.length > 0) {
+        const scaleFactor = tierTarget / origPrice;
+        let runningSum = 0;
+        tier.lineItems.forEach((it) => {
+          const q = Math.max(1, Number(it.qty) || 1);
+          const lineOrig = q * Math.max(0, Number(it.unitPrice) || 0);
+          const scaledLine = Math.max(0, Math.round(lineOrig * scaleFactor));
+          it.unitPrice = Math.round((scaledLine / q) * 100) / 100;
+          runningSum += Math.round((q * it.unitPrice) * 100) / 100;
+        });
+        const diff = Math.round((tierTarget - runningSum) * 100) / 100;
+        if (Math.abs(diff) > 0.001) {
+          const unitOneItem = tier.lineItems.find((it) => (Number(it.qty) || 1) === 1);
+          if (unitOneItem) {
+            unitOneItem.unitPrice = Math.max(0, Math.round((unitOneItem.unitPrice + diff) * 100) / 100);
+          }
+        }
+        tier.price = getTierItemsSubtotal(tier);
+      } else {
+        tier.price = tierTarget;
+      }
+    });
+    return proposal;
+  }
+
   // =========================================================================
   // Render Proposal Sheet (Shared between Studio Preview & Standalone Client)
   // =========================================================================
@@ -556,6 +615,9 @@
               .map((f) => `<li>${ICONS.check}<span>${escapeHtml(f)}</span></li>`)
               .join("");
 
+        const showMonthly = Boolean(p.financingEnabled) && Number(tier.price) > 0;
+        const tierMonthly = showMonthly ? computeMonthlyPayment(tier.price, p.financingMonths, p.financingApr) : 0;
+
         return `
           <div class="tier-card ${isSelected ? "selected" : ""} ${isRec ? "recommended" : ""}"
                data-action="select-tier" data-tier-idx="${originalIdx}" role="button" tabindex="0">
@@ -572,6 +634,7 @@
               <div class="tier-price">${formatMoney(tier.price, cur)}</div>
               ${tier.timeline ? `<span class="tier-timeline">${escapeHtml(tier.timeline)}</span>` : ""}
             </div>
+            ${showMonthly ? `<div class="tier-monthly-pill">or est. <strong class="mono">${formatMoney(tierMonthly, cur)}/mo*</strong></div>` : ""}
             <ul class="tier-features">${featuresHtml}</ul>
             ${hasLineItems ? `<div class="tier-scope-footnote">${items.length} itemized service${items.length === 1 ? "" : "s"} • full breakdown below</div>` : ""}
             <div class="tier-select-cta">${isSelected ? "✓ Selected Package" : "Select This Option"}</div>
@@ -810,6 +873,13 @@
     }
 
     const showViralFooter = !p.whiteLabel && !state.isPro;
+    const badgeRefHref = `${getBaseStudioUrl()}?ref=quote_badge&tpl=${encodeURIComponent(p.id || "contractor")}`;
+    const finMonths = Math.min(180, Math.max(3, Math.round(Number(p.financingMonths) || 60)));
+    const finApr = p.financingApr === undefined ? 9.99 : Math.min(36, Math.max(0, Number(p.financingApr) || 0));
+    const summaryMonthly = p.financingEnabled && totals.total > 0
+      ? computeMonthlyPayment(totals.total, finMonths, finApr)
+      : 0;
+    const safeFinUrl = sanitizeHttpsUrl(p.financingUrl);
 
     return `
       <article class="proposal-sheet">
@@ -1020,6 +1090,18 @@
                   <span class="mono">${formatMoney(totals.balanceDue, cur)}</span>
                 </div>
               ` : ""}
+              ${summaryMonthly > 0 ? `
+                <div class="financing-summary-box">
+                  <div class="financing-summary-top">
+                    <span>Est. Monthly Financing (${finMonths} mos @ ${finApr}%* APR)</span>
+                    <strong class="mono">${formatMoney(summaryMonthly, cur)}/mo*</strong>
+                  </div>
+                  <div class="financing-summary-sub">
+                    <span>*Estimated payment; subject to lender credit approval.</span>
+                    ${safeFinUrl ? `<a class="financing-link" href="${escapeHtml(safeFinUrl)}" target="_blank" rel="noopener noreferrer">Check Financing Options →</a>` : ""}
+                  </div>
+                </div>
+              ` : ""}
               ${p.paymentNote ? `<p class="terms-note" style="margin-top:10px;color:var(--text-secondary);"><strong>Payment Schedule:</strong> ${escapeHtml(p.paymentNote)}</p>` : ""}
               ${p.terms ? `<p class="terms-note">${ICONS.shield} <strong>Guarantee &amp; Terms:</strong> ${escapeHtml(p.terms)}</p>` : ""}
             </div>
@@ -1035,9 +1117,9 @@
             <button type="button" class="btn btn-ghost btn-sm no-print" style="padding:2px 6px;font-size:11.5px;" data-action="open-modal" data-modal="modal-legal">Privacy &amp; ESIGN Terms</button>
           </div>
           ${showViralFooter ? `
-            <a class="viral-badge no-print" href="${escapeHtml(getBaseStudioUrl())}" target="_blank" rel="noopener noreferrer">
+            <a class="viral-badge no-print" href="${escapeHtml(badgeRefHref)}" target="_blank" rel="noopener noreferrer">
               <span style="color:var(--accent);display:inline-flex;">${ICONS.bolt}</span>
-              <span>Powered by <strong>BidLift</strong> — Boost quote revenue +28% (Free)</span>
+              <span>Powered by <strong>BidLift</strong> — Send Good / Better / Best quotes free in 60s →</span>
             </a>
           ` : `<div>Verified Digital Acceptance Enabled</div>`}
         </footer>
@@ -1532,6 +1614,42 @@
 
       <div class="card-box">
         <div class="card-box-head">
+          <span class="card-box-title">Monthly Payment Framing (Financing Display)</span>
+        </div>
+        <div class="field-grid">
+          <div class="toggle-row">
+            <div>
+              <div style="font-size:12.5px;font-weight:700;">Show Est. Monthly Payment on Tiers</div>
+              <div style="font-size:11.5px;color:var(--text-muted);">Frames project totals into affordable monthly figures so buyers pick higher tiers.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" data-toggle-financing ${p.financingEnabled ? "checked" : ""} />
+              <span class="slider"></span>
+            </label>
+          </div>
+          ${p.financingEnabled ? `
+            <div class="field-row-2">
+              <div class="field">
+                <label for="f-fin-months">Term (Months)</label>
+                <select id="f-fin-months" data-bind="financingMonths">
+                  ${[12, 24, 36, 48, 60, 84, 120].map((m) => `<option value="${m}" ${Number(p.financingMonths || 60) === m ? "selected" : ""}>${m} months</option>`).join("")}
+                </select>
+              </div>
+              <div class="field">
+                <label for="f-fin-apr">Est. APR (%)</label>
+                <input id="f-fin-apr" type="number" min="0" max="36" step="0.1" data-bind="financingApr" value="${p.financingApr === undefined ? 9.99 : Number(p.financingApr)}" />
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-fin-url">Optional Pre-Qualification URL (Wisetack / Hearth / Affirm)</label>
+              <input id="f-fin-url" type="text" data-bind="financingUrl" value="${escapeHtml(p.financingUrl || "")}" placeholder="https://apply.yourlender.com/..." />
+            </div>
+          ` : ""}
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div class="card-box-head">
           <span class="card-box-title">Tax, Fast-Action Urgency &amp; Guarantee</span>
         </div>
         <div class="field-grid">
@@ -1780,12 +1898,32 @@
             <p>Open <strong>4. Close</strong> in the builder, set your deposit percentage (e.g., 25%–50%), and paste your existing HTTPS Stripe Payment Link, Venmo, PayPal.me, Square link, or Zelle instructions. BidLift takes 0% transaction fees.</p>
           </details>
         </div>
+        <div class="seo-templates-bar">
+          <div class="seo-templates-head">
+            <h3>Free Industry Templates &amp; Good / Better / Best Deal-Lift Calculator</h3>
+            <p>Explore ready-to-customize multi-option proposal templates or calculate your exact revenue lift first.</p>
+          </div>
+          <div class="seo-links-grid">
+            <a class="seo-link-chip is-primary" href="templates/good-better-best-pricing-calculator.html">GBB Profit &amp; Deal-Lift Calculator →</a>
+            <a class="seo-link-chip" href="templates/">All 10 Templates Hub</a>
+            <a class="seo-link-chip" href="templates/hvac-estimate-template.html">HVAC Estimate Template</a>
+            <a class="seo-link-chip" href="templates/roofing-proposal-template.html">Roofing Proposal Template</a>
+            <a class="seo-link-chip" href="templates/plumbing-quote-template.html">Plumbing Quote Template</a>
+            <a class="seo-link-chip" href="templates/electrical-estimate-template.html">Electrical Estimate Template</a>
+            <a class="seo-link-chip" href="templates/landscaping-proposal-template.html">Landscaping Proposal Template</a>
+            <a class="seo-link-chip" href="templates/contractor-estimate-template.html">Contractor Remodel Template</a>
+            <a class="seo-link-chip" href="templates/web-design-proposal-template.html">Web Design &amp; Agency Template</a>
+            <a class="seo-link-chip" href="templates/cleaning-proposal-template.html">Cleaning Proposal Template</a>
+          </div>
+        </div>
       </section>
 
       <footer class="studio-footer no-print">
         <div class="studio-footer-inner">
           <div>© ${new Date().getFullYear()} <strong>BidLift</strong> • Client-Private Interactive Proposal Studio</div>
           <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+            <a href="templates/" class="btn btn-ghost btn-sm">Free Templates</a>
+            <a href="templates/good-better-best-pricing-calculator.html" class="btn btn-ghost btn-sm">Profit Calculator</a>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy Policy &amp; ESIGN Terms</button>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-pro">Pricing</button>
             <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}" class="btn btn-ghost btn-sm">${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}</a>
@@ -1849,7 +1987,12 @@
               ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><strong>Quick Templates:</strong> <div class="template-pills" style="margin-top:0;">${templatePillsHtml}</div></div>`
               : `
                 <h1>Turn Flat Quotes Into +28% Bigger Deals <span style="font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,0.16);font-weight:700;">Zero Signup • Zero Server PII</span></h1>
-                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick an industry template, customize packages &amp; optional add-ons, and send a live ESIGN + deposit link in 60 seconds.</p>
+                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick an industry template, frame monthly options &amp; add-ons, and send a live ESIGN + deposit link in 60 seconds.</p>
+                <div class="hero-cta-row">
+                  <button type="button" class="btn btn-accent btn-sm" data-action="open-live-client-demo">${ICONS.bolt} Try Live Client View (Demo)</button>
+                  <a class="hero-calc-link" href="templates/good-better-best-pricing-calculator.html">GBB Profit Calculator →</a>
+                  <a class="hero-calc-link" href="templates/">10 Free Trade Templates →</a>
+                </div>
                 <div class="template-pills">${templatePillsHtml}</div>
               `
             }
@@ -1902,7 +2045,8 @@
               <span class="live-dot"></span>
               <span>Interactive Client View — Click packages, toggle upgrades &amp; test ESIGN below</span>
             </div>
-            <div style="display:flex;gap:8px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-accent btn-sm" data-action="open-live-client-demo">${ICONS.external} Fullscreen Client View</button>
               <button type="button" class="btn btn-outline btn-sm" data-action="print-proposal">${ICONS.print} Print / PDF</button>
               <button type="button" class="btn btn-primary btn-sm" data-action="open-share-modal">${ICONS.share} Send to Client</button>
             </div>
@@ -1920,14 +2064,19 @@
 
   function renderClientStandalone() {
     const p = state.proposal;
+    const badgeRefHref = `${getBaseStudioUrl()}?ref=quote_badge&tpl=${encodeURIComponent(p.id || "contractor")}`;
     return `
       <div class="client-mode-wrapper ${state.embedMode ? "embed-mode" : ""}">
         ${!state.embedMode ? `
           <div class="client-floating-bar no-print">
-            <a href="${escapeHtml(getBaseStudioUrl())}" class="viral-badge" title="Build your own interactive proposal free">
-              <span style="color:var(--accent);display:inline-flex;">${ICONS.bolt}</span>
-              <span>Built with <strong>BidLift</strong> • Create Your Own Free</span>
-            </a>
+            ${state.demoPreviewReturn
+              ? `<button type="button" class="btn btn-primary btn-sm back-studio-btn" data-action="back-to-studio">← Customize This Quote in Studio</button>`
+              : `
+                <a href="${escapeHtml(badgeRefHref)}" class="viral-badge" title="Build your own interactive proposal free">
+                  <span style="color:var(--accent);display:inline-flex;">${ICONS.bolt}</span>
+                  <span>Built with <strong>BidLift</strong> • Send Good / Better / Best quotes free →</span>
+                </a>
+              `}
             <div style="display:flex;gap:8px;">
               <button type="button" class="btn btn-outline btn-sm" data-action="toggle-theme">${state.theme === "dark" ? ICONS.sun : ICONS.moon}</button>
               <button type="button" class="btn btn-outline btn-sm" data-action="print-proposal">${ICONS.print} Print / PDF</button>
@@ -2128,6 +2277,33 @@
         btn.classList.toggle("active", btn.dataset.view === state.mobileView);
       });
       if (state.mobileView === "preview") initSignaturePad();
+      return;
+    }
+
+    if (action === "open-live-client-demo") {
+      state.demoPreviewReturn = true;
+      state.mode = "client";
+      state.embedMode = false;
+      renderApp();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      trackEvent("buyer_demo_opened", {
+        template_id: state.proposal?.id || "custom",
+        has_financing: Boolean(state.proposal?.financingEnabled)
+      });
+      return;
+    }
+
+    if (action === "back-to-studio") {
+      state.demoPreviewReturn = false;
+      state.mode = "studio";
+      try {
+        const u = new URL(window.location.href);
+        if (u.searchParams.has("demo")) {
+          u.searchParams.delete("demo");
+          window.history.replaceState({}, "", `${u.pathname}${u.search}${u.hash}`);
+        }
+      } catch (err) {}
+      renderApp();
       return;
     }
 
@@ -2974,6 +3150,22 @@
       return;
     }
 
+    if (el.dataset.bind === "financingMonths") {
+      state.proposal.financingMonths = Math.min(180, Math.max(3, Number(el.value) || 60));
+      saveCurrentDraftLocal();
+      refreshPreviewOnly();
+      return;
+    }
+
+    if (el.hasAttribute("data-toggle-financing")) {
+      state.proposal.financingEnabled = el.checked;
+      saveCurrentDraftLocal();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      refreshPreviewOnly();
+      return;
+    }
+
     if (el.dataset.tierAutocalc !== undefined) {
       const tIdx = Number(el.dataset.tierAutocalc);
       const tier = state.proposal.tiers[tIdx];
@@ -3090,6 +3282,7 @@
         return;
       }
 
+      state.demoPreviewReturn = false;
       state.mode = "client";
       state.proposal = normalizeProposalServices(decoded);
       state.selectedTierIdx = Math.min(decoded.tiers.length - 1, Math.max(0, Number(decoded.recommendedTierIndex ?? 1)));
@@ -3104,35 +3297,58 @@
       trackEvent("client_quote_viewed", {
         is_embed: state.embedMode,
         tier_count: getVisibleTiers(decoded).length,
-        addon_count: (decoded.addons || []).length
+        addon_count: (decoded.addons || []).length,
+        has_financing: Boolean(state.proposal.financingEnabled)
       });
       return;
     }
 
-    // Studio Mode
-    state.mode = "studio";
+    // Studio / Deep-Linked Template Mode
+    const tplParam = (search.get("tpl") || "").trim().toLowerCase();
+    const flatParam = search.get("flat");
+    const demoParam = search.get("demo") === "1";
+
     state.embedMode = false;
-    try {
-      const savedCurrent = localStorage.getItem(CONFIG.STORAGE_KEYS.CURRENT);
-      if (savedCurrent) {
-        const parsed = JSON.parse(savedCurrent);
-        if (parsed && Array.isArray(parsed.tiers) && parsed.tiers.length > 0) {
-          state.proposal = normalizeProposalServices(parsed);
+    state.proposal = null;
+
+    if (tplParam && TEMPLATES[tplParam]) {
+      state.proposal = createProposalFromTemplate(tplParam);
+    } else {
+      try {
+        const savedCurrent = localStorage.getItem(CONFIG.STORAGE_KEYS.CURRENT);
+        if (savedCurrent) {
+          const parsed = JSON.parse(savedCurrent);
+          if (parsed && Array.isArray(parsed.tiers) && parsed.tiers.length > 0) {
+            state.proposal = normalizeProposalServices(parsed);
+          }
         }
-      }
-    } catch (err) {}
+      } catch (err) {}
+    }
 
     if (!state.proposal) {
       state.proposal = createProposalFromTemplate("contractor");
     }
+    if (flatParam !== null && flatParam !== "") {
+      applyFlatBudgetScaling(state.proposal, Number(flatParam));
+    }
     if (state.isPro) {
       state.proposal.whiteLabel = true;
     }
+
+    state.demoPreviewReturn = demoParam;
+    state.mode = demoParam ? "client" : "studio";
     state.selectedTierIdx = Math.min(state.proposal.tiers.length - 1, Math.max(0, Number(state.proposal.recommendedTierIndex ?? 1)));
+    if (!demoParam && (tplParam || flatParam)) {
+      saveCurrentDraftLocal();
+    }
     renderApp();
     if (!studioLoadTracked) {
       studioLoadTracked = true;
-      trackEvent("studio_loaded", { template_id: state.proposal.id || "custom" });
+      trackEvent(demoParam ? "buyer_demo_opened" : "studio_loaded", {
+        template_id: state.proposal.id || "custom",
+        entry_template: state.proposal.id || "custom",
+        has_financing: Boolean(state.proposal.financingEnabled)
+      });
     }
   }
 

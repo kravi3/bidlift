@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com; object-src 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Good, Better, Best Pricing &amp; Profit Lift Calculator — BidLift</title>
+  <meta name="description" content="Calculate how much extra revenue your contracting or agency business unlocks by turning a flat 1-price estimate into an interactive Good / Better / Best quote." />
+  <link rel="canonical" href="https://bidlift-5ias.onrender.com/templates/good-better-best-pricing-calculator.html" />
+  <meta property="og:title" content="Good / Better / Best Deal-Lift Calculator | BidLift" />
+  <meta property="og:description" content="Convert your flat quote into Good / Better / Best tiers, see estimated annual lift, and launch your interactive proposal in 1 click." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://bidlift-5ias.onrender.com/templates/good-better-best-pricing-calculator.html" />
+  <meta property="og:image" content="https://bidlift-5ias.onrender.com/og-card.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../seo.css?v=11" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "BidLift Good / Better / Best Pricing Calculator",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "url": "https://bidlift-5ias.onrender.com/templates/good-better-best-pricing-calculator.html",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+</head>
+<body>
+  <header class="seo-topbar">
+    <div class="seo-topbar-inner">
+      <a class="seo-brand" href="../?ref=seo_calc">
+        <span class="seo-brand-mark">B</span>
+        <strong>BidLift</strong>
+      </a>
+      <nav class="seo-nav-links" aria-label="Calculator Navigation">
+        <a class="seo-nav-link" href="./">10 Free Templates</a>
+        <a class="btn btn-primary" href="../?ref=seo_calc">Open Quote Studio →</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="seo-hero">
+    <div class="seo-hero-inner">
+      <div class="seo-breadcrumb"><a href="../?ref=seo_calc">BidLift Studio</a> / <a href="./">Templates</a> / Good-Better-Best Calculator</div>
+      <span class="seo-pill">Interactive Deal-Lift Calculator • Zero Signup</span>
+      <h1>Good, Better, Best Pricing &amp; Revenue-Lift Calculator</h1>
+      <p>Enter your typical flat single-price quote below. See exact Good / Better / Best tier pricing, estimated monthly buyer framing, and your projected annual revenue increase—then generate the quote in one click.</p>
+    </div>
+  </section>
+
+  <main class="seo-container">
+    <section class="seo-section">
+      <div class="calc-layout">
+        <div>
+          <h2>1. Enter Your Quote Numbers</h2>
+          <p class="seo-section-sub">Quick presets for common trade &amp; agency tickets:</p>
+          <div class="calc-presets" style="margin-bottom:14px;">
+            <button type="button" class="preset-btn" data-calc-preset="4000" data-preset-trade="hvac">HVAC ($4,000)</button>
+            <button type="button" class="preset-btn" data-calc-preset="10000" data-preset-trade="roofing">Roof ($10,000)</button>
+            <button type="button" class="preset-btn" data-calc-preset="2400" data-preset-trade="contractor">Remodel ($2,400)</button>
+            <button type="button" class="preset-btn" data-calc-preset="2200" data-preset-trade="plumbing">Plumbing ($2,200)</button>
+            <button type="button" class="preset-btn" data-calc-preset="3000" data-preset-trade="agency">Agency ($3,000)</button>
+          </div>
+          <div class="calc-form-grid">
+            <div class="calc-field">
+              <label for="calc-trade">Industry Template</label>
+              <select id="calc-trade">
+                <option value="hvac">HVAC Install</option>
+                <option value="roofing">Roofing</option>
+                <option value="plumbing">Plumbing</option>
+                <option value="electrical">Electrical</option>
+                <option value="contractor">Home Remodel &amp; Painting</option>
+                <option value="landscaping">Landscaping</option>
+                <option value="agency">Web Design &amp; Marketing Agency</option>
+                <option value="cleaning">Cleaning Services</option>
+                <option value="realestate">Real Estate Media</option>
+                <option value="media">Creative / Photo Studio</option>
+              </select>
+            </div>
+            <div class="calc-field">
+              <label for="calc-flat">Your Current 1-Price Flat Bid ($ USD)</label>
+              <input id="calc-flat" type="number" min="100" max="500000" step="50" value="4000" />
+            </div>
+            <div class="calc-field">
+              <label for="calc-quotes">Proposals Sent Per Month</label>
+              <input id="calc-quotes" type="number" min="1" max="500" step="1" value="12" />
+            </div>
+            <div class="calc-field">
+              <label for="calc-close">Current Win / Close Rate (%)</label>
+              <input id="calc-close" type="number" min="5" max="95" step="1" value="35" />
+            </div>
+            <div class="calc-field">
+              <label for="calc-spread">Tier Anchoring Strategy</label>
+              <select id="calc-spread">
+                <option value="conservative">Conservative (+20% Signature / +45% Best)</option>
+                <option value="recommended" selected>Recommended (+28% Signature / +62% Best)</option>
+                <option value="premium">Premium Anchored (+35% Signature / +80% Best)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2>2. Your Recommended 3-Tier Output</h2>
+          <p class="seo-section-sub">Projected revenue impact when buyers choose from 3 structured options:</p>
+          <div class="calc-kpis">
+            <div class="calc-kpi">
+              <span>Projected Avg Deal Size</span>
+              <strong id="res-avg-deal" class="mono">$5,521</strong>
+            </div>
+            <div class="calc-kpi is-highlight">
+              <span>Estimated Lift Per Job</span>
+              <strong id="res-lift-pct" class="mono">+$1,521 (+38%)</strong>
+            </div>
+            <div class="calc-kpi is-highlight">
+              <span>Added Monthly Revenue</span>
+              <strong id="res-month-lift" class="mono">+$6,388 / mo</strong>
+            </div>
+            <div class="calc-kpi is-highlight">
+              <span>Added Annual Revenue</span>
+              <strong id="res-year-lift" class="mono">+$76,656 / yr</strong>
+            </div>
+          </div>
+
+          <div class="calc-tiers-preview">
+            <div class="calc-tier-mini">
+              <small>Good (Essential · 25% pick)</small>
+              <strong id="res-tier-good" class="mono">$4,000</strong>
+              <span id="res-good-mo">~$85/mo (60m)</span>
+            </div>
+            <div class="calc-tier-mini is-rec">
+              <small>★ Better (Popular · 55% pick)</small>
+              <strong id="res-tier-better" class="mono">$5,120</strong>
+              <span id="res-better-mo">~$109/mo (60m)</span>
+            </div>
+            <div class="calc-tier-mini">
+              <small>Best (Turnkey · 20% pick)</small>
+              <strong id="res-tier-best" class="mono">$6,480</strong>
+              <span id="res-best-mo">~$138/mo (60m)</span>
+            </div>
+          </div>
+
+          <p id="res-roi-note" style="font-size:13px;color:var(--text-secondary);margin:0 0 16px;"></p>
+
+          <div style="display:flex;flex-wrap:wrap;gap:10px;">
+            <a id="calc-launch-studio-btn" class="btn btn-primary" href="../?tpl=hvac&flat=4000&ref=seo_calc">Generate My 3-Tier HVAC Install Quote Free →</a>
+            <a id="calc-demo-btn" class="btn btn-outline" href="../?tpl=hvac&flat=4000&demo=1&ref=seo_calc">Preview Buyer View First</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-section">
+      <h2>Why Good / Better / Best Outperforms 1-Price Quotes</h2>
+      <div class="compare-grid">
+        <div class="compare-box">
+          <h3>Old Single-Price PDF</h3>
+          <ul class="tier-bullets">
+            <li>Forces a binary Yes/No price negotiation against your cheapest competitor.</li>
+            <li>No easy way for motivated buyers to add warranties, upgrades, or priority scheduling.</li>
+            <li>Large lump-sum sticker shock with zero monthly option framing.</li>
+          </ul>
+        </div>
+        <div class="compare-box is-win">
+          <h3>BidLift 3-Tier Interactive Link</h3>
+          <ul class="tier-bullets">
+            <li>Frames the buyer's choice as <em>which tier fits my home/project best?</em></li>
+            <li>Full itemized scope table builds trust and justifies Signature/Best pricing.</li>
+            <li>ESIGN SHA-256 receipt + direct 0% fee Stripe/Venmo/Zelle deposit link closes faster.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="seo-section">
+      <h2>Explore Ready-to-Send Industry Templates</h2>
+      <div class="cross-links-wrap">
+        <a class="cross-link" href="hvac-estimate-template.html">HVAC Estimate Template</a>
+        <a class="cross-link" href="roofing-proposal-template.html">Roofing Proposal Template</a>
+        <a class="cross-link" href="plumbing-quote-template.html">Plumbing Quote Template</a>
+        <a class="cross-link" href="electrical-estimate-template.html">Electrical Estimate Template</a>
+        <a class="cross-link" href="landscaping-proposal-template.html">Landscaping Proposal Template</a>
+        <a class="cross-link" href="contractor-estimate-template.html">Contractor Estimate Template</a>
+        <a class="cross-link" href="web-design-proposal-template.html">Web Design Proposal Template</a>
+        <a class="cross-link" href="cleaning-proposal-template.html">Cleaning Proposal Template</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="seo-footer">
+    <div class="seo-footer-inner">
+      <span>© 2026 BidLift • Client-Private Interactive Proposal Studio</span>
+      <span><a href="../?ref=seo_calc">Launch Studio</a> • <a href="./">All Templates</a></span>
+    </div>
+  </footer>
+
+  <script src="../config.js?v=11"></script>
+  <script src="../templates.js?v=11"></script>
+  <script src="../analytics.js?v=11"></script>
+  <script src="../calculator.js?v=11"></script>
+</body>
+</html>

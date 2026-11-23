@@ -91,6 +91,30 @@ window.BIDLIFT_STARTER_SERVICES = {
     { name: "Product White-Background Cutouts", category: "E-Commerce", qty: 15, unit: "images", unitPrice: 18, note: "Crisp PNG & Amazon/Shopify ready high-res cutouts" },
     { name: "Additional Half-Day Location Extension", category: "Production", qty: 1, unit: "session", unitPrice: 480, note: "3 extra shoot hours + 15 edited stills" },
     { name: "Voiceover Studio Narration Track", category: "Audio", qty: 1, unit: "track", unitPrice: 260, note: "Script polish + studio voice talent mix" }
+  ],
+  hvac: [
+    { name: "Smart Wi-Fi Thermostat Install & Pairing", category: "Controls", qty: 1, unit: "unit", unitPrice: 285, note: "Programmed schedule, C-wire adapter & homeowner walkthrough" },
+    { name: "Duct Static Pressure Seal & Sanitizing", category: "Airflow", qty: 1, unit: "system", unitPrice: 440, note: "Mastic trunk sealing & EPA botanical coil treatment" },
+    { name: "Condenser Surge Protector (HVAC Rated)", category: "Protection", qty: 1, unit: "unit", unitPrice: 240, note: "Protects compressor & inverter boards from utility spikes" },
+    { name: "4-Inch HEPA Media Filter Cabinet Upgrade", category: "IAQ", qty: 1, unit: "cabinet", unitPrice: 360, note: "Includes first MERV-13 pleated media cartridge" }
+  ],
+  roofing: [
+    { name: "Seamless Micro-Mesh Gutter Guards", category: "Drainage", qty: 140, unit: "lin ft", unitPrice: 8, note: "Color-matched aluminum leaf protection with fasteners" },
+    { name: "Solar-Powered Whisper Attic Exhaust Fan", category: "Ventilation", qty: 1, unit: "unit", unitPrice: 640, note: "Lowers peak summer attic heat by up to 25°F" },
+    { name: "Velux Flashing & Curb-Mount Skylight Swap", category: "Skylight", qty: 1, unit: "opening", unitPrice: 890, note: "Pre-flashed tempered Low-E3 glass sealed to deck" },
+    { name: "Fascia & Roofline Rot Decking Allowance", category: "Carpentry", qty: 3, unit: "sheets", unitPrice: 115, note: "CDX plywood swap where hidden moisture is uncovered" }
+  ],
+  plumbing: [
+    { name: "Main Water Pressure Reducing Valve (PRV)", category: "Code & Flow", qty: 1, unit: "valve", unitPrice: 320, note: "Stabilizes home pressure at 55–65 PSI to protect fixtures" },
+    { name: "Main-Line Hydro-Jetting & Camera Scan", category: "Drains", qty: 1, unit: "job", unitPrice: 480, note: "Clears grease/roots & records HD USB scope video" },
+    { name: "3/4 HP Whisper Garbage Disposal Swap", category: "Kitchen", qty: 1, unit: "unit", unitPrice: 340, note: "Stainless grind chamber + braided supply lines" },
+    { name: "Frost-Free Exterior Hose Bib Upgrade", category: "Exterior", qty: 1, unit: "bib", unitPrice: 265, note: "Quarter-turn ball valve & vacuum breaker installed" }
+  ],
+  electrical: [
+    { name: "Level-2 EV Charger Hardwire & Commissioning", category: "EV Ready", qty: 1, unit: "circuit", unitPrice: 690, note: "Up to 40 ft conduit run, 60A breaker & wall mount" },
+    { name: "6-Pack Gimbal LED Recessed Ceiling Lights", category: "Lighting", qty: 6, unit: "fixtures", unitPrice: 140, note: "IC-rated 2700K–5000K selectable trim + dimmer switch" },
+    { name: "Whole-Home Interconnected Smoke & CO Swap", category: "Life Safety", qty: 4, unit: "alarms", unitPrice: 90, note: "Hardwired with 10-year sealed battery backup" },
+    { name: "Quiet 110 CFM Humidity-Sensing Bath Fan", category: "Ventilation", qty: 1, unit: "unit", unitPrice: 420, note: "Insulated exterior vent ducting & timer switch" }
   ]
 };
 
@@ -124,6 +148,10 @@ window.BIDLIFT_TEMPLATES = {
     paymentLink: "",
     paymentNote: "30% deposit locks your start date; 70% balance upon final walkthrough.",
     terms: "Includes surface protection, daily site cleanup, architectural coatings, and our 5-year peeling/blistering warranty.",
+    financingEnabled: true,
+    financingMonths: 36,
+    financingApr: 9.99,
+    financingUrl: "",
     singleTierMode: false,
     recommendedTierIndex: 1,
     tiers: [
@@ -534,6 +562,10 @@ window.BIDLIFT_TEMPLATES = {
     paymentLink: "",
     paymentNote: "35% material & plant nursery reservation deposit; balance upon completion.",
     terms: "All woody shrubs & trees carry a 1-year replacement guarantee when paired with functioning irrigation.",
+    financingEnabled: true,
+    financingMonths: 36,
+    financingApr: 9.99,
+    financingUrl: "",
     singleTierMode: false,
     recommendedTierIndex: 1,
     tiers: [
@@ -906,6 +938,414 @@ window.BIDLIFT_TEMPLATES = {
         price: 300,
         selected: false
       }
+    ]
+  },
+
+  hvac: {
+    id: "hvac",
+    label: "HVAC Install",
+    icon: "bolt",
+    businessName: "Summit Air & Heating Co.",
+    businessTagline: "NATE-Certified Comfort Specialists • 10-Yr Parts Warranty",
+    businessEmail: "comfort@summitair.example",
+    businessPhone: "(602) 555-0184",
+    logoData: "",
+    paletteId: "navy-gold",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-710",
+    clientName: "Morgan & Taylor Brooks",
+    projectTitle: "3-Ton AC & High-Efficiency Heat Pump Replacement",
+    projectLocation: "3120 Suncrest Lane",
+    introText: "Following today's Manual-J load check and static pressure test, here are three turnkey system packages sized cleanly for your home's ductwork and comfort goals.",
+    recommendedBadge: "Most Popular Choice",
+    trustBadges: ["NATE-Certified Techs", "Load-Calc Verified Sizing", "No-Surprise Flat Pricing"],
+    validDays: 10,
+    fastActionDiscount: 250,
+    fastActionHours: 72,
+    depositPercent: 25,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "25% equipment order deposit; 75% upon startup walkthrough or monthly financing approval.",
+    terms: "Includes permits, EPA refrigerant recovery, haul-away of old unit, and full manufacturer + labor coverage as itemized.",
+    financingEnabled: true,
+    financingMonths: 60,
+    financingApr: 9.99,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Standard 14.3 SEER2",
+        subtitle: "Reliable single-stage replacement",
+        price: 5400,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Matched 3-ton 14.3 SEER2 condenser & indoor coil",
+          "New composite pad, electrical whip & disconnect",
+          "EPA recovery, nitrogen purge & vacuum startup",
+          "Permits, haul-away & 1-year labor warranty"
+        ],
+        lineItems: [
+          { name: "3-Ton 14.3 SEER2 Condenser & Matched Coil", category: "Equipment", qty: 1, unit: "system", unitPrice: 3600, note: "AHRI-matched residential outdoor condenser & cased evaporator coil" },
+          { name: "Pad, Whip, Disconnect & Basic Thermostat", category: "Hardware", qty: 1, unit: "pkg", unitPrice: 550, note: "Hurricane pad, code-compliant fused disconnect & digital t-stat" },
+          { name: "EPA Recovery, Brazing & Commissioning", category: "Install Labor", qty: 1, unit: "job", unitPrice: 950, note: "Nitrogen-purged copper line set braze & 500-micron pull" },
+          { name: "City Permits, Disposal & 1-Yr Labor Warranty", category: "Permits & Care", qty: 1, unit: "job", unitPrice: 300, note: "Old unit recycling & 1-year workmanship guarantee" }
+        ]
+      },
+      {
+        name: "Signature 17 SEER2",
+        subtitle: "2-stage humidity & bill-saving upgrade",
+        price: 7200,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Standard 14.3 SEER2 package",
+          "2-stage 17 SEER2 condenser & variable ECM air handler",
+          "Ecobee Smart Thermostat + 4-inch media cabinet",
+          "2-year seasonal tune-ups + 5-year labor warranty"
+        ],
+        lineItems: [
+          { name: "Everything in Standard 14.3 SEER2 Scope", category: "Core System", qty: 1, unit: "system", unitPrice: 5400, note: "Full equipment, commissioning, permit & old unit haul-away" },
+          { name: "2-Stage 17 SEER2 + Variable ECM Upgrade", category: "Efficiency", qty: 1, unit: "upgrade", unitPrice: 1100, note: "Lower summer humidity, quieter rooms & ~24% energy savings" },
+          { name: "Ecobee Smart Thermostat + 4\" Filter Cabinet", category: "Controls & IAQ", qty: 1, unit: "pkg", unitPrice: 450, note: "Wi-Fi room sensor + MERV-13 sealed media rack" },
+          { name: "2-Yr Tune-Up Plan + 5-Yr Labor Protection", category: "Warranty", qty: 1, unit: "pkg", unitPrice: 250, note: "Spring/Fall coil checkups plus 5-year labor coverage" }
+        ]
+      },
+      {
+        name: "ComfortPro Inverter",
+        subtitle: "Whisper-quiet modulating comfort + IAQ",
+        price: 9800,
+        timeline: "1–2 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Signature 17 SEER2 package",
+          "Fully modulating inverter condenser (-5°F cold climate)",
+          "Whole-home UV-C coil purifier + supply duct sealing",
+          "10-year bumper-to-bumper parts & labor warranty"
+        ],
+        lineItems: [
+          { name: "Everything in Signature 17 SEER2 Scope", category: "Signature Base", qty: 1, unit: "system", unitPrice: 7200, note: "Complete high-efficiency install, smart t-stat & permit" },
+          { name: "Modulating Inverter Condenser Upgrade", category: "Whisper Inverter", qty: 1, unit: "upgrade", unitPrice: 1450, note: "Variable-speed compressor holds temperature within ±0.5°F" },
+          { name: "Whole-Home UV-C Purifier & Trunk Duct Seal", category: "Air Quality", qty: 1, unit: "pkg", unitPrice: 750, note: "Aero-grade mastic plenum seal + medical-grade UV-C bulb" },
+          { name: "10-Year Parts & Labor Peace-of-Mind Plan", category: "Warranty", qty: 1, unit: "10-yr", unitPrice: 400, note: "Zero out-of-pocket repair bills for a full decade" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "hvac-duct-clean", title: "Full Supply & Return Duct Cleaning", description: "Negative-air HEPA brush sweep across all registers + botanical mist.", category: "Airflow", qty: 1, unit: "home", price: 490, selected: false },
+      { id: "hvac-zoning", title: "2-Zone Motorized Damper Balancing Kit", description: "Fix hot upstairs / cold basement rooms with independent zone sensors.", category: "Comfort", qty: 1, unit: "2 zones", price: 680, selected: false },
+      { id: "hvac-surge", title: "Commercial HVAC Compressor Surge Guard", description: "Hardwired surge arrestor protecting inverter control boards.", category: "Protection", qty: 1, unit: "unit", price: 240, selected: false },
+      { id: "hvac-maint", title: "Priority Club VIP Response (3-Yr)", description: "Guaranteed 4-hour emergency dispatch + priority seasonal cleanings.", category: "Priority", qty: 1, unit: "3-yr", price: 295, selected: false }
+    ]
+  },
+
+  roofing: {
+    id: "roofing",
+    label: "Roofing",
+    icon: "shield",
+    businessName: "Crestline Roofing & Exteriors",
+    businessTagline: "GAF Master Craftsmanship • Storm-Tested Warranties",
+    businessEmail: "bids@crestlineroofing.example",
+    businessPhone: "(720) 555-0193",
+    logoData: "",
+    paletteId: "obsidian-luxe",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-815",
+    clientName: "Elena & Marcus Reid",
+    projectTitle: "Complete Architectural Roof Replacement (24 Squares)",
+    projectLocation: "450 Hawthorne Summit Dr",
+    introText: "Based on today's drone & attic inspection (2,400 sq ft pitched roof), here are three weather-tight roof systems itemized cleanly down to underlayment, flashing, and ventilation.",
+    recommendedBadge: "Best Storm Value",
+    trustBadges: ["10-Yr Leak Workmanship", "2x Magnetic Nail Sweep", "$2M General Liability"],
+    validDays: 14,
+    fastActionDiscount: 400,
+    fastActionHours: 72,
+    depositPercent: 30,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "30% material delivery deposit; 70% upon magnetic yard sweep & photo inspection sign-off.",
+    terms: "All old roofing layers torn down to bare deck, inspected, re-nailed to code, and wrapped with breathable synthetic felt.",
+    financingEnabled: true,
+    financingMonths: 60,
+    financingApr: 9.99,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Essential 30-Yr",
+        subtitle: "Dependable architectural shingle system",
+        price: 9600,
+        timeline: "2 Days",
+        autoCalcPrice: true,
+        features: [
+          "Complete tear-off & dumpster haul-away (24 squares)",
+          "Synthetic underlayment + eaves ice & water shield",
+          "30-year architectural dimensional shingles",
+          "New step/valley flashing, pipe boots & nail sweep"
+        ],
+        lineItems: [
+          { name: "Full Tear-Off & Dumpster Disposal", category: "Tear-Off", qty: 24, unit: "squares", unitPrice: 110, note: "Strip down to deck, inspect sheathing & haul old shingles" },
+          { name: "Synthetic Felt + Ice & Water Shield", category: "Dry-In", qty: 24, unit: "squares", unitPrice: 45, note: "6-ft ice barrier at eaves, valleys & wall intersections" },
+          { name: "30-Yr Architectural Shingles & Ridge Cap", category: "Roofing", qty: 24, unit: "squares", unitPrice: 215, note: "High-wind 6-nail fastening pattern in chosen color" },
+          { name: "New Flashing, Boots & Magnetic Sweep", category: "Metal & Clean", qty: 1, unit: "job", unitPrice: 720, note: "Silicone-sealed plumbing jacks, apron metal & lawn magnet pass" }
+        ]
+      },
+      {
+        name: "Signature StormGuard",
+        subtitle: "Class-4 impact rated + balanced ventilation",
+        price: 12800,
+        timeline: "2 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Essential 30-Yr roof replacement",
+          "UL 2218 Class-4 hail/impact shingle upgrade",
+          "Continuous Cobra ridge vent & soffit intake baffles",
+          "10-year non-prorated workmanship leak warranty"
+        ],
+        lineItems: [
+          { name: "Everything in Essential 30-Yr System", category: "Core Roof", qty: 24, unit: "squares", unitPrice: 400, note: "Full tear-off, synthetic dry-in, boots & cleanup" },
+          { name: "UL Class-4 SBS Hail-Resistant Shingles", category: "Storm Rating", qty: 24, unit: "squares", unitPrice: 75, note: "Qualifies for many homeowner insurance hail discounts" },
+          { name: "Balanced Ridge Vent & Intake Baffles", category: "Ventilation", qty: 1, unit: "pkg", unitPrice: 850, note: "Continuous ridge airflow extends shingle & attic life" },
+          { name: "10-Yr Transferable Workmanship Warranty", category: "Warranty", qty: 1, unit: "pkg", unitPrice: 550, note: "Zero-deductible leak protection backed in writing" }
+        ]
+      },
+      {
+        name: "Lifetime Fortified",
+        subtitle: "Standing-seam metal accents & 50-yr shield",
+        price: 16900,
+        timeline: "3 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Signature StormGuard roof system",
+          "24-gauge standing-seam metal porch & bay accents",
+          "High-temp full-deck self-adhered ice membrane",
+          "Seamless 6\" aluminum gutter apron & 50-yr transfer warranty"
+        ],
+        lineItems: [
+          { name: "Everything in Signature StormGuard System", category: "Signature Base", qty: 1, unit: "roof", unitPrice: 12800, note: "Class-4 SBS roof, balanced ventilation & 10-yr labor" },
+          { name: "24-Ga Standing-Seam Metal Porch & Dormers", category: "Metal Accent", qty: 1, unit: "pkg", unitPrice: 2450, note: "Concealed-fastener matte charcoal architectural metal" },
+          { name: "Full-Deck Peel-and-Stick Ice Membrane", category: "Waterproof", qty: 1, unit: "roof", unitPrice: 950, note: "100% secondary water barrier even if shingles lift" },
+          { name: "Seamless Gutter Apron + 50-Yr Transferable Warranty", category: "Trim & Care", qty: 1, unit: "pkg", unitPrice: 700, note: "Oversized heavy-gauge drip edge & lifetime coverage" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "roof-gutter-guards", title: "Micro-Mesh Gutter Guards (140 ft)", description: "Keep pine needles and oak leaves out of downspouts permanently.", category: "Drainage", qty: 140, unit: "lin ft", price: 1120, selected: false },
+      { id: "roof-skylight", title: "Deck-Mount Low-E3 Velux Skylight Swap", description: "Replace aging dome/glass unit cleanly with new roof flashing kit.", category: "Skylight", qty: 1, unit: "unit", price: 890, selected: false },
+      { id: "roof-solar-fan", title: "Solar-Powered Whisper Attic Exhaust Fan", description: "Automatic thermostatic exhaust lowering summer cooling loads.", category: "Ventilation", qty: 1, unit: "unit", price: 640, selected: false },
+      { id: "roof-chimney", title: "Custom Copper / Steel Chimney Cricket & Cap", description: "Divert heavy valley runoff cleanly around chimney masonry.", category: "Flashing", qty: 1, unit: "pkg", price: 780, selected: false }
+    ]
+  },
+
+  plumbing: {
+    id: "plumbing",
+    label: "Plumbing",
+    icon: "shield",
+    businessName: "TrueFlow Plumbing & Mechanical",
+    businessTagline: "Master Licensed Plumbers • Upfront Flat-Rate Quotes",
+    businessEmail: "service@trueflowplumbing.example",
+    businessPhone: "(512) 555-0166",
+    logoData: "",
+    paletteId: "indigo-modern",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-904",
+    clientName: "Daniel & Priya Patel",
+    projectTitle: "Water Heater Replacement & Whole-Home Valve Upgrade",
+    projectLocation: "910 Arroyo Springs Blvd",
+    introText: "Select from a dependable 50-gallon tank swap, high-efficiency endless hot water upgrade, or total flood-prevention protection—each price includes permit, haul-away, and code parts.",
+    recommendedBadge: "Homeowner Favorite",
+    trustBadges: ["Master Plumber #MP-4821", "Same-Day Clean Install", "Full Code Permit Included"],
+    validDays: 7,
+    fastActionDiscount: 125,
+    fastActionHours: 48,
+    depositPercent: 25,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "25% deposit schedules parts & arrival window; balance due upon hot-water pressure test.",
+    terms: "Includes shoe covers, containment tarp, old tank draining/haul-away, and code thermal expansion tank compliance.",
+    financingEnabled: true,
+    financingMonths: 36,
+    financingApr: 9.99,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Standard 50-Gal",
+        subtitle: "Dependable like-for-like tank install",
+        price: 2150,
+        timeline: "Same Day",
+        autoCalcPrice: true,
+        features: [
+          "Drain, disconnect & haul away old water heater",
+          "Commercial-grade 50-gal high-recovery water heater",
+          "New 3/4\" quarter-turn ball valve, pan & expansion tank",
+          "Code leak/pressure test + 6-year tank warranty"
+        ],
+        lineItems: [
+          { name: "Drain, Remove & Recycle Old Tank", category: "Removal", qty: 1, unit: "job", unitPrice: 250, note: "Floor protection, pump drain & eco disposal" },
+          { name: "50-Gal Commercial-Grade High-Recovery Tank", category: "Equipment", qty: 1, unit: "unit", unitPrice: 1150, note: "Bradford White / Rheem Pro tank with brass drain valve" },
+          { name: "Brass Shutoff, Expansion Tank & Drain Pan", category: "Code Parts", qty: 1, unit: "pkg", unitPrice: 450, note: "Full-port shutoff, flex lines & thermal relief valve" },
+          { name: "Pressure Test, Permit & 6-Yr Tank Reg", category: "Commission", qty: 1, unit: "job", unitPrice: 300, note: "Combustion/gas or element safety calibration" }
+        ]
+      },
+      {
+        name: "Signature Tankless",
+        subtitle: "Endless hot water + lower utility bills",
+        price: 3450,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Old tank haul-away & space-saving wall mount prep",
+          "High-efficiency condensing tankless water heater",
+          "Service isolation flush valves & PRV protection",
+          "Custom venting tie-in + 12-year heat exchanger warranty"
+        ],
+        lineItems: [
+          { name: "Old Tank Removal, Re-Pipe & Wall Backing", category: "Prep & Haul", qty: 1, unit: "pkg", unitPrice: 650, note: "Recovers closet/garage floor space cleanly" },
+          { name: "Condensing Tankless 0.96 UEF Unit", category: "Equipment", qty: 1, unit: "unit", unitPrice: 1850, note: "Continuous hot water across 3 simultaneous showers" },
+          { name: "Tankless Isolation Flush Kit & Regulator", category: "Valves", qty: 1, unit: "pkg", unitPrice: 550, note: "Built-in descaling ports & brass shutoffs" },
+          { name: "PVC/Gas Vent Tie-In & 12-Yr Coverage", category: "Vent & Care", qty: 1, unit: "job", unitPrice: 400, note: "Full permit test + 12-year exchanger registration" }
+        ]
+      },
+      {
+        name: "Smart Flood-Shield",
+        subtitle: "Instant hot water loop + smart auto shutoff",
+        price: 4950,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Signature Tankless hot water system",
+          "Hot-water recirculation pump for 2-second sink heat",
+          "Flo Wi-Fi smart ultrasonic automatic shutoff valve",
+          "Whole-home carbon filter & 5-year labor warranty"
+        ],
+        lineItems: [
+          { name: "Everything in Signature Tankless System", category: "Core System", qty: 1, unit: "system", unitPrice: 3450, note: "Full tankless install, isolation kit & 12-yr coverage" },
+          { name: "Dedicated Hot-Water Recirculation Pump", category: "Instant Heat", qty: 1, unit: "loop", unitPrice: 650, note: "Cuts water waste waiting on master bath showers" },
+          { name: "Smart Wi-Fi Ultrasonic Leak Shutoff", category: "Flood Guard", qty: 1, unit: "unit", unitPrice: 550, note: "Detects pinhole leaks & closes main line from phone" },
+          { name: "Scale/Carbon Prefilter + 5-Yr Labor", category: "Water & Care", qty: 1, unit: "pkg", unitPrice: 300, note: "Protects fixtures & extends appliance lifespan" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "plumb-prv", title: "Main Pressure Reducing Valve (PRV) Swap", description: "Drop damaging 90+ PSI street pressure to a safe 60 PSI.", category: "Code & Flow", qty: 1, unit: "valve", price: 320, selected: false },
+      { id: "plumb-jet", title: "Main Sewer Line Hydro-Jet + HD Camera", description: "High-pressure scour & recorded video proof of clean pipe.", category: "Drains", qty: 1, unit: "job", price: 480, selected: false },
+      { id: "plumb-disp", title: "3/4 HP Whisper Stainless Disposal", description: "Quiet anti-jam disposal + braided faucet supply hoses.", category: "Kitchen", qty: 1, unit: "unit", price: 340, selected: false },
+      { id: "plumb-flush", title: "First Annual Tankless Descale & Tune-Up", description: "Pre-paid 45-minute vinegar flush at month 12.", category: "Maintenance", qty: 1, unit: "visit", price: 185, selected: false }
+    ]
+  },
+
+  electrical: {
+    id: "electrical",
+    label: "Electrical",
+    icon: "bolt",
+    businessName: "Beacon Volt Electrical",
+    businessTagline: "Master Electricians • Clean NEC Code Upgrades",
+    businessEmail: "quotes@beaconvolt.example",
+    businessPhone: "(614) 555-0155",
+    logoData: "",
+    paletteId: "slate-minimal",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-982",
+    clientName: "Hannah & Ben Wallace",
+    projectTitle: "200-Amp Main Service Panel Upgrade & EV Prep",
+    projectLocation: "218 Oakmont Circle",
+    introText: "Your existing 100A panel is at capacity. Below are three NEC-compliant 200-amp service packages—choose code replacement alone, EV-ready + whole-home surge, or full generator transfer protection.",
+    recommendedBadge: "EV & Surge Ready",
+    trustBadges: ["Master Licensed & Bonded", "Permits & Utility Coord.", "Lifetime Panel Workmanship"],
+    validDays: 10,
+    fastActionDiscount: 150,
+    fastActionHours: 72,
+    depositPercent: 30,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "30% schedules utility permit & panel reservation; balance upon final inspector green tag.",
+    terms: "Includes utility shutdown coordination, new copper grounding rods, clear printed breaker directory, and municipal sign-off.",
+    financingEnabled: true,
+    financingMonths: 36,
+    financingApr: 9.99,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Essential 200A Swap",
+        subtitle: "Clean NEC-compliant capacity upgrade",
+        price: 2850,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Permit pulling & electric utility shutdown scheduling",
+          "200-amp 40-space copper-bus main panel & grounding",
+          "All branch circuit transfers + typed breaker map",
+          "Municipal electrical final inspection sign-off"
+        ],
+        lineItems: [
+          { name: "Utility Coordination & Electrical Permit", category: "Permits", qty: 1, unit: "job", unitPrice: 450, note: "City filing, fee payment & power company meter release" },
+          { name: "200A 40-Space Copper-Bus Panel & Grounding", category: "Panel Gear", qty: 1, unit: "unit", unitPrice: 1450, note: "Dual copper ground rods, cold-water bond & weatherhead" },
+          { name: "Circuit Re-Termination & Code Breakers", category: "Install Labor", qty: 1, unit: "job", unitPrice: 650, note: "Neat wire dressing & laser-printed circuit directory" },
+          { name: "Municipal Inspector Walkthrough", category: "Inspection", qty: 1, unit: "job", unitPrice: 300, note: "Verified NEC green-tag approval" }
+        ]
+      },
+      {
+        name: "Signature Surge + EV",
+        subtitle: "200A panel + appliance surge & 50A garage circuit",
+        price: 3950,
+        timeline: "1 Day",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Essential 200A Panel Swap",
+          "Hardwired Type-1/2 Whole-Home Surge Protection",
+          "Dedicated 50A NEMA 14-50 EV outlet in garage",
+          "NEC load calculation sheet + 10-yr craftsmanship care"
+        ],
+        lineItems: [
+          { name: "Everything in Essential 200A Panel Scope", category: "Core Panel", qty: 1, unit: "pkg", unitPrice: 2850, note: "Full 200A panel, copper grounding, permit & green tag" },
+          { name: "Whole-Home Type-1/2 Surge Protector", category: "Appliance Safe", qty: 1, unit: "unit", unitPrice: 350, note: "Shields HVAC, fridge, TVs & EV onboard chargers" },
+          { name: "Dedicated 50A NEMA 14-50 EV Garage Circuit", category: "EV Ready", qty: 1, unit: "run", unitPrice: 550, note: "6-AWG copper wire, EV-rated receptacle & GFCI breaker" },
+          { name: "NEC Load Report & 10-Yr Panel Warranty", category: "Documentation", qty: 1, unit: "pkg", unitPrice: 200, note: "Printed future-expansion headroom & priority care" }
+        ]
+      },
+      {
+        name: "Total Backup Pro",
+        subtitle: "200A + Surge + EV + Generator Interlock & Monitor",
+        price: 5450,
+        timeline: "1–2 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Signature Surge + EV package",
+          "50A manual generator interlock + exterior inlet box",
+          "Smart real-time home circuit energy monitor",
+          "Year 1 & Year 2 thermal infrared load scan"
+        ],
+        lineItems: [
+          { name: "Everything in Signature Surge + EV Scope", category: "Signature Base", qty: 1, unit: "pkg", unitPrice: 3950, note: "200A panel, Type-1/2 surge & 50A EV circuit included" },
+          { name: "50A Generator Interlock & Weather Inlet", category: "Backup Power", qty: 1, unit: "pkg", unitPrice: 750, note: "Run furnace, fridge, Wi-Fi & well during grid outages" },
+          { name: "Whole-Home Real-Time Energy Monitor", category: "Smart Meter", qty: 1, unit: "unit", unitPrice: 450, note: "Per-circuit kWh tracking & overload alerts via phone" },
+          { name: "Year 1 & Year 2 Thermal Load Torque Scan", category: "Preventive", qty: 1, unit: "pkg", unitPrice: 300, note: "IR camera hotspot inspection for lifelong safety" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "elec-ev-hardwire", title: "Hardwire Level-2 EV Wall Charger (48A)", description: "Install customer-supplied Tesla/Wallbox/ChargePoint unit at full speed.", category: "EV Ready", qty: 1, unit: "circuit", price: 690, selected: false },
+      { id: "elec-led-6", title: "6 Gimbal Dimmable LED Recessed Lights", description: "Clean hole-saw install + Lutron smart dimmer switch included.", category: "Lighting", qty: 6, unit: "fixtures", price: 840, selected: false },
+      { id: "elec-bath-fan", title: "Ultra-Quiet 110 CFM Humidity Bath Fan", description: "Replaces noisy exhaust fan with moisture-sensing switch.", category: "Ventilation", qty: 1, unit: "unit", price: 420, selected: false },
+      { id: "elec-smoke", title: "4 Interconnected Smart Smoke + CO Alarms", description: "Hardwired life-safety detectors with 10-year backup battery.", category: "Life Safety", qty: 4, unit: "alarms", price: 360, selected: false }
     ]
   }
 };
