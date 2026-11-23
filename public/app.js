@@ -10,7 +10,9 @@
   const TEMPLATES = window.BIDLIFT_TEMPLATES || {};
   const CODEC = window.BidLiftCodec;
   const ANALYTICS = window.BidLiftAnalytics;
+  const CLOUD = window.BidLiftCloud;
   let studioLoadTracked = false;
+  let countdownIntervalId = null;
 
   function trackEvent(name, props) {
     try {
@@ -42,9 +44,18 @@
 
   // Application State
   const state = {
-    mode: "studio", // "studio" | "client" | "error"
+    mode: "studio", // "studio" | "client" | "error" | "admin"
     embedMode: false,
     demoPreviewReturn: false,
+    quickQuoteOpen: true,
+    quickNotesText: "",
+    showCompareMatrix: false,
+    activeCloudToken: "",
+    cloudShareUrl: "",
+    cloudSession: CLOUD && typeof CLOUD.getSession === "function" ? CLOUD.getSession() : null,
+    cloudProposals: [],
+    adminMetrics: null,
+    adminError: "",
     mobileView: "builder", // "builder" | "preview"
     activeTab: "business", // "business" | "tiers" | "addons" | "close"
     heroCollapsed: false,
@@ -541,6 +552,142 @@
     return proposal;
   }
 
+  function formatCountdown(msRemaining) {
+    const ms = Math.max(0, Number(msRemaining) || 0);
+    if (ms <= 0) return "Expired";
+    const totalSec = Math.floor(ms / 1000);
+    const hrs = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${hrs}h ${pad(mins)}m ${pad(secs)}s`;
+  }
+
+  function startCountdownTicker() {
+    if (countdownIntervalId) {
+      clearInterval(countdownIntervalId);
+      countdownIntervalId = null;
+    }
+    const nodes = document.querySelectorAll(".countdown-clock[data-deadline-ms]");
+    if (!nodes || nodes.length === 0) return;
+    const updateAll = () => {
+      document.querySelectorAll(".countdown-clock[data-deadline-ms]").forEach((el) => {
+        const deadline = Number(el.dataset.deadlineMs) || 0;
+        el.textContent = formatCountdown(deadline - Date.now());
+      });
+    };
+    updateAll();
+    countdownIntervalId = setInterval(updateAll, 1000);
+  }
+
+  function parseQuickQuoteNotes(rawText) {
+    const text = String(rawText || "").trim();
+    if (!text) return null;
+    const lower = text.toLowerCase();
+
+    const tradeRules = [
+      { id: "hvac", re: /\b(hvac|ac|a\/c|air condition|furnace|heat pump|seer|condenser|duct|ton)\b/i },
+      { id: "roofing", re: /\b(roof|roofing|shingle|gutter|skylight|squares|hail|flashing)\b/i },
+      { id: "plumbing", re: /\b(plumb|plumbing|water heater|tankless|pipe|drain|sewer|valve|leak)\b/i },
+      { id: "electrical", re: /\b(electric|electrical|panel|200a|breaker|ev charger|wiring|recessed|outlet)\b/i },
+      { id: "landscaping", re: /\b(landscap|lawn|sod|mulch|patio|paver|irrigation|yard|tree|pergola)\b/i },
+      { id: "cleaning", re: /\b(clean|cleaning|maid|deep clean|move-out|carpet|window|housekeeping)\b/i },
+      { id: "agency", re: /\b(website|web design|seo|agency|marketing|funnel|landing page|retainer|google ads)\b/i },
+      { id: "realestate", re: /\b(staging|mls|real estate|twilight|drone|3d tour|virtual tour)\b/i },
+      { id: "media", re: /\b(photo|photography|video|shoot|reel|cinema|editorial)\b/i }
+    ];
+    let matchedTrade = "contractor";
+    for (const rule of tradeRules) {
+      if (rule.re.test(lower) && TEMPLATES[rule.id]) {
+        matchedTrade = rule.id;
+        break;
+      }
+    }
+
+    const segments = text.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+    let clientName = "";
+    let projectLocation = "";
+    let projectTitle = "";
+    let basePrice = 0;
+    const parsedAddons = [];
+
+    segments.forEach((seg, idx) => {
+      const atMatch = /\bat\s+([^,;]+)$/i.exec(seg);
+      if (atMatch && !projectLocation) {
+        projectLocation = atMatch[1].trim().slice(0, 120);
+      }
+
+      const moneyMatch = /\$\s*([0-9][0-9,]*(?:\.[0-9]{1,2})?)/.exec(seg);
+      const numVal = moneyMatch ? Number(moneyMatch[1].replace(/,/g, "")) : 0;
+
+      if (idx === 0 && !moneyMatch && !/\bat\s+/i.test(seg)) {
+        const words = seg.split(/\s+/);
+        if (words.length >= 1 && words.length <= 4 && !/\b(install|repair|replace|quote|base|add)\b/i.test(seg)) {
+          clientName = seg.replace(/^(client|for)[:\s]+/i, "").trim().slice(0, 100);
+          return;
+        }
+      }
+
+      const isExplicitAdd = /^\s*(add|plus|\+|upgrade|upsell|extra)\b/i.test(seg);
+      const isBaseHint = /\b(base|package|main|total|quote|flat|install|replace)\b/i.test(seg);
+
+      if (moneyMatch && numVal > 0) {
+        if (basePrice === 0 && !isExplicitAdd && (isBaseHint || parsedAddons.length === 0) && numVal >= 100) {
+          basePrice = numVal;
+          const cleanedTitle = seg
+            .replace(/\$\s*[0-9][0-9,]*(?:\.[0-9]{1,2})?/g, "")
+            .replace(/\bat\s+[^,;]+$/i, "")
+            .replace(/\b(base|quote|price)\b/gi, "")
+            .replace(/^[-:\s]+|[-:\s]+$/g, "")
+            .trim();
+          if (cleanedTitle && !projectTitle) projectTitle = cleanedTitle;
+        } else {
+          const addonTitle = seg
+            .replace(/\$\s*[0-9][0-9,]*(?:\.[0-9]{1,2})?/g, "")
+            .replace(/^\s*(add|plus|\+|upgrade|upsell|extra)[:\s]*/i, "")
+            .replace(/\s+(?:for|at)$/i, "")
+            .replace(/\s{2,}/g, " ")
+            .trim();
+          if (addonTitle) {
+            parsedAddons.push({
+              id: `qq-${Date.now()}-${parsedAddons.length}`,
+              title: addonTitle.replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 90),
+              description: "Custom upgrade added from project notes.",
+              category: "Quick Add-On",
+              qty: 1,
+              unit: "pkg",
+              price: Math.round(numVal),
+              selected: false
+            });
+          }
+        }
+      } else if (!projectTitle && seg !== clientName) {
+        const cleanScope = seg.replace(/\bat\s+[^,;]+$/i, "").trim();
+        if (cleanScope) projectTitle = cleanScope;
+      }
+    });
+
+    if (basePrice === 0) {
+      const anyPrice = /\$\s*([0-9][0-9,]{2,})/.exec(text);
+      if (anyPrice) basePrice = Number(anyPrice[1].replace(/,/g, "")) || 0;
+    }
+
+    const proposal = createProposalFromTemplate(matchedTrade);
+    if (clientName) proposal.clientName = clientName;
+    if (projectLocation) proposal.projectLocation = projectLocation;
+    if (projectTitle && projectTitle.length >= 4) {
+      const cleanT = projectTitle.replace(/\b\w/g, (c) => c.toUpperCase()).slice(0, 120);
+      proposal.projectTitle = /proposal|quote|install|upgrade|package/i.test(cleanT) ? cleanT : `${cleanT} Proposal`;
+    }
+    if (basePrice >= 100 && basePrice <= 500000) {
+      applyFlatBudgetScaling(proposal, basePrice);
+    }
+    if (parsedAddons.length > 0) {
+      proposal.addons = [...parsedAddons, ...(proposal.addons || [])].slice(0, 8);
+    }
+    return { proposal, tradeId: matchedTrade, basePrice, parsedAddonsCount: parsedAddons.length };
+  }
+
   // =========================================================================
   // Render Proposal Sheet (Shared between Studio Preview & Standalone Client)
   // =========================================================================
@@ -554,6 +701,8 @@
     const msLeft = Math.max(0, expiryDate.getTime() - Date.now());
     const daysLeft = Math.ceil(msLeft / 86400000);
     const cur = p.currency || "USD";
+    const fastWindowMs = (Number(p.fastActionHours) || 48) * 3600 * 1000;
+    const fastDeadlineMs = (Number(p.createdAt) || Date.now()) + fastWindowMs;
 
     const initials = (p.businessName || "BL")
       .split(/\s+/)
@@ -881,6 +1030,63 @@
       : 0;
     const safeFinUrl = sanitizeHttpsUrl(p.financingUrl);
 
+    const compareRowsHtml = (!p.singleTierMode && visibleTiers.length > 1 && state.showCompareMatrix)
+      ? `
+        <div class="compare-matrix-wrap">
+          <table class="compare-matrix-table">
+            <thead>
+              <tr>
+                <th>Comparison Factor</th>
+                ${visibleTiers.map(({ tier, originalIdx }) => `
+                  <th class="${originalIdx === totals.chosenTierIdx ? "is-selected-col" : ""}">
+                    ${escapeHtml(tier.name || `Option ${originalIdx + 1}`)}
+                  </th>
+                `).join("")}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Total Package Price</strong></td>
+                ${visibleTiers.map(({ tier }) => `<td class="mono"><strong>${formatMoney(tier.price, cur)}</strong></td>`).join("")}
+              </tr>
+              <tr>
+                <td>Est. Monthly Payment</td>
+                ${visibleTiers.map(({ tier }) => {
+                  const m = p.financingEnabled && Number(tier.price) > 0 ? computeMonthlyPayment(tier.price, finMonths, finApr) : 0;
+                  return `<td class="mono">${m > 0 ? `~${formatMoney(m, cur)}/mo*` : "Lump sum / Deposit"}</td>`;
+                }).join("")}
+              </tr>
+              <tr>
+                <td>Estimated Timeline</td>
+                ${visibleTiers.map(({ tier }) => `<td>${escapeHtml(tier.timeline || "TBD")}</td>`).join("")}
+              </tr>
+              <tr>
+                <td>Included Scope Items</td>
+                ${visibleTiers.map(({ tier }) => {
+                  const cnt = (Array.isArray(tier.lineItems) && tier.lineItems.length) ? tier.lineItems.length : (tier.features || []).length;
+                  return `<td>${cnt} itemized service${cnt === 1 ? "" : "s"}</td>`;
+                }).join("")}
+              </tr>
+              <tr>
+                <td>Best Designed For</td>
+                ${visibleTiers.map(({ tier }) => `<td>${escapeHtml(tier.subtitle || "—")}</td>`).join("")}
+              </tr>
+              <tr>
+                <td>Select Package</td>
+                ${visibleTiers.map(({ originalIdx }) => `
+                  <td>
+                    <button type="button" class="btn btn-sm ${originalIdx === totals.chosenTierIdx ? "btn-primary" : "btn-outline"}" data-action="select-tier" data-tier-idx="${originalIdx}">
+                      ${originalIdx === totals.chosenTierIdx ? "✓ Selected" : "Choose Option"}
+                    </button>
+                  </td>
+                `).join("")}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `
+      : "";
+
     return `
       <article class="proposal-sheet">
         <header class="proposal-hero">
@@ -898,7 +1104,7 @@
             <div class="proposal-status-stack">
               <div class="validity-pill">${ICONS.clock} ${daysLeft > 0 ? `Valid for ${daysLeft} day${daysLeft === 1 ? "" : "s"}` : "Quote Expiring Today"}</div>
               ${totals.isFastEligible
-                ? `<div class="fast-bonus-pill">${ICONS.bolt} Fast-Action Bonus: Save ${formatMoney(totals.discountApplied, cur)} (${p.fastActionHours}h)</div>`
+                ? `<div class="fast-bonus-pill">${ICONS.bolt} Fast-Action Bonus: Save ${formatMoney(totals.discountApplied, cur)} • Ends <span class="countdown-clock mono" data-deadline-ms="${fastDeadlineMs}">${formatCountdown(fastDeadlineMs - Date.now())}</span></div>`
                 : ""}
             </div>
           </div>
@@ -946,11 +1152,15 @@
               <h2>1. Choose Your Package</h2>
               <p>${visibleTiers.length === 1 ? "Customized scope prepared specifically for your project." : "Compare options below—click any package to update your live quote &amp; itemized scope."}</p>
             </div>
-            ${!isClientStandalone ? `<span class="badge-count" style="border-radius:8px;padding:4px 10px;height:auto;">Interactive Preview</span>` : ""}
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              ${visibleTiers.length > 1 ? `<button type="button" class="btn btn-outline btn-sm no-print" data-action="toggle-compare-matrix">${ICONS.list} ${state.showCompareMatrix ? "Hide Comparison" : "Compare All 3 Tiers"}</button>` : ""}
+              ${!isClientStandalone ? `<span class="badge-count" style="border-radius:8px;padding:4px 10px;height:auto;">Interactive Preview</span>` : ""}
+            </div>
           </div>
           <div class="tiers-grid ${visibleTiers.length === 1 ? "single-tier" : ""}">
             ${tiersHtml}
           </div>
+          ${compareRowsHtml}
         </section>
 
         ${hasAddons ? `
@@ -1705,7 +1915,11 @@
 
     const embedUrl = state.shareUrl ? `${state.shareUrl}&embed=1` : `${getBaseStudioUrl()}#q=...`;
     const iframeSnippet = `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="920" style="border:0;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.08);" loading="lazy"></iframe>`;
-    const pitchText = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${state.shareUrl}`;
+    const activeShareUrl = state.cloudShareUrl || state.shareUrl;
+    const pitchText = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${activeShareUrl}`;
+    const waShareUrl = `https://wa.me/?text=${encodeURIComponent(pitchText)}`;
+    const cloudReady = Boolean(CLOUD && CLOUD.isConfigured());
+    const cloudLoggedIn = Boolean(state.cloudSession && state.cloudSession.user);
 
     return `
       <!-- Share & Embed Modal -->
@@ -1716,7 +1930,7 @@
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-share">✕</button>
           </div>
           <p style="margin:0 0 12px;font-size:13px;color:var(--text-secondary);">
-            <strong>100% Zero-Server Privacy:</strong> The entire proposal is compressed securely inside the URL fragment—no client data ever touches a database.
+            <strong>100% Zero-Server Privacy:</strong> Your compressed <code>#q=</code> link stores client data cleanly in the URL hash—or use Phase 2 Cloud Sync for clean short links &amp; open/sign alerts.
           </p>
           <div style="display:flex;gap:8px;margin-bottom:12px;">
             <button type="button" class="btn btn-sm ${state.shareTab === "link" ? "btn-primary" : "btn-outline"}" data-action="switch-share-tab" data-tab="link">${ICONS.share} Client Proposal Link</button>
@@ -1732,6 +1946,21 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
               <button type="button" class="btn btn-primary" data-action="copy-share-url">${ICONS.copy} Copy Client Link</button>
               <a class="btn btn-outline" id="open-client-link" href="${escapeHtml(state.shareUrl)}" target="_blank" rel="noopener noreferrer">${ICONS.external} Open Client View</a>
+              <a class="btn btn-outline" href="${escapeHtml(waShareUrl)}" target="_blank" rel="noopener noreferrer">Share via WhatsApp</a>
+            </div>
+            <div class="cloud-status-card" style="margin-top:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <strong style="font-size:12.5px;">Short Link &amp; Open/Sign Alerts (Phase 2)</strong>
+                ${cloudReady && cloudLoggedIn
+                  ? `<button type="button" class="btn btn-accent btn-sm" data-action="publish-cloud-proposal">${ICONS.bolt} Publish Tracked Short Link (#p=)</button>`
+                  : `<button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">${cloudReady ? "Sign In for Short Links" : "Configure Cloud Sync ($0 Free Tier)"}</button>`}
+              </div>
+              ${state.cloudShareUrl ? `
+                <div style="margin-top:8px;">
+                  <div class="code-box" style="margin-bottom:6px;">${escapeHtml(state.cloudShareUrl)}</div>
+                  <button type="button" class="btn btn-primary btn-xs" data-action="copy-cloud-share-url">${ICONS.copy} Copy Short Cloud Link</button>
+                </div>
+              ` : `<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">${cloudReady ? (cloudLoggedIn ? "Publish once to create a clean short URL with live view & e-sign tracking." : "Sign in cleanly via Magic Link to track client opens & signatures.") : "Running in $0 browser-local mode. Plug Supabase URL/Key into config.js to unlock #p= short links & instant open/sign emails."}</div>`}
             </div>
             <div style="margin-top:16px;">
               <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
@@ -1786,13 +2015,13 @@
             <div class="plan-box">
               <strong>Pro Monthly</strong>
               <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">100% White-Label (removes BidLift footer), priority brand presets, multi-currency &amp; tax. Cancel anytime.</span>
+              <span style="font-size:12px;color:var(--text-muted);">100% White-Label, multi-currency &amp; tax, priority financing framing &amp; Phase 2 tracked short-links / open alerts. Launch Week code: <strong>PH30</strong> (30% off).</span>
               <button type="button" class="btn btn-primary btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="monthly">Get Pro Monthly</button>
             </div>
             <div class="plan-box featured">
               <strong>Pro Annual <span style="font-size:11px;color:var(--success);font-weight:700;">(Save 56%)</span></strong>
               <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">~$8.25/mo billed annually. 100% White-Label + instant browser unlock after checkout.</span>
+              <span style="font-size:12px;color:var(--text-muted);">~$8.25/mo billed annually. 100% White-Label + instant browser unlock after checkout (use code <strong>PH30</strong> through Nov 30).</span>
               <button type="button" class="btn btn-accent btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="annual">Get Pro Annual</button>
             </div>
           </div>
@@ -1822,6 +2051,67 @@
           <div style="display:flex;gap:8px;margin-top:12px;">
             <button type="button" class="btn btn-primary" data-action="copy-zelle">${ICONS.copy} Copy Payment Info</button>
           </div>
+        </div>
+      </div>
+
+      <!-- Cloud Sync & Instant Open/Sign Alerts Modal (Phase 2) -->
+      <div class="modal-backdrop" id="modal-cloud" role="dialog" aria-modal="true">
+        <div class="modal-card" style="max-width:560px;">
+          <div class="modal-header">
+            <h3>Phase 2 Cloud Sync &amp; Client Open Alerts</h3>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-cloud">✕</button>
+          </div>
+          ${cloudReady ? `
+            ${cloudLoggedIn ? `
+              <div class="cloud-status-card">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                  <div>
+                    <strong style="font-size:13px;color:var(--success);">✓ Connected: ${escapeHtml(state.cloudSession.user?.email || "Contractor")}</strong>
+                    <div style="font-size:12px;color:var(--text-muted);">Cloud proposals create clean <code>#p=</code> links with open &amp; e-sign email alerts.</div>
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <a class="btn btn-outline btn-xs" href="#admin">Super Admin</a>
+                    <button type="button" class="btn btn-outline btn-xs" data-action="cloud-signout">Sign Out</button>
+                  </div>
+                </div>
+              </div>
+              <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;">
+                <strong style="font-size:13px;">Recent Cloud Quotes (${state.cloudProposals.length})</strong>
+                <button type="button" class="btn btn-primary btn-xs" data-action="publish-cloud-proposal">${ICONS.plus} Save &amp; Publish Current</button>
+              </div>
+              <div style="margin-top:8px;display:grid;gap:8px;">
+                ${state.cloudProposals.length ? state.cloudProposals.map((cp) => `
+                  <div class="draft-item">
+                    <div>
+                      <strong style="font-size:13px;">${escapeHtml(cp.project_title)}</strong>
+                      <div style="font-size:11.5px;color:var(--text-muted);">${escapeHtml(cp.client_name || "Client")} • Status: <strong>${escapeHtml(cp.status)}</strong> • Views: <strong>${Number(cp.view_count || 0)}</strong></div>
+                    </div>
+                    <a class="btn btn-outline btn-xs" href="#p=${escapeHtml(cp.share_token)}" target="_blank">Open #p=</a>
+                  </div>
+                `).join("") : `<p style="font-size:12.5px;color:var(--text-muted);">No cloud quotes published yet.</p>`}
+              </div>
+            ` : `
+              <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;">
+                Sign in cleanly with a 1-click Magic Link email to sync quotes across phone &amp; laptop, send short <code>#p=</code> URLs, and receive instant alerts when clients view or sign.
+              </p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <input id="cloud-login-email" type="email" placeholder="you@company.com" style="flex:1;min-width:210px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-primary);" />
+                <button type="button" class="btn btn-primary btn-sm" data-action="cloud-magic-login">Send Magic Link</button>
+              </div>
+            `}
+          ` : `
+            <div class="cloud-status-card">
+              <strong style="font-size:13.5px;display:block;margin-bottom:6px;">Zero-Cost ($0/mo) Cloud Layer Ready to Connect</strong>
+              <p style="margin:0 0 10px;font-size:12.5px;color:var(--text-secondary);line-height:1.55;">
+                Your Phase 2 Postgres schema (<code>phase2/supabase_schema.sql</code>), Polar Pro webhook (<code>phase2/polar_webhook_edge_fn.ts</code>), Resend instant alert Edge Function (<code>phase2/notify_proposal_event_fn.ts</code>), and REST client (<code>public/cloud.js</code>) are built.
+              </p>
+              <ol style="margin:0;padding-left:18px;font-size:12.5px;color:var(--text-secondary);line-height:1.6;">
+                <li>Create a free <strong>Supabase</strong> project (<code>$0/mo</code>) and run <code>phase2/supabase_schema.sql</code>.</li>
+                <li>Deploy <code>polar_webhook_edge_fn.ts</code> &amp; <code>notify_proposal_event_fn.ts</code> (Resend free tier: 3,000 alert emails/mo).</li>
+                <li>Add your Supabase URL &amp; Anon Key in <code>public/config.js</code> to enable Magic Link login, clean <code>#p=</code> links, Open/Sign notifications &amp; <code>#admin</code> metrics.</li>
+              </ol>
+            </div>
+          `}
         </div>
       </div>
 
@@ -1965,6 +2255,9 @@
         </div>
 
         <div class="topbar-actions">
+          <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">
+            ${ICONS.bolt} ${state.cloudSession ? "Cloud ●" : "Cloud Sync"}
+          </button>
           <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-drafts">
             ${ICONS.folder} Drafts <span class="badge-count">${state.drafts.length}</span>
           </button>
@@ -2025,6 +2318,26 @@
                 <strong id="lift-expected" style="color:var(--success);">${formatMoney(lift.expectedDeal, cur)}</strong>
               </div>
             </div>
+          </div>
+
+          <div class="quick-quote-box">
+            <div class="quick-quote-head">
+              <span>${ICONS.bolt} <strong>Quick-Quote from Messy Job Notes</strong></span>
+              <button type="button" class="btn btn-ghost btn-xs" data-action="toggle-quick-quote">${state.quickQuoteOpen ? "Hide" : "Expand"}</button>
+            </div>
+            ${state.quickQuoteOpen ? `
+              <div class="quick-quote-body">
+                <textarea id="quick-notes-input" rows="2" placeholder="Paste rough notes (e.g. Sarah Johnson, 3-ton AC install at 410 Pine St, base $5800, add smart thermostat $350, duct cleaning $490)">${escapeHtml(state.quickNotesText)}</textarea>
+                <div class="quick-quote-actions">
+                  <div class="quick-presets">
+                    <button type="button" class="btn btn-outline btn-xs" data-action="quick-preset" data-preset-note="Sarah Johnson, 3-ton AC install at 410 Pine St, base $5800, add smart thermostat $350, duct cleaning $490">HVAC $5.8k</button>
+                    <button type="button" class="btn btn-outline btn-xs" data-action="quick-preset" data-preset-note="Marcus Reid, architectural roof replacement at 82 Cedar Rd, base $11500, add gutter guards $980, solar attic fan $640">Roof $11.5k</button>
+                    <button type="button" class="btn btn-outline btn-xs" data-action="quick-preset" data-preset-note="Apex Dental, website redesign &amp; SEO funnel, base $3200, add conversion copywriting $600, Google Business 3-pack $450">Agency $3.2k</button>
+                  </div>
+                  <button type="button" class="btn btn-primary btn-xs" data-action="run-quick-quote">${ICONS.sparkle} Auto-Build 3 Tiers</button>
+                </div>
+              </div>
+            ` : ""}
           </div>
 
           <nav class="builder-tabs" role="tablist">
@@ -2091,6 +2404,43 @@
     `;
   }
 
+  function renderAdminPortalView() {
+    const m = state.adminMetrics;
+    const isConfigured = Boolean(CLOUD && CLOUD.isConfigured());
+    return `
+      <div class="client-mode-wrapper">
+        <div class="proposal-sheet" style="max-width:900px;padding:28px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
+            <div>
+              <h2 style="font-size:22px;">BidLift Super Admin Platform Metrics</h2>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary);">Live telemetry via <code>get_admin_platform_metrics()</code> (Phase 2 Supabase RLS gated to super_admin).</p>
+            </div>
+            <a class="btn btn-outline btn-sm" href="${escapeHtml(getBaseStudioUrl())}">← Back to Studio</a>
+          </div>
+          ${!isConfigured ? `
+            <div class="cloud-status-card">
+              <strong>Supabase Cloud Layer Not Yet Connected ($0 Mode)</strong>
+              <p style="margin:6px 0 0;font-size:13px;color:var(--text-secondary);">Configure <code>SUPABASE.URL</code> and <code>SUPABASE.ANON_KEY</code> in <code>public/config.js</code> after running <code>phase2/supabase_schema.sql</code> to inspect live DB metrics here.</p>
+            </div>
+          ` : state.adminError ? `
+            <div class="cloud-status-card">
+              <strong style="color:var(--danger);">${escapeHtml(state.adminError)}</strong>
+            </div>
+          ` : m ? `
+            <div class="admin-kpi-grid">
+              <div class="calc-kpi"><span>Total Contractors</span><strong class="mono">${Number(m.total_contractors || 0)}</strong></div>
+              <div class="calc-kpi"><span>Pro Subscribers</span><strong class="mono">${Number(m.pro_subscribers || 0)}</strong></div>
+              <div class="calc-kpi"><span>Total Cloud Quotes</span><strong class="mono">${Number(m.total_proposals || 0)}</strong></div>
+              <div class="calc-kpi"><span>Total Client Views</span><strong class="mono">${Number(m.total_views || 0)}</strong></div>
+              <div class="calc-kpi"><span>Signed Proposals</span><strong class="mono">${Number(m.signed_proposals || 0)}</strong></div>
+              <div class="calc-kpi"><span>Gross Client Volume</span><strong class="mono">$${Number(m.gross_client_volume || 0).toLocaleString()}</strong></div>
+            </div>
+          ` : `<p>Loading platform metrics…</p>`}
+        </div>
+      </div>
+    `;
+  }
+
   function renderErrorView() {
     return `
       <div class="client-mode-wrapper" style="display:flex;align-items:center;justify-content:center;">
@@ -2126,6 +2476,7 @@
     });
     initSignaturePad();
     refreshLiftCoach();
+    startCountdownTicker();
   }
 
   function renderApp() {
@@ -2133,14 +2484,18 @@
     if (!root) return;
     applyBrandPalette(state.proposal);
 
-    if (state.mode === "error") {
+    if (state.mode === "admin") {
+      root.innerHTML = renderAdminPortalView();
+    } else if (state.mode === "error") {
       root.innerHTML = renderErrorView();
     } else if (state.mode === "client") {
       root.innerHTML = renderClientStandalone();
       initSignaturePad();
+      startCountdownTicker();
     } else {
       root.innerHTML = renderStudioShell();
       initSignaturePad();
+      startCountdownTicker();
     }
 
     if (state.pendingToast) {
@@ -2277,6 +2632,60 @@
         btn.classList.toggle("active", btn.dataset.view === state.mobileView);
       });
       if (state.mobileView === "preview") initSignaturePad();
+      return;
+    }
+
+    if (action === "toggle-quick-quote") {
+      state.quickQuoteOpen = !state.quickQuoteOpen;
+      renderApp();
+      return;
+    }
+
+    if (action === "quick-preset") {
+      state.quickNotesText = target.dataset.presetNote || "";
+      const box = document.getElementById("quick-notes-input");
+      if (box) box.value = state.quickNotesText;
+      const res = parseQuickQuoteNotes(state.quickNotesText);
+      if (res) {
+        state.proposal = res.proposal;
+        state.selectedTierIdx = state.proposal.recommendedTierIndex ?? 1;
+        state.approved = false;
+        saveCurrentDraftLocal();
+        renderApp();
+        trackEvent("quick_quote_used", { template_id: res.tradeId, quick_quote_used: true });
+        showToast(`Built 3 ${TEMPLATES[res.tradeId]?.label || ""} tiers + ${res.parsedAddonsCount} add-on(s)!`);
+      }
+      return;
+    }
+
+    if (action === "run-quick-quote") {
+      const box = document.getElementById("quick-notes-input");
+      const raw = (box ? box.value : state.quickNotesText || "").trim();
+      if (!raw) {
+        showToast("Type or pick a sample job note first (e.g. 'Sarah, HVAC install, base $5800').");
+        if (box) box.focus();
+        return;
+      }
+      state.quickNotesText = raw;
+      const res = parseQuickQuoteNotes(raw);
+      if (res) {
+        state.proposal = res.proposal;
+        state.selectedTierIdx = state.proposal.recommendedTierIndex ?? 1;
+        state.approved = false;
+        saveCurrentDraftLocal();
+        renderApp();
+        trackEvent("quick_quote_used", { template_id: res.tradeId, quick_quote_used: true });
+        showToast(`Auto-built ${TEMPLATES[res.tradeId]?.label || ""} quote with ${res.parsedAddonsCount} parsed add-on(s)!`);
+      }
+      return;
+    }
+
+    if (action === "toggle-compare-matrix") {
+      state.showCompareMatrix = !state.showCompareMatrix;
+      if (state.showCompareMatrix) {
+        trackEvent("compare_matrix_opened", { compare_matrix_opened: true });
+      }
+      refreshPreviewOnly();
       return;
     }
 
@@ -2776,6 +3185,7 @@
         note: signerNote,
         isoTimestamp,
         tierName: totals.chosenTier?.name || "Selected Option",
+        tierIndex: totals.chosenTierIdx,
         basePrice: totals.basePrice,
         lineItems: deepClone(totals.chosenTier?.lineItems || []),
         addons: deepClone(totals.selectedAddons),
@@ -2786,6 +3196,11 @@
         depositDue: totals.depositDue,
         signatureDataUrl: state.signatureDataUrl
       };
+      if (state.activeCloudToken && CLOUD && CLOUD.isConfigured()) {
+        try {
+          await CLOUD.submitCloudAcceptance(state.activeCloudToken, state.approvalReceipt, totals);
+        } catch (err) {}
+      }
       refreshPreviewOnly();
       trackEvent("proposal_signed", {
         tier_index: totals.chosenTierIdx,
@@ -2821,6 +3236,7 @@
     // Share & Embed Modals
     if (action === "open-share-modal" || action === "open-embed-modal") {
       state.shareTab = action === "open-embed-modal" ? "embed" : "link";
+      state.cloudShareUrl = "";
       const encoded = await CODEC.encodeProposal(state.proposal);
       state.shareUrl = `${getBaseStudioUrl()}#q=${encoded}`;
       renderApp();
@@ -2833,6 +3249,55 @@
       });
       const modal = document.getElementById("modal-share");
       if (modal) modal.classList.add("open");
+      return;
+    }
+
+    if (action === "publish-cloud-proposal") {
+      if (!CLOUD || !CLOUD.isConfigured()) {
+        showToast("Configure Supabase URL & Anon Key in config.js first.");
+        return;
+      }
+      try {
+        const created = await CLOUD.publishCloudProposal(state.proposal);
+        state.cloudShareUrl = `${getBaseStudioUrl()}#p=${encodeURIComponent(created.share_token)}`;
+        state.cloudProposals = await CLOUD.listMyCloudProposals();
+        renderApp();
+        const modal = document.getElementById("modal-share");
+        if (modal) modal.classList.add("open");
+        trackEvent("share_link_created", { share_mode: "cloud_short", cloud_mode: true });
+        showToast("Short cloud link #p= published with open/sign alerts!");
+      } catch (err) {
+        showToast(err.message || "Cloud publish failed.");
+      }
+      return;
+    }
+
+    if (action === "copy-cloud-share-url") {
+      if (state.cloudShareUrl) {
+        copyText(state.cloudShareUrl, "Short Cloud proposal link copied!");
+      }
+      return;
+    }
+
+    if (action === "cloud-magic-login") {
+      const emailInput = document.getElementById("cloud-login-email");
+      const rawEmail = emailInput ? emailInput.value : "";
+      if (!CLOUD) return;
+      try {
+        await CLOUD.signInMagicLink(rawEmail);
+        showToast("Check your email for your 1-click BidLift Cloud sign-in link!");
+      } catch (err) {
+        showToast(err.message || "Unable to send sign-in email.");
+      }
+      return;
+    }
+
+    if (action === "cloud-signout") {
+      if (CLOUD) await CLOUD.signOut();
+      state.cloudSession = null;
+      state.cloudProposals = [];
+      renderApp();
+      showToast("Signed out of Cloud Sync.");
       return;
     }
 
@@ -2856,7 +3321,7 @@
 
     if (action === "copy-pitch-text") {
       const p = state.proposal;
-      const pitch = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${state.shareUrl}`;
+      const pitch = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${state.cloudShareUrl || state.shareUrl}`;
       copyText(pitch, "Pitch message + link copied!");
       return;
     }
@@ -3003,6 +3468,11 @@
     }
     if (el.id === "client-signer-note") {
       state.clientSignerNote = el.value;
+      return;
+    }
+
+    if (el.id === "quick-notes-input") {
+      state.quickNotesText = el.value;
       return;
     }
 
@@ -3248,8 +3718,74 @@
   // Router & Initialization (Including Automatic Stripe Return Fulfillment)
   // =========================================================================
   async function handleRoute() {
+    if (CLOUD && CLOUD.isConfigured()) {
+      const authSess = await CLOUD.handleAuthCallbackFromHash();
+      if (authSess) {
+        state.cloudSession = authSess;
+        state.pendingToast = `Signed in via Cloud Sync as ${authSess.user?.email || "Contractor"}!`;
+      } else {
+        state.cloudSession = CLOUD.getSession();
+      }
+      if (state.cloudSession && (!state.cloudProposals || state.cloudProposals.length === 0)) {
+        CLOUD.listMyCloudProposals().then((rows) => {
+          state.cloudProposals = rows || [];
+        }).catch(() => {});
+      }
+    }
+
     const hash = window.location.hash || "";
     const search = new URLSearchParams(window.location.search);
+
+    if (hash === "#admin") {
+      state.mode = "admin";
+      state.adminMetrics = null;
+      state.adminError = "";
+      renderApp();
+      if (CLOUD && CLOUD.isConfigured()) {
+        try {
+          state.adminMetrics = await CLOUD.fetchAdminMetrics();
+        } catch (err) {
+          state.adminError = err.message || "Admin sign-in required.";
+        }
+        renderApp();
+      }
+      return;
+    }
+
+    if (hash.startsWith("#p=")) {
+      const cloudToken = hash.slice(3).split("&")[0].trim();
+      const cloudRow = CLOUD && CLOUD.isConfigured() ? await CLOUD.fetchCloudProposal(cloudToken) : null;
+      if (!cloudRow || !cloudRow.payload) {
+        state.mode = "error";
+        renderApp();
+        return;
+      }
+      state.activeCloudToken = cloudToken;
+      state.demoPreviewReturn = false;
+      state.embedMode = search.get("embed") === "1";
+      state.mode = "client";
+      state.proposal = normalizeProposalServices(cloudRow.payload);
+      if (cloudRow.white_label) state.proposal.whiteLabel = true;
+      state.selectedTierIdx = Math.min(state.proposal.tiers.length - 1, Math.max(0, Number(state.proposal.recommendedTierIndex ?? 1)));
+      state.approved = false;
+      state.approvalReceipt = null;
+      state.hasSignatureInk = false;
+      state.signatureDataUrl = "";
+      state.clientSignerName = "";
+      state.clientSignerEmail = "";
+      state.esignConsent = false;
+      renderApp();
+      trackEvent("client_quote_viewed", {
+        is_embed: state.embedMode,
+        cloud_mode: true,
+        tier_count: getVisibleTiers(state.proposal).length,
+        addon_count: (state.proposal.addons || []).length,
+        has_financing: Boolean(state.proposal.financingEnabled)
+      });
+      return;
+    }
+
+    state.activeCloudToken = "";
 
     // Handle automated post-checkout redirect (?unlock=<key>&plan=monthly|annual)
     const unlockParam = search.get("unlock");

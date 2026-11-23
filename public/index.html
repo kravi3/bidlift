@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com; object-src 'none'; base-uri 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com https://*.supabase.co; object-src 'none'; base-uri 'self';" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta name="google-site-verification" content="3vQ3Bq-liSir6jfVO-KdYfyEuePvCNC5zvr4GaoCMrs" />
   <title>BidLift — Interactive Good / Better / Best Proposals That Boost Revenue</title>
@@ -23,7 +23,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=11" />
+  <link rel="stylesheet" href="styles.css?v=12" />
 
   <script type="application/ld+json">
   {
@@ -87,10 +87,11 @@
   <div id="app"></div>
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-  <script src="config.js?v=11"></script>
-  <script src="templates.js?v=11"></script>
-  <script src="codec.js?v=11"></script>
-  <script src="analytics.js?v=11"></script>
-  <script src="app.js?v=11"></script>
+  <script src="config.js?v=12"></script>
+  <script src="templates.js?v=12"></script>
+  <script src="codec.js?v=12"></script>
+  <script src="analytics.js?v=12"></script>
+  <script src="cloud.js?v=12"></script>
+  <script src="app.js?v=12"></script>
 </body>
 </html>

@@ -28,7 +28,10 @@ window.BidLiftAnalytics = (function () {
     "viewport_class",
     "entry_source",
     "entry_template",
-    "has_financing"
+    "has_financing",
+    "quick_quote_used",
+    "compare_matrix_opened",
+    "cloud_mode"
   ]);
 
   function getSessionDistinctId() {

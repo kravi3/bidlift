@@ -13,6 +13,11 @@ window.BIDLIFT_CONFIG = {
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
   SUPPORT_EMAIL: "bidliftco@gmail.com",
   LICENSE_PREFIX: "BL-PRO-",
+  SUPABASE: {
+    URL: "",
+    ANON_KEY: ""
+  },
+  CLOUD_SHORT_LINK_ENABLED: false,
   ANALYTICS: {
     PROVIDER: "posthog",
     POSTHOG_PROJECT_KEY: "phc_oLaVNBcBBDBxGZUSsgLdDbpbSoXSPikzyuMFZY6MoRGD",
