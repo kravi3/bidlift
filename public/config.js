@@ -30,6 +30,7 @@ window.BIDLIFT_CONFIG = {
     CURRENT: "bidlift_current_v1",
     THEME: "bidlift_theme_v1",
     PRO_LICENSE: "bidlift_pro_v1",
-    HERO_COLLAPSED: "bidlift_hero_collapsed_v1"
+    HERO_COLLAPSED: "bidlift_hero_collapsed_v1",
+    SERVICES_CATALOG: "bidlift_services_catalog_v1"
   }
 };

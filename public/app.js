@@ -35,7 +35,9 @@
     clock: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
     bolt: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
     shield: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`,
-    external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`
+    external: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+    list: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>`,
+    bookmark: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>`
   };
 
   // Application State
@@ -59,6 +61,10 @@
     signatureDataUrl: "",
     hasSignatureInk: false,
     drafts: [],
+    serviceCatalog: [],
+    showCatForm: false,
+    editingCatIdx: -1,
+    catForm: { name: "", category: "", qty: 1, unit: "job", unitPrice: 250, note: "" },
     shareUrl: "",
     shareTab: "link", // "link" | "embed"
     pendingToast: ""
@@ -253,6 +259,79 @@
         const parsed = JSON.parse(draftsRaw);
         if (Array.isArray(parsed)) state.drafts = parsed;
       }
+
+      const catKey = CONFIG.STORAGE_KEYS.SERVICES_CATALOG || "bidlift_services_catalog_v1";
+      const catRaw = localStorage.getItem(catKey);
+      if (catRaw) {
+        const parsedCat = JSON.parse(catRaw);
+        if (Array.isArray(parsedCat)) {
+          state.serviceCatalog = parsedCat.map((item) => normalizeServiceItem(item));
+        }
+      }
+    } catch (e) {}
+  }
+
+  function normalizeServiceItem(item, fallbackCategory) {
+    const it = item && typeof item === "object" ? item : {};
+    return {
+      id: String(it.id || `svc-${Math.random().toString(16).slice(2, 8)}`),
+      name: String(it.name || it.title || "Custom Service"),
+      category: String(it.category || fallbackCategory || "Core Service"),
+      qty: Math.max(0, Number(it.qty) || 1),
+      unit: String(it.unit || "job"),
+      unitPrice: Math.max(0, Number(it.unitPrice ?? it.price) || 0),
+      note: String(it.note || it.description || "")
+    };
+  }
+
+  function getLineItemTotal(item) {
+    const qty = Math.max(0, Number(item?.qty) || 0);
+    const rate = Math.max(0, Number(item?.unitPrice) || 0);
+    return Math.round(qty * rate * 100) / 100;
+  }
+
+  function getTierItemsSubtotal(tier) {
+    const items = Array.isArray(tier?.lineItems) ? tier.lineItems : [];
+    return Math.round(items.reduce((sum, it) => sum + getLineItemTotal(it), 0) * 100) / 100;
+  }
+
+  function syncTierPriceFromItems(tier) {
+    if (!tier || !tier.autoCalcPrice) return;
+    if (Array.isArray(tier.lineItems) && tier.lineItems.length > 0) {
+      tier.price = getTierItemsSubtotal(tier);
+    }
+  }
+
+  function normalizeProposalServices(p) {
+    if (!p || typeof p !== "object") return p;
+    if (Array.isArray(p.tiers)) {
+      p.tiers = p.tiers.map((tier) => {
+        const items = Array.isArray(tier.lineItems)
+          ? tier.lineItems.map((it) => normalizeServiceItem(it))
+          : [];
+        return {
+          ...tier,
+          autoCalcPrice: Boolean(tier.autoCalcPrice),
+          features: Array.isArray(tier.features) ? tier.features : [],
+          lineItems: items
+        };
+      });
+    }
+    if (Array.isArray(p.addons)) {
+      p.addons = p.addons.map((a) => ({
+        ...a,
+        category: String(a.category || "Upgrade"),
+        qty: Math.max(1, Number(a.qty) || 1),
+        unit: String(a.unit || "pkg")
+      }));
+    }
+    return p;
+  }
+
+  function saveServiceCatalog() {
+    try {
+      const catKey = CONFIG.STORAGE_KEYS.SERVICES_CATALOG || "bidlift_services_catalog_v1";
+      localStorage.setItem(catKey, JSON.stringify(state.serviceCatalog));
     } catch (e) {}
   }
 
@@ -271,7 +350,7 @@
 
   function createProposalFromTemplate(templateId) {
     const base = TEMPLATES[templateId] || TEMPLATES.contractor;
-    const p = deepClone(base);
+    const p = normalizeProposalServices(deepClone(base));
     p.createdAt = Date.now();
     p.whiteLabel = Boolean(state.isPro);
     return p;
@@ -441,20 +520,47 @@
       ? `<div class="proposal-intro-box">${escapeHtml(p.introText)}</div>`
       : "";
 
+    const hasAddons = (p.addons || []).length > 0;
+    const itemSecNum = hasAddons ? 3 : 2;
+    const closeSecNum = hasAddons ? 4 : 3;
+
     const badgeText = (p.recommendedBadge || "Most Popular Choice").trim() || "Most Popular Choice";
     const tiersHtml = visibleTiers
       .map(({ tier, originalIdx }) => {
         const isSelected = originalIdx === totals.chosenTierIdx;
         const isRec = !p.singleTierMode && visibleTiers.length > 1 && originalIdx === Number(p.recommendedTierIndex);
-        const featuresHtml = (tier.features || [])
-          .filter((f) => f && f.trim())
-          .map((f) => `<li>${ICONS.check}<span>${escapeHtml(f)}</span></li>`)
-          .join("");
+        const items = Array.isArray(tier.lineItems) ? tier.lineItems : [];
+        const hasLineItems = items.length > 0;
+
+        const featuresHtml = hasLineItems
+          ? items
+              .filter((it) => it && (it.name || "").trim())
+              .map((it) => {
+                const qtyLabel = `${Number(it.qty) || 1}${it.unit ? " " + it.unit : ""}`;
+                return `
+                  <li>
+                    ${ICONS.check}
+                    <div class="tier-service-line">
+                      <div class="tier-service-head">
+                        <strong>${escapeHtml(it.name)}</strong>
+                        <span class="tier-item-meta">${escapeHtml(qtyLabel)}</span>
+                      </div>
+                      ${it.note ? `<div class="tier-service-note">${escapeHtml(it.note)}</div>` : ""}
+                    </div>
+                  </li>
+                `;
+              })
+              .join("")
+          : (tier.features || [])
+              .filter((f) => f && f.trim())
+              .map((f) => `<li>${ICONS.check}<span>${escapeHtml(f)}</span></li>`)
+              .join("");
 
         return `
           <div class="tier-card ${isSelected ? "selected" : ""} ${isRec ? "recommended" : ""}"
                data-action="select-tier" data-tier-idx="${originalIdx}" role="button" tabindex="0">
             ${isRec ? `<div class="tier-ribbon">★ ${escapeHtml(badgeText)}</div>` : ""}
+            ${visibleTiers.length > 1 ? `<div class="tier-eyebrow">Option ${originalIdx + 1}</div>` : ""}
             <div class="tier-top-row">
               <div>
                 <div class="tier-name">${escapeHtml(tier.name || `Option ${originalIdx + 1}`)}</div>
@@ -467,6 +573,7 @@
               ${tier.timeline ? `<span class="tier-timeline">${escapeHtml(tier.timeline)}</span>` : ""}
             </div>
             <ul class="tier-features">${featuresHtml}</ul>
+            ${hasLineItems ? `<div class="tier-scope-footnote">${items.length} itemized service${items.length === 1 ? "" : "s"} • full breakdown below</div>` : ""}
             <div class="tier-select-cta">${isSelected ? "✓ Selected Package" : "Select This Option"}</div>
           </div>
         `;
@@ -476,10 +583,16 @@
     const addonsHtml = (p.addons || [])
       .map((addon, idx) => {
         const active = Boolean(addon.selected);
+        const cat = (addon.category || "").trim();
+        const unitLabel = addon.unit ? `${Number(addon.qty) || 1} ${addon.unit}` : "";
         return `
           <div class="addon-card ${active ? "active" : ""}" data-action="toggle-addon" data-addon-idx="${idx}" role="button" tabindex="0">
             <div class="addon-check">${active ? ICONS.check : ""}</div>
             <div class="addon-info">
+              <div class="addon-meta-tags">
+                ${cat ? `<span class="addon-cat-pill">${escapeHtml(cat)}</span>` : ""}
+                ${unitLabel ? `<span class="addon-unit-pill">${escapeHtml(unitLabel)}</span>` : ""}
+              </div>
               <div class="addon-title">${escapeHtml(addon.title)}</div>
               ${addon.description ? `<div class="addon-desc">${escapeHtml(addon.description)}</div>` : ""}
             </div>
@@ -489,15 +602,107 @@
       })
       .join("");
 
+    // Itemized Services Breakdown Rows (Live for Currently Selected Tier + Checked Upgrades)
+    const activeTier = totals.chosenTier || {};
+    const activeLineItems = Array.isArray(activeTier.lineItems) ? activeTier.lineItems.filter((it) => it && (it.name || "").trim()) : [];
+    const activeLegacyFeatures = Array.isArray(activeTier.features) ? activeTier.features.filter((f) => f && f.trim()) : [];
+    const itemsCalculatedSum = getTierItemsSubtotal(activeTier);
+    const tierDiff = Math.round((totals.basePrice - itemsCalculatedSum) * 100) / 100;
+
+    let coreRowsHtml = "";
+    if (activeLineItems.length > 0) {
+      coreRowsHtml = activeLineItems.map((it) => {
+        const qtyVal = Math.max(0, Number(it.qty) || 0);
+        const rateVal = Math.max(0, Number(it.unitPrice) || 0);
+        const lineAmt = getLineItemTotal(it);
+        const qtyText = `${qtyVal}${it.unit ? " " + it.unit : ""}`;
+        return `
+          <tr>
+            <td data-label="Service &amp; Scope">
+              <div class="itemized-svc-name">${escapeHtml(it.name)}</div>
+              ${it.note ? `<div class="itemized-svc-note">${escapeHtml(it.note)}</div>` : ""}
+            </td>
+            <td data-label="Category"><span class="itemized-cat-pill">${escapeHtml(it.category || "Core Service")}</span></td>
+            <td data-label="Qty / Unit" class="mono">${escapeHtml(qtyText)}</td>
+            <td data-label="Rate" class="mono">${rateVal > 0 ? formatMoney(rateVal, cur) : "—"}</td>
+            <td data-label="Amount" class="itemized-amt">${lineAmt > 0 ? `<span class="mono">${formatMoney(lineAmt, cur)}</span>` : `<span class="itemized-included-pill">Included</span>`}</td>
+          </tr>
+        `;
+      }).join("");
+
+      if (Math.abs(tierDiff) >= 0.01) {
+        const isSavings = tierDiff < 0;
+        coreRowsHtml += `
+          <tr class="itemized-adjust-row ${isSavings ? "is-savings" : ""}">
+            <td data-label="Service &amp; Scope">
+              <div class="itemized-svc-name">${isSavings ? "Multi-Service Package Savings" : "Package Bundle Adjustment"}</div>
+              <div class="itemized-svc-note">Reconciles itemized services to your fixed ${escapeHtml(activeTier.name || "package")} price</div>
+            </td>
+            <td data-label="Category"><span class="itemized-cat-pill">Bundle</span></td>
+            <td data-label="Qty / Unit" class="mono">1 pkg</td>
+            <td data-label="Rate" class="mono">—</td>
+            <td data-label="Amount" class="itemized-amt mono">${isSavings ? "-" + formatMoney(Math.abs(tierDiff), cur) : "+" + formatMoney(tierDiff, cur)}</td>
+          </tr>
+        `;
+      }
+    } else {
+      coreRowsHtml = `
+        <tr>
+          <td data-label="Service &amp; Scope">
+            <div class="itemized-svc-name">${escapeHtml(activeTier.name || "Selected Package")} — Full Base Scope</div>
+            ${activeTier.subtitle ? `<div class="itemized-svc-note">${escapeHtml(activeTier.subtitle)}</div>` : ""}
+          </td>
+          <td data-label="Category"><span class="itemized-cat-pill">Core Package</span></td>
+          <td data-label="Qty / Unit" class="mono">1 pkg</td>
+          <td data-label="Rate" class="mono">${formatMoney(totals.basePrice, cur)}</td>
+          <td data-label="Amount" class="itemized-amt mono">${formatMoney(totals.basePrice, cur)}</td>
+        </tr>
+        ${activeLegacyFeatures.map((feat) => `
+          <tr>
+            <td data-label="Service &amp; Scope"><div class="itemized-svc-name">${escapeHtml(feat)}</div></td>
+            <td data-label="Category"><span class="itemized-cat-pill">Deliverable</span></td>
+            <td data-label="Qty / Unit" class="mono">1 item</td>
+            <td data-label="Rate" class="mono">—</td>
+            <td data-label="Amount" class="itemized-amt"><span class="itemized-included-pill">Included</span></td>
+          </tr>
+        `).join("")}
+      `;
+    }
+
+    const upgradeRowsHtml = totals.selectedAddons.length > 0
+      ? totals.selectedAddons.map((a) => `
+          <tr class="itemized-upgrade-row">
+            <td data-label="Service &amp; Scope">
+              <div class="itemized-svc-name">+ ${escapeHtml(a.title)}</div>
+              ${a.description ? `<div class="itemized-svc-note">${escapeHtml(a.description)}</div>` : ""}
+            </td>
+            <td data-label="Category"><span class="itemized-cat-pill accent">${escapeHtml(a.category || "Upgrade")}</span></td>
+            <td data-label="Qty / Unit" class="mono">${escapeHtml(`${Number(a.qty) || 1}${a.unit ? " " + a.unit : " pkg"}`)}</td>
+            <td data-label="Rate" class="mono">${formatMoney(a.price, cur)}</td>
+            <td data-label="Amount" class="itemized-amt mono">+${formatMoney(a.price, cur)}</td>
+          </tr>
+        `).join("")
+      : `
+        <tr class="itemized-empty-upgrade-row">
+          <td colspan="5">No optional upgrades added yet — click any upgrade card above to include it here automatically.</td>
+        </tr>
+      `;
+
+    const itemizedServiceCount = activeLineItems.length || activeLegacyFeatures.length;
+
     let closeRightColumnHtml = "";
     if (state.approved && state.approvalReceipt) {
       const rec = state.approvalReceipt;
       const mailSubject = encodeURIComponent(`Approved Proposal${p.quoteNumber ? ` ${p.quoteNumber}` : ""}: ${p.projectTitle} (${rec.verificationId})`);
       const addonsText = rec.addons.length ? rec.addons.map((a) => `- ${a.title} (+${formatMoney(a.price, cur)})`).join("\n") : "None";
+      const svcText = Array.isArray(rec.lineItems) && rec.lineItems.length
+        ? `\nIncluded Services:\n${rec.lineItems.map((it) => `- ${it.name} (${it.qty} ${it.unit})`).join("\n")}\n`
+        : "";
       const mailBody = encodeURIComponent(
         `Hi ${p.businessName},\n\nI have reviewed and electronically signed the proposal for "${p.projectTitle}".\n\n` +
         (p.quoteNumber ? `Quote Reference: ${p.quoteNumber}\n` : "") +
         `Selected Package: ${rec.tierName} (${formatMoney(rec.basePrice, cur)})\n` +
+        svcText +
         `Selected Upgrades:\n${addonsText}\n` +
         (rec.taxAmount > 0 ? `${rec.taxLabel} (${rec.taxRate}%): ${formatMoney(rec.taxAmount, cur)}\n` : "") +
         `Total Approved: ${formatMoney(rec.total, cur)}\n` +
@@ -649,13 +854,27 @@
         </header>
 
         ${trustHtml}
+
+        <div class="buyer-nav-strip no-print" aria-label="Proposal Sections">
+          <div class="buyer-nav-pills">
+            <button type="button" class="buyer-nav-pill" data-action="scroll-to-section" data-target="sec-packages">1. Packages</button>
+            ${hasAddons ? `<button type="button" class="buyer-nav-pill" data-action="scroll-to-section" data-target="sec-upgrades">2. Upgrades</button>` : ""}
+            <button type="button" class="buyer-nav-pill" data-action="scroll-to-section" data-target="sec-itemization">${itemSecNum}. Itemized Scope</button>
+            <button type="button" class="buyer-nav-pill" data-action="scroll-to-section" data-target="sec-signoff">${closeSecNum}. Sign &amp; Approve</button>
+          </div>
+          <div class="buyer-live-pill">
+            <span><strong>${escapeHtml(totals.chosenTier?.name || "")}</strong>${totals.selectedAddons.length ? ` • +${totals.selectedAddons.length} upgrade${totals.selectedAddons.length === 1 ? "" : "s"}` : ""}</span>
+            <strong class="mono buyer-live-total">${formatMoney(totals.total, cur)}</strong>
+          </div>
+        </div>
+
         ${introHtml}
 
-        <section class="proposal-section">
+        <section class="proposal-section" id="sec-packages">
           <div class="section-heading">
             <div>
               <h2>1. Choose Your Package</h2>
-              <p>${visibleTiers.length === 1 ? "Customized scope prepared specifically for your project." : "Compare options below—click any package to update your live quote."}</p>
+              <p>${visibleTiers.length === 1 ? "Customized scope prepared specifically for your project." : "Compare options below—click any package to update your live quote &amp; itemized scope."}</p>
             </div>
             ${!isClientStandalone ? `<span class="badge-count" style="border-radius:8px;padding:4px 10px;height:auto;">Interactive Preview</span>` : ""}
           </div>
@@ -664,13 +883,16 @@
           </div>
         </section>
 
-        ${(p.addons || []).length > 0 ? `
-          <section class="proposal-section">
+        ${hasAddons ? `
+          <section class="proposal-section" id="sec-upgrades">
             <div class="section-heading">
               <div>
                 <h2>2. Customize With Optional Upgrades</h2>
-                <p>Click any add-on below to include it in your project automatically.</p>
+                <p>Click any add-on below to include it in your itemized quote automatically.</p>
               </div>
+              ${totals.selectedAddons.length > 0
+                ? `<span class="selection-summary-pill">${totals.selectedAddons.length} Selected (+${formatMoney(totals.addonsTotal, cur)})</span>`
+                : `<span class="selection-muted-pill">Optional Enhancements</span>`}
             </div>
             <div class="addons-grid">
               ${addonsHtml}
@@ -678,10 +900,84 @@
           </section>
         ` : ""}
 
-        <section class="proposal-section" style="border-bottom:none;">
+        <section class="proposal-section" id="sec-itemization">
           <div class="section-heading">
             <div>
-              <h2>${(p.addons || []).length > 0 ? "3." : "2."} Investment Summary &amp; Sign-Off</h2>
+              <h2>${itemSecNum}. Detailed Services &amp; Itemized Breakdown</h2>
+              <p>Complete line-by-line scope for your selected <strong>${escapeHtml(activeTier.name || "package")}</strong>${totals.selectedAddons.length ? ` plus ${totals.selectedAddons.length} selected upgrade${totals.selectedAddons.length === 1 ? "" : "s"}` : ""}.</p>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+              <span class="itemized-tier-badge">${ICONS.list} ${itemizedServiceCount} Service Item${itemizedServiceCount === 1 ? "" : "s"}</span>
+              ${activeTier.timeline ? `<span class="tier-timeline">ETA: ${escapeHtml(activeTier.timeline)}</span>` : ""}
+            </div>
+          </div>
+
+          <div class="itemized-card">
+            <table class="itemized-table">
+              <thead>
+                <tr>
+                  <th>Service &amp; Scope</th>
+                  <th>Category</th>
+                  <th>Qty / Unit</th>
+                  <th>Rate</th>
+                  <th style="text-align:right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="itemized-group-row">
+                  <td colspan="4">Included Scope — ${escapeHtml(activeTier.name || "Package")}</td>
+                  <td class="mono" style="text-align:right;">${formatMoney(totals.basePrice, cur)}</td>
+                </tr>
+                ${coreRowsHtml}
+                <tr class="itemized-group-row">
+                  <td colspan="4">Optional Upgrades Selected (${totals.selectedAddons.length})</td>
+                  <td class="mono" style="text-align:right;">${totals.addonsTotal > 0 ? "+" + formatMoney(totals.addonsTotal, cur) : formatMoney(0, cur)}</td>
+                </tr>
+                ${upgradeRowsHtml}
+              </tbody>
+            </table>
+
+            <div class="itemized-totals-bar">
+              <div class="itemized-total-chip">
+                <span>Package Scope</span>
+                <strong class="mono">${formatMoney(totals.basePrice, cur)}</strong>
+              </div>
+              ${totals.addonsTotal > 0 ? `
+                <div class="itemized-total-chip">
+                  <span>Upgrades (${totals.selectedAddons.length})</span>
+                  <strong class="mono">+${formatMoney(totals.addonsTotal, cur)}</strong>
+                </div>
+              ` : ""}
+              ${totals.discountApplied > 0 ? `
+                <div class="itemized-total-chip is-discount">
+                  <span>Fast-Action Bonus</span>
+                  <strong class="mono">-${formatMoney(totals.discountApplied, cur)}</strong>
+                </div>
+              ` : ""}
+              ${totals.taxAmount > 0 ? `
+                <div class="itemized-total-chip">
+                  <span>${escapeHtml(totals.taxLabel)} (${totals.taxRate}%)</span>
+                  <strong class="mono">+${formatMoney(totals.taxAmount, cur)}</strong>
+                </div>
+              ` : ""}
+              <div class="itemized-total-chip is-grand">
+                <span>Total Investment</span>
+                <strong class="mono">${formatMoney(totals.total, cur)}</strong>
+              </div>
+              ${totals.depositPct > 0 ? `
+                <div class="itemized-total-chip is-deposit">
+                  <span>Deposit (${totals.depositPct}%)</span>
+                  <strong class="mono">${formatMoney(totals.depositDue, cur)}</strong>
+                </div>
+              ` : ""}
+            </div>
+          </div>
+        </section>
+
+        <section class="proposal-section" id="sec-signoff" style="border-bottom:none;">
+          <div class="section-heading">
+            <div>
+              <h2>${closeSecNum}. Investment Summary &amp; Sign-Off</h2>
               <p>Transparent breakdown with zero hidden fees.</p>
             </div>
           </div>
@@ -752,6 +1048,113 @@
   // =========================================================================
   // Builder Pane Rendering
   // =========================================================================
+  function renderServiceCatalogBoxHtml(p, cur) {
+    const sym = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[cur]?.symbol) || "$";
+    const tplLabel = TEMPLATES[p.id]?.label || "Trade";
+    const cf = state.catForm || { name: "", category: "", qty: 1, unit: "job", unitPrice: 250, note: "" };
+    const tiers = Array.isArray(p.tiers) ? p.tiers : [];
+
+    const formHtml = state.showCatForm ? `
+      <div class="catalog-form-box">
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text-primary);">
+          ${state.editingCatIdx >= 0 ? "Update Saved Service" : "Add Custom Reusable Service"}
+        </div>
+        <div class="field-grid">
+          <div class="field-row-2">
+            <div class="field">
+              <label>Service Name *</label>
+              <input type="text" id="cat-f-name" data-cat-field="name" placeholder="e.g., Accent Wall Trim & Paint" value="${escapeHtml(cf.name)}" />
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <input type="text" id="cat-f-category" data-cat-field="category" placeholder="e.g., Custom Finish" value="${escapeHtml(cf.category)}" />
+            </div>
+          </div>
+          <div class="line-item-metrics-row">
+            <div class="field">
+              <label>Qty</label>
+              <input type="number" min="0" step="any" id="cat-f-qty" data-cat-field="qty" value="${Number(cf.qty) || 1}" />
+            </div>
+            <div class="field">
+              <label>Unit</label>
+              <input type="text" id="cat-f-unit" data-cat-field="unit" placeholder="job / sq ft" value="${escapeHtml(cf.unit)}" />
+            </div>
+            <div class="field">
+              <label>Rate (${escapeHtml(sym)})</label>
+              <input type="number" min="0" step="any" id="cat-f-rate" data-cat-field="unitPrice" value="${Number(cf.unitPrice) || 0}" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Included Scope Note</label>
+            <input type="text" id="cat-f-note" data-cat-field="note" placeholder="Materials, prep & quality standard..." value="${escapeHtml(cf.note)}" />
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" data-action="save-cat-service">${state.editingCatIdx >= 0 ? "Save Changes" : "Save to My Library"}</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="cancel-cat-form">Cancel</button>
+          </div>
+        </div>
+      </div>
+    ` : "";
+
+    const listHtml = state.serviceCatalog.length > 0
+      ? `
+        <div class="catalog-list">
+          ${state.serviceCatalog.map((svc, cIdx) => {
+            const totalAmt = getLineItemTotal(svc);
+            const tierBtns = tiers.map((t, ti) => `
+              <button type="button" class="btn btn-outline btn-xs" data-action="catalog-to-tier" data-cat-idx="${cIdx}" data-tier-idx="${ti}" title="Add to Option ${ti + 1}: ${escapeHtml(t.name)}">+ T${ti + 1}</button>
+            `).join("");
+            return `
+              <div class="catalog-item-row">
+                <div class="catalog-item-top">
+                  <div>
+                    <div class="catalog-item-title">${escapeHtml(svc.name)}</div>
+                    <div class="catalog-item-meta">
+                      <span class="itemized-cat-pill">${escapeHtml(svc.category || "Core")}</span>
+                      <span class="mono">${Number(svc.qty) || 1} ${escapeHtml(svc.unit || "job")} × ${formatMoney(svc.unitPrice, cur)} = <strong>${formatMoney(totalAmt, cur)}</strong></span>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:4px;">
+                    <button type="button" class="btn btn-ghost btn-xs" data-action="edit-cat-service" data-cat-idx="${cIdx}">Edit</button>
+                    <button type="button" class="btn btn-danger-ghost btn-xs" data-action="delete-cat-service" data-cat-idx="${cIdx}" title="Delete service">×</button>
+                  </div>
+                </div>
+                ${svc.note ? `<div class="catalog-item-note">${escapeHtml(svc.note)}</div>` : ""}
+                <div class="catalog-item-actions">
+                  ${tierBtns}
+                  <button type="button" class="btn btn-outline btn-xs" data-action="catalog-to-addon" data-cat-idx="${cIdx}" title="Add as optional buyer upgrade">+ Upsell</button>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `
+      : `
+        <div class="catalog-empty">
+          <p>Save your own repeatable services &amp; rates once, then insert them into any tier or upsell in 1 click.</p>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" data-action="load-starter-services">${ICONS.sparkle} Load ${escapeHtml(tplLabel)} Starter Services</button>
+            <button type="button" class="btn btn-primary btn-sm" data-action="toggle-cat-form">${ICONS.plus} Create Custom Service</button>
+          </div>
+        </div>
+      `;
+
+    return `
+      <div class="card-box catalog-box">
+        <div class="card-box-head" style="flex-wrap:wrap;gap:8px;">
+          <span class="card-box-title">${ICONS.bookmark} My Services Library <span class="badge-count">${state.serviceCatalog.length}</span></span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-xs" data-action="toggle-cat-form">${ICONS.plus} Add Service</button>
+            <button type="button" class="btn btn-outline btn-xs" data-action="save-quote-services-to-catalog" title="Bookmark all services from this quote into your library">Save Quote Items</button>
+            ${state.serviceCatalog.length > 0 ? `<button type="button" class="btn btn-ghost btn-xs" data-action="load-starter-services">+ ${escapeHtml(tplLabel)} Presets</button>` : ""}
+          </div>
+        </div>
+        ${formHtml}
+        ${listHtml}
+      </div>
+    `;
+  }
+
   function renderBuilderBodyHtml() {
     const p = state.proposal;
     const cur = p.currency || "USD";
@@ -874,8 +1277,33 @@
 
     if (state.activeTab === "tiers") {
       const sym = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[cur]?.symbol) || "$";
+      const catalogBoxHtml = renderServiceCatalogBoxHtml(p, cur);
       const tierCardsHtml = (p.tiers || []).map((tier, tIdx) => {
         const isRec = Number(p.recommendedTierIndex) === tIdx;
+        const lineItems = Array.isArray(tier.lineItems) ? tier.lineItems : [];
+        const itemsSum = getTierItemsSubtotal(tier);
+
+        const lineItemsHtml = lineItems.map((it, lIdx) => {
+          const lineAmt = getLineItemTotal(it);
+          return `
+            <div class="line-item-editor-card">
+              <div class="line-item-top-row">
+                <input type="text" value="${escapeHtml(it.name)}" data-line-bind="${tIdx}:${lIdx}:name" placeholder="Service name (e.g., Cabinet Spray Finish)" />
+                <span class="line-item-sum mono" id="line-sum-${tIdx}-${lIdx}">${lineAmt > 0 ? formatMoney(lineAmt, cur) : "Incl."}</span>
+                <button type="button" class="btn btn-ghost btn-xs" data-action="save-item-to-catalog" data-tier-idx="${tIdx}" data-line-idx="${lIdx}" title="Save to My Services Library">★</button>
+                <button type="button" class="btn btn-danger-ghost btn-xs" data-action="remove-line-item" data-tier-idx="${tIdx}" data-line-idx="${lIdx}" title="Remove service">×</button>
+              </div>
+              <div class="line-item-metrics-4">
+                <input type="text" value="${escapeHtml(it.category)}" data-line-bind="${tIdx}:${lIdx}:category" placeholder="Category" title="Service category" />
+                <input type="number" min="0" step="any" value="${Number(it.qty) ?? 1}" data-line-bind="${tIdx}:${lIdx}:qty" placeholder="Qty" title="Quantity" />
+                <input type="text" value="${escapeHtml(it.unit)}" data-line-bind="${tIdx}:${lIdx}:unit" placeholder="Unit" title="Unit (job, sq ft, hr)" />
+                <input type="number" min="0" step="any" value="${Number(it.unitPrice) || 0}" data-line-bind="${tIdx}:${lIdx}:unitPrice" placeholder="Rate" title="Unit Rate (${escapeHtml(sym)})" />
+              </div>
+              <input type="text" value="${escapeHtml(it.note)}" data-line-bind="${tIdx}:${lIdx}:note" placeholder="1-line scope & materials detail for buyer..." />
+            </div>
+          `;
+        }).join("");
+
         const featuresListHtml = (tier.features || []).map((feat, fIdx) => `
           <div class="feature-item-row">
             <input type="text" value="${escapeHtml(feat)}" data-tier-feat="${tIdx}:${fIdx}" placeholder="Deliverable bullet..." />
@@ -902,7 +1330,7 @@
                 </div>
                 <div class="field">
                   <label>Price (${escapeHtml(sym)})</label>
-                  <input type="number" min="0" step="1" value="${Number(tier.price) || 0}" data-tier-bind="${tIdx}:price" />
+                  <input id="tier-price-input-${tIdx}" type="number" min="0" step="any" value="${Number(tier.price) || 0}" data-tier-bind="${tIdx}:price" />
                 </div>
               </div>
               <div class="field-row-2">
@@ -915,13 +1343,40 @@
                   <input type="text" value="${escapeHtml(tier.timeline)}" data-tier-bind="${tIdx}:timeline" />
                 </div>
               </div>
-              <div class="field">
-                <label>Included Deliverables</label>
-                <div>${featuresListHtml}</div>
-                <button type="button" class="btn btn-outline btn-sm" data-action="add-feature" data-tier-idx="${tIdx}" style="align-self:flex-start;">
-                  ${ICONS.plus} Add Deliverable
-                </button>
+
+              <div class="toggle-row" style="padding:7px 10px;">
+                <div>
+                  <span style="font-size:12px;font-weight:600;display:block;">Auto-sum price from itemized services</span>
+                  <span style="font-size:11px;color:var(--text-muted);" id="tier-items-sum-${tIdx}">Services sum: <strong class="mono">${formatMoney(itemsSum, cur)}</strong></span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" data-tier-autocalc="${tIdx}" ${tier.autoCalcPrice ? "checked" : ""} />
+                  <span class="slider"></span>
+                </label>
               </div>
+
+              <div class="field">
+                <label>Itemized Services (${lineItems.length})</label>
+                <div class="line-item-list">${lineItemsHtml}</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button type="button" class="btn btn-outline btn-sm" data-action="add-line-item" data-tier-idx="${tIdx}">
+                    ${ICONS.plus} Add Service Item
+                  </button>
+                  ${lineItems.length === 0 && (tier.features || []).length > 0 ? `
+                    <button type="button" class="btn btn-primary btn-sm" data-action="convert-features-to-items" data-tier-idx="${tIdx}">Convert Bullets to Services</button>
+                  ` : ""}
+                </div>
+              </div>
+
+              <details class="legacy-bullets-details">
+                <summary>Summary Highlight Bullets (${(tier.features || []).length})</summary>
+                <div style="margin-top:8px;">
+                  <div>${featuresListHtml}</div>
+                  <button type="button" class="btn btn-outline btn-xs" data-action="add-feature" data-tier-idx="${tIdx}">
+                    ${ICONS.plus} Add Highlight Bullet
+                  </button>
+                </div>
+              </details>
             </div>
           </div>
         `;
@@ -950,12 +1405,26 @@
             }
           </div>
         </div>
+        ${catalogBoxHtml}
         ${tierCardsHtml}
       `;
     }
 
     if (state.activeTab === "addons") {
       const sym = (CONFIG.CURRENCIES && CONFIG.CURRENCIES[cur]?.symbol) || "$";
+      const quickCatalogChips = state.serviceCatalog.length > 0
+        ? `
+          <div class="card-box">
+            <div style="font-size:11.5px;font-weight:700;color:var(--text-secondary);margin-bottom:6px;">Quick-Add From My Services Library:</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              ${state.serviceCatalog.map((svc, cIdx) => `
+                <button type="button" class="btn btn-outline btn-xs" data-action="catalog-to-addon" data-cat-idx="${cIdx}">+ ${escapeHtml(svc.name)} (${formatMoney(getLineItemTotal(svc), cur)})</button>
+              `).join("")}
+            </div>
+          </div>
+        `
+        : "";
+
       const addonsHtml = (p.addons || []).map((addon, aIdx) => `
         <div class="card-box">
           <div class="card-box-head">
@@ -971,6 +1440,20 @@
               <div class="field">
                 <label>Upgrade Price (${escapeHtml(sym)})</label>
                 <input type="number" min="0" step="1" value="${Number(addon.price) || 0}" data-addon-bind="${aIdx}:price" />
+              </div>
+            </div>
+            <div class="line-item-metrics-row">
+              <div class="field">
+                <label>Category</label>
+                <input type="text" value="${escapeHtml(addon.category || "Upgrade")}" data-addon-bind="${aIdx}:category" placeholder="Priority / Upgrade" />
+              </div>
+              <div class="field">
+                <label>Qty</label>
+                <input type="number" min="1" step="1" value="${Number(addon.qty) || 1}" data-addon-bind="${aIdx}:qty" />
+              </div>
+              <div class="field">
+                <label>Unit</label>
+                <input type="text" value="${escapeHtml(addon.unit || "pkg")}" data-addon-bind="${aIdx}:unit" placeholder="pkg / visit" />
               </div>
             </div>
             <div class="field">
@@ -993,6 +1476,7 @@
           <span style="font-size:12.5px;color:var(--text-muted);">Clients love toggling upgrades themselves instead of feeling pressured.</span>
           <button type="button" class="btn btn-primary btn-sm" data-action="add-addon">${ICONS.plus} Add Upsell</button>
         </div>
+        ${quickCatalogChips}
         ${addonsHtml || `<div class="card-box" style="text-align:center;color:var(--text-muted);">No add-ons yet. Click "+ Add Upsell" to boost your average order size.</div>`}
       `;
     }
@@ -1402,7 +1886,7 @@
 
           <nav class="builder-tabs" role="tablist">
             <button type="button" class="builder-tab ${state.activeTab === "business" ? "active" : ""}" data-action="switch-tab" data-tab="business">1. Brand</button>
-            <button type="button" class="builder-tab ${state.activeTab === "tiers" ? "active" : ""}" data-action="switch-tab" data-tab="tiers">2. Tiers</button>
+            <button type="button" class="builder-tab ${state.activeTab === "tiers" ? "active" : ""}" data-action="switch-tab" data-tab="tiers">2. Services</button>
             <button type="button" class="builder-tab ${state.activeTab === "addons" ? "active" : ""}" data-action="switch-tab" data-tab="addons">3. Upsells</button>
             <button type="button" class="builder-tab ${state.activeTab === "close" ? "active" : ""}" data-action="switch-tab" data-tab="close">4. Close</button>
           </nav>
@@ -1600,6 +2084,13 @@
     canvas.addEventListener("pointercancel", stopDraw);
   }
 
+  function refreshBuilderAndPreview() {
+    saveCurrentDraftLocal();
+    const body = document.getElementById("builder-body");
+    if (body) body.innerHTML = renderBuilderBodyHtml();
+    refreshPreviewOnly();
+  }
+
   // =========================================================================
   // Event Delegation (Clicks, Inputs, Changes)
   // =========================================================================
@@ -1698,6 +2189,177 @@
       return;
     }
 
+    if (action === "scroll-to-section") {
+      const targetEl = document.getElementById(target.dataset.target);
+      if (targetEl) targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+
+    if (action === "toggle-cat-form") {
+      state.showCatForm = !state.showCatForm;
+      state.editingCatIdx = -1;
+      state.catForm = { name: "", category: "", qty: 1, unit: "job", unitPrice: 250, note: "" };
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      return;
+    }
+
+    if (action === "cancel-cat-form") {
+      state.showCatForm = false;
+      state.editingCatIdx = -1;
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      return;
+    }
+
+    if (action === "edit-cat-service") {
+      const cIdx = Number(target.dataset.catIdx);
+      const svc = state.serviceCatalog[cIdx];
+      if (!svc) return;
+      state.editingCatIdx = cIdx;
+      state.showCatForm = true;
+      state.catForm = deepClone(svc);
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      return;
+    }
+
+    if (action === "save-cat-service") {
+      const cf = state.catForm || {};
+      const cleanName = String(cf.name || "").trim();
+      if (!cleanName) {
+        showToast("Please enter a service name.");
+        const el = document.getElementById("cat-f-name");
+        if (el) el.focus();
+        return;
+      }
+      const entry = normalizeServiceItem(cf);
+      if (state.editingCatIdx >= 0 && state.serviceCatalog[state.editingCatIdx]) {
+        entry.id = state.serviceCatalog[state.editingCatIdx].id;
+        state.serviceCatalog[state.editingCatIdx] = entry;
+        showToast(`Updated "${entry.name}" in My Services Library`);
+      } else {
+        state.serviceCatalog.unshift(entry);
+        showToast(`Added "${entry.name}" to My Services Library`);
+      }
+      saveServiceCatalog();
+      state.showCatForm = false;
+      state.editingCatIdx = -1;
+      state.catForm = { name: "", category: "", qty: 1, unit: "job", unitPrice: 250, note: "" };
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      return;
+    }
+
+    if (action === "delete-cat-service") {
+      const cIdx = Number(target.dataset.catIdx);
+      state.serviceCatalog.splice(cIdx, 1);
+      if (state.editingCatIdx === cIdx) {
+        state.editingCatIdx = -1;
+        state.showCatForm = false;
+      }
+      saveServiceCatalog();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      showToast("Service removed from library.");
+      return;
+    }
+
+    if (action === "load-starter-services") {
+      const starters = (window.BIDLIFT_STARTER_SERVICES && window.BIDLIFT_STARTER_SERVICES[state.proposal.id || "contractor"])
+        || (window.BIDLIFT_STARTER_SERVICES && window.BIDLIFT_STARTER_SERVICES.contractor)
+        || [];
+      const existingNames = new Set(state.serviceCatalog.map((s) => s.name.trim().toLowerCase()));
+      let added = 0;
+      starters.forEach((st) => {
+        if (!existingNames.has(String(st.name || "").trim().toLowerCase())) {
+          state.serviceCatalog.push(normalizeServiceItem(st));
+          existingNames.add(String(st.name || "").trim().toLowerCase());
+          added += 1;
+        }
+      });
+      saveServiceCatalog();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      showToast(added > 0 ? `Loaded ${added} trade starter services into library!` : "Trade starter services already in library.");
+      return;
+    }
+
+    if (action === "save-quote-services-to-catalog") {
+      const existingNames = new Set(state.serviceCatalog.map((s) => s.name.trim().toLowerCase()));
+      let added = 0;
+      (state.proposal.tiers || []).forEach((t) => {
+        (t.lineItems || []).forEach((it) => {
+          const nm = String(it.name || "").trim();
+          if (nm && !existingNames.has(nm.toLowerCase())) {
+            state.serviceCatalog.push(normalizeServiceItem(it));
+            existingNames.add(nm.toLowerCase());
+            added += 1;
+          }
+        });
+      });
+      saveServiceCatalog();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      showToast(added > 0 ? `Saved ${added} quote service(s) to your library!` : "All current quote services are already saved.");
+      return;
+    }
+
+    if (action === "save-item-to-catalog") {
+      const tIdx = Number(target.dataset.tierIdx);
+      const lIdx = Number(target.dataset.lineIdx);
+      const item = state.proposal.tiers[tIdx]?.lineItems?.[lIdx];
+      if (!item || !(item.name || "").trim()) {
+        showToast("Enter a service name before saving to library.");
+        return;
+      }
+      state.serviceCatalog.unshift(normalizeServiceItem(item));
+      saveServiceCatalog();
+      const body = document.getElementById("builder-body");
+      if (body) body.innerHTML = renderBuilderBodyHtml();
+      showToast(`Saved "${item.name}" to My Services Library!`);
+      return;
+    }
+
+    if (action === "catalog-to-tier") {
+      const cIdx = Number(target.dataset.catIdx);
+      const tIdx = Number(target.dataset.tierIdx);
+      const svc = state.serviceCatalog[cIdx];
+      const tier = state.proposal.tiers[tIdx];
+      if (!svc || !tier) return;
+      if (!Array.isArray(tier.lineItems)) tier.lineItems = [];
+      if (tier.lineItems.length >= 15) {
+        showToast("Maximum 15 service items per package.");
+        return;
+      }
+      tier.lineItems.push(normalizeServiceItem(svc));
+      syncTierPriceFromItems(tier);
+      state.selectedTierIdx = tIdx;
+      refreshBuilderAndPreview();
+      showToast(`Added "${svc.name}" to ${tier.name || `Option ${tIdx + 1}`}`);
+      return;
+    }
+
+    if (action === "catalog-to-addon") {
+      const cIdx = Number(target.dataset.catIdx);
+      const svc = state.serviceCatalog[cIdx];
+      if (!svc) return;
+      if (!Array.isArray(state.proposal.addons)) state.proposal.addons = [];
+      state.proposal.addons.push({
+        id: `addon-${Date.now()}`,
+        title: svc.name,
+        description: svc.note || "",
+        category: svc.category || "Upgrade",
+        qty: Math.max(1, Number(svc.qty) || 1),
+        unit: svc.unit || "pkg",
+        price: getLineItemTotal(svc),
+        selected: false
+      });
+      refreshBuilderAndPreview();
+      showToast(`Added "${svc.name}" to Optional Upsells!`);
+      return;
+    }
+
     if (action === "add-tier") {
       if ((state.proposal.tiers || []).length >= 3) return;
       state.proposal.tiers.push({
@@ -1705,13 +2367,15 @@
         subtitle: "Expanded service option",
         price: 2500,
         timeline: "5 Days",
-        features: ["Full core scope included", "Priority scheduling support"]
+        autoCalcPrice: true,
+        features: ["Full core scope included", "Priority scheduling support"],
+        lineItems: [
+          normalizeServiceItem({ name: "Core Project Delivery", category: "Core Scope", qty: 1, unit: "pkg", unitPrice: 2000, note: "Primary materials, labor & quality supervision" }),
+          normalizeServiceItem({ name: "Priority Prep & Cleanup", category: "Prep & Care", qty: 1, unit: "job", unitPrice: 500, note: "Dedicated scheduling & final walkthrough" })
+        ]
       });
       state.proposal.singleTierMode = false;
-      saveCurrentDraftLocal();
-      const body = document.getElementById("builder-body");
-      if (body) body.innerHTML = renderBuilderBodyHtml();
-      refreshPreviewOnly();
+      refreshBuilderAndPreview();
       return;
     }
 
@@ -1750,18 +2414,70 @@
       return;
     }
 
+    if (action === "add-line-item") {
+      const tIdx = Number(target.dataset.tierIdx);
+      const tier = state.proposal.tiers[tIdx];
+      if (!tier) return;
+      if (!Array.isArray(tier.lineItems)) tier.lineItems = [];
+      if (tier.lineItems.length >= 15) {
+        showToast("Maximum 15 service items per package.");
+        return;
+      }
+      tier.lineItems.push(normalizeServiceItem({
+        name: "Custom Service Line",
+        category: "Service",
+        qty: 1,
+        unit: "job",
+        unitPrice: 250,
+        note: ""
+      }));
+      syncTierPriceFromItems(tier);
+      refreshBuilderAndPreview();
+      return;
+    }
+
+    if (action === "remove-line-item") {
+      const tIdx = Number(target.dataset.tierIdx);
+      const lIdx = Number(target.dataset.lineIdx);
+      const tier = state.proposal.tiers[tIdx];
+      if (!tier || !Array.isArray(tier.lineItems)) return;
+      tier.lineItems.splice(lIdx, 1);
+      syncTierPriceFromItems(tier);
+      refreshBuilderAndPreview();
+      return;
+    }
+
+    if (action === "convert-features-to-items") {
+      const tIdx = Number(target.dataset.tierIdx);
+      const tier = state.proposal.tiers[tIdx];
+      if (!tier) return;
+      const bullets = (tier.features || []).filter((f) => f && f.trim());
+      tier.autoCalcPrice = false;
+      tier.lineItems = bullets.map((b, idx) => normalizeServiceItem({
+        name: b.slice(0, 100),
+        category: idx === 0 ? "Core Scope" : "Included",
+        qty: 1,
+        unit: "item",
+        unitPrice: idx === 0 ? Number(tier.price) || 0 : 0,
+        note: ""
+      }));
+      refreshBuilderAndPreview();
+      showToast(`Converted ${tier.lineItems.length} bullets into itemized services!`);
+      return;
+    }
+
     if (action === "add-addon") {
       state.proposal.addons.push({
         id: `addon-${Date.now()}`,
         title: "Priority Service Upgrade",
         description: "Optional add-on to elevate final results.",
+        category: "Upgrade",
+        qty: 1,
+        unit: "pkg",
         price: 250,
         selected: false
       });
-      saveCurrentDraftLocal();
-      const body = document.getElementById("builder-body");
-      if (body) body.innerHTML = renderBuilderBodyHtml();
-      refreshPreviewOnly();
+      refreshBuilderAndPreview();
       return;
     }
 
@@ -1855,6 +2571,9 @@
         businessName: p.businessName || "",
         clientName: p.clientName || "",
         tierName: totals.chosenTier?.name || "",
+        lineItems: Array.isArray(totals.chosenTier?.lineItems)
+          ? totals.chosenTier.lineItems.map((it) => ({ name: it.name, qty: it.qty, unit: it.unit, unitPrice: it.unitPrice }))
+          : [],
         addons: totals.selectedAddons.map((a) => ({ title: a.title, price: a.price })),
         subtotal: totals.subtotal,
         discount: totals.discountApplied,
@@ -1882,6 +2601,7 @@
         isoTimestamp,
         tierName: totals.chosenTier?.name || "Selected Option",
         basePrice: totals.basePrice,
+        lineItems: deepClone(totals.chosenTier?.lineItems || []),
         addons: deepClone(totals.selectedAddons),
         taxRate: totals.taxRate,
         taxLabel: totals.taxLabel,
@@ -2006,7 +2726,7 @@
     if (action === "load-draft") {
       const idx = Number(target.dataset.draftIdx);
       if (state.drafts[idx]) {
-        state.proposal = deepClone(state.drafts[idx].proposal);
+        state.proposal = normalizeProposalServices(deepClone(state.drafts[idx].proposal));
         state.proposal.whiteLabel = state.isPro;
         state.selectedTierIdx = state.proposal.recommendedTierIndex ?? 1;
         state.approved = false;
@@ -2144,11 +2864,53 @@
       return;
     }
 
+    if (el.dataset.catField) {
+      const field = el.dataset.catField;
+      if (!state.catForm) state.catForm = { name: "", category: "", qty: 1, unit: "job", unitPrice: 250, note: "" };
+      state.catForm[field] = el.type === "number" ? Math.max(0, Number(el.value) || 0) : el.value;
+      return;
+    }
+
     if (el.dataset.tierBind) {
       const [tIdxStr, key] = el.dataset.tierBind.split(":");
       const tIdx = Number(tIdxStr);
-      if (state.proposal.tiers[tIdx]) {
-        state.proposal.tiers[tIdx][key] = el.type === "number" ? Number(el.value) || 0 : el.value;
+      const tier = state.proposal.tiers[tIdx];
+      if (tier) {
+        tier[key] = el.type === "number" ? Number(el.value) || 0 : el.value;
+        if (key === "price" && tier.autoCalcPrice) {
+          tier.autoCalcPrice = false;
+          const autoCb = document.querySelector(`input[data-tier-autocalc="${tIdx}"]`);
+          if (autoCb) autoCb.checked = false;
+        }
+        saveCurrentDraftLocal();
+        refreshPreviewOnly();
+      }
+      return;
+    }
+
+    if (el.dataset.lineBind) {
+      const [tIdxStr, lIdxStr, key] = el.dataset.lineBind.split(":");
+      const tIdx = Number(tIdxStr);
+      const lIdx = Number(lIdxStr);
+      const tier = state.proposal.tiers[tIdx];
+      const item = tier?.lineItems?.[lIdx];
+      if (item) {
+        item[key] = el.type === "number" ? Math.max(0, Number(el.value) || 0) : el.value;
+        const cur = state.proposal.currency || "USD";
+        const lineAmt = getLineItemTotal(item);
+        const lineSumEl = document.getElementById(`line-sum-${tIdx}-${lIdx}`);
+        if (lineSumEl) lineSumEl.textContent = lineAmt > 0 ? formatMoney(lineAmt, cur) : "Incl.";
+
+        const itemsSum = getTierItemsSubtotal(tier);
+        const tierSumEl = document.getElementById(`tier-items-sum-${tIdx}`);
+        if (tierSumEl) {
+          tierSumEl.innerHTML = `Services sum: <strong class="mono">${escapeHtml(formatMoney(itemsSum, cur))}</strong>`;
+        }
+        if (tier.autoCalcPrice) {
+          syncTierPriceFromItems(tier);
+          const priceInput = document.getElementById(`tier-price-input-${tIdx}`);
+          if (priceInput) priceInput.value = String(tier.price);
+        }
         saveCurrentDraftLocal();
         refreshPreviewOnly();
       }
@@ -2171,7 +2933,7 @@
       const [aIdxStr, key] = el.dataset.addonBind.split(":");
       const aIdx = Number(aIdxStr);
       if (state.proposal.addons[aIdx]) {
-        state.proposal.addons[aIdx][key] = el.type === "number" ? Number(el.value) || 0 : el.value;
+        state.proposal.addons[aIdx][key] = el.type === "number" ? Math.max(key === "qty" ? 1 : 0, Number(el.value) || 0) : el.value;
         saveCurrentDraftLocal();
         refreshPreviewOnly();
       }
@@ -2212,6 +2974,22 @@
       return;
     }
 
+    if (el.dataset.tierAutocalc !== undefined) {
+      const tIdx = Number(el.dataset.tierAutocalc);
+      const tier = state.proposal.tiers[tIdx];
+      if (tier) {
+        tier.autoCalcPrice = el.checked;
+        if (tier.autoCalcPrice) {
+          syncTierPriceFromItems(tier);
+          const priceInput = document.getElementById(`tier-price-input-${tIdx}`);
+          if (priceInput) priceInput.value = String(tier.price);
+        }
+        saveCurrentDraftLocal();
+        refreshPreviewOnly();
+      }
+      return;
+    }
+
     if (el.dataset.addonCheck !== undefined) {
       const aIdx = Number(el.dataset.addonCheck);
       if (state.proposal.addons[aIdx]) {
@@ -2247,7 +3025,7 @@
             saveDraftsList();
           }
           if (obj.current && Array.isArray(obj.current.tiers)) {
-            state.proposal = obj.current;
+            state.proposal = normalizeProposalServices(obj.current);
             saveCurrentDraftLocal();
           }
           renderApp();
@@ -2313,7 +3091,7 @@
       }
 
       state.mode = "client";
-      state.proposal = decoded;
+      state.proposal = normalizeProposalServices(decoded);
       state.selectedTierIdx = Math.min(decoded.tiers.length - 1, Math.max(0, Number(decoded.recommendedTierIndex ?? 1)));
       state.approved = false;
       state.approvalReceipt = null;
@@ -2339,7 +3117,7 @@
       if (savedCurrent) {
         const parsed = JSON.parse(savedCurrent);
         if (parsed && Array.isArray(parsed.tiers) && parsed.tiers.length > 0) {
-          state.proposal = parsed;
+          state.proposal = normalizeProposalServices(parsed);
         }
       }
     } catch (err) {}

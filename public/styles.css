@@ -1814,6 +1814,590 @@ svg {
   flex-wrap: wrap;
 }
 
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+/* ==========================================================================
+   Buyer Interactive Stepper & Live Selection Strip
+   ========================================================================== */
+.buyer-nav-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 30px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.buyer-nav-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.buyer-nav-pill {
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.buyer-nav-pill:hover {
+  border-color: var(--brand);
+  color: var(--text-primary);
+  background: var(--brand-soft);
+}
+
+[data-theme="dark"] .buyer-nav-pill:hover {
+  background: var(--bg-elevated);
+}
+
+.buyer-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  border: 1px solid rgba(15, 41, 74, 0.16);
+  font-size: 12px;
+  color: var(--brand);
+}
+
+[data-theme="dark"] .buyer-live-pill {
+  background: rgba(200, 157, 60, 0.14);
+  border-color: rgba(200, 157, 60, 0.35);
+  color: #fde68a;
+}
+
+.buyer-live-total {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* ==========================================================================
+   Aesthetic Tier Card Service Previews & Add-On Pills
+   ========================================================================== */
+.tier-eyebrow {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.tier-service-line {
+  flex: 1;
+  min-width: 0;
+}
+
+.tier-service-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tier-service-head strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.tier-item-meta {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tier-service-note {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.38;
+  margin-top: 2px;
+}
+
+.tier-scope-footnote {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.selection-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--success-soft);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+  color: var(--success);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.selection-muted-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.addon-meta-tags {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.addon-cat-pill,
+.addon-unit-pill {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.addon-card.active .addon-cat-pill {
+  background: rgba(5, 150, 105, 0.14);
+  border-color: rgba(5, 150, 105, 0.28);
+  color: var(--success);
+}
+
+/* ==========================================================================
+   Section 3 — Detailed Services & Itemized Breakdown
+   ========================================================================== */
+.itemized-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+[data-theme="dark"] .itemized-tier-badge {
+  background: rgba(200, 157, 60, 0.16);
+  color: #fde68a;
+}
+
+.itemized-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.itemized-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.itemized-table thead th {
+  text-align: left;
+  padding: 11px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.itemized-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: top;
+  color: var(--text-secondary);
+}
+
+.itemized-group-row td {
+  background: rgba(15, 41, 74, 0.04);
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+  padding: 9px 16px;
+}
+
+[data-theme="dark"] .itemized-group-row td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.itemized-svc-name {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.itemized-svc-note {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.itemized-cat-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.itemized-cat-pill.accent {
+  background: var(--success-soft);
+  border-color: rgba(5, 150, 105, 0.25);
+  color: var(--success);
+}
+
+.itemized-amt {
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.itemized-included-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--success-soft);
+  color: var(--success);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.itemized-adjust-row.is-savings td,
+.itemized-adjust-row.is-savings .itemized-amt {
+  color: var(--success);
+}
+
+.itemized-upgrade-row td {
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.itemized-empty-upgrade-row td {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: 14px 16px;
+}
+
+.itemized-totals-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.itemized-total-chip {
+  display: flex;
+  flex-direction: column;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  min-width: 110px;
+}
+
+.itemized-total-chip span {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.itemized-total-chip strong {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.itemized-total-chip.is-discount strong {
+  color: var(--success);
+}
+
+.itemized-total-chip.is-grand {
+  background: var(--brand);
+  border-color: var(--brand);
+}
+
+.itemized-total-chip.is-grand span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.itemized-total-chip.is-grand strong {
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.itemized-total-chip.is-deposit {
+  border-color: var(--accent);
+  background: rgba(200, 157, 60, 0.09);
+}
+
+@media (max-width: 679px) {
+  .buyer-nav-strip {
+    padding: 10px 16px;
+  }
+  .proposal-section,
+  .proposal-intro-box,
+  .trust-badges-bar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .itemized-table thead {
+    display: none;
+  }
+  .itemized-table tbody tr {
+    display: block;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 12px;
+  }
+  .itemized-table tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    border-bottom: none;
+    padding: 4px 0;
+    text-align: right;
+  }
+  .itemized-table tbody td[data-label="Service & Scope"] {
+    display: block;
+    text-align: left;
+    padding-bottom: 6px;
+  }
+  .itemized-table tbody td:not([data-label="Service & Scope"]):before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-align: left;
+  }
+  .itemized-group-row td[colspan="4"],
+  .itemized-empty-upgrade-row td {
+    display: block;
+    text-align: left;
+  }
+  .itemized-group-row td:before {
+    display: none !important;
+  }
+  .itemized-totals-bar {
+    justify-content: stretch;
+  }
+  .itemized-total-chip {
+    flex: 1 1 44%;
+  }
+}
+
+/* ==========================================================================
+   Builder My Services Library & Per-Package Line Item Editor
+   ========================================================================== */
+.catalog-box {
+  border-color: rgba(200, 157, 60, 0.4);
+  background: linear-gradient(180deg, rgba(200, 157, 60, 0.05) 0%, var(--bg-subtle) 100%);
+}
+
+.catalog-form-box {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 11px;
+  margin-bottom: 10px;
+}
+
+.catalog-empty {
+  text-align: center;
+  padding: 10px 6px 4px;
+}
+
+.catalog-empty p {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.catalog-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 270px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.catalog-item-row {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 9px 10px;
+}
+
+.catalog-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.catalog-item-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.catalog-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 3px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.catalog-item-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.catalog-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.line-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.line-item-editor-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.line-item-top-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.line-item-top-row input {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.line-item-sum {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--brand);
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: var(--brand-soft);
+  white-space: nowrap;
+}
+
+[data-theme="dark"] .line-item-sum {
+  background: rgba(200, 157, 60, 0.16);
+  color: #fde68a;
+}
+
+.line-item-metrics-row {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr 1fr;
+  gap: 7px;
+}
+
+.line-item-metrics-4 {
+  display: grid;
+  grid-template-columns: 1.3fr 0.65fr 0.85fr 0.85fr;
+  gap: 6px;
+}
+
+.line-item-editor-card input {
+  padding: 6px 8px !important;
+  font-size: 12px !important;
+}
+
+.legacy-bullets-details {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 7px 10px;
+}
+
+.legacy-bullets-details summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
 /* ==========================================================================
    Print / PDF Export Rules
    ========================================================================== */
@@ -1828,6 +2412,7 @@ svg {
   .builder-pane,
   .preview-chrome-bar,
   .client-floating-bar,
+  .buyer-nav-strip,
   .studio-traction-section,
   .studio-footer,
   .modal-backdrop,
@@ -1850,6 +2435,9 @@ svg {
   }
   .tier-card,
   .addon-card,
+  .itemized-card,
+  .itemized-table tr,
+  .itemized-totals-bar,
   .summary-box,
   .signature-box,
   .audit-trail-box {

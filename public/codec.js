@@ -65,12 +65,24 @@ window.BidLiftCodec = (function () {
         s: String(t.subtitle || "").slice(0, 140),
         p: Math.max(0, Number(t.price) || 0),
         d: String(t.timeline || "").slice(0, 50),
-        f: (Array.isArray(t.features) ? t.features : []).slice(0, 15).map((f) => String(f || "").slice(0, 180))
+        ac: Boolean(t.autoCalcPrice),
+        f: (Array.isArray(t.features) ? t.features : []).slice(0, 15).map((f) => String(f || "").slice(0, 180)),
+        li: (Array.isArray(t.lineItems) ? t.lineItems : []).slice(0, 15).map((it) => ({
+          n: String(it.name || "").slice(0, 100),
+          c: String(it.category || "").slice(0, 40),
+          q: Math.max(0, Number(it.qty) ?? 1),
+          u: String(it.unit || "").slice(0, 24),
+          r: Math.max(0, Number(it.unitPrice) || 0),
+          d: String(it.note || "").slice(0, 180)
+        }))
       })),
       ad: (Array.isArray(p.addons) ? p.addons : []).slice(0, 25).map((a) => ({
         id: String(a.id || "").slice(0, 40),
         t: String(a.title || "").slice(0, 100),
         d: String(a.description || "").slice(0, 220),
+        c: String(a.category || "").slice(0, 40),
+        q: Math.max(1, Number(a.qty) || 1),
+        u: String(a.unit || "").slice(0, 24),
         p: Math.max(0, Number(a.price) || 0),
         s: Boolean(a.selected)
       }))
@@ -82,8 +94,18 @@ window.BidLiftCodec = (function () {
     if (m.tiers && Array.isArray(m.tiers)) {
       return {
         ...m,
-        tiers: m.tiers.slice(0, 3),
-        addons: (Array.isArray(m.addons) ? m.addons : []).slice(0, 25)
+        tiers: m.tiers.slice(0, 3).map((t) => ({
+          ...t,
+          autoCalcPrice: Boolean(t.autoCalcPrice),
+          features: Array.isArray(t.features) ? t.features.slice(0, 15) : [],
+          lineItems: Array.isArray(t.lineItems) ? t.lineItems.slice(0, 15) : []
+        })),
+        addons: (Array.isArray(m.addons) ? m.addons : []).slice(0, 25).map((a) => ({
+          ...a,
+          category: String(a.category || ""),
+          qty: Math.max(1, Number(a.qty) || 1),
+          unit: String(a.unit || "")
+        }))
       };
     }
     const tiers = Array.isArray(m.ti)
@@ -92,7 +114,18 @@ window.BidLiftCodec = (function () {
           subtitle: String(t.s || ""),
           price: Math.max(0, Number(t.p) || 0),
           timeline: String(t.d || ""),
-          features: Array.isArray(t.f) ? t.f.slice(0, 15).map((f) => String(f || "")) : []
+          autoCalcPrice: Boolean(t.ac),
+          features: Array.isArray(t.f) ? t.f.slice(0, 15).map((f) => String(f || "")) : [],
+          lineItems: Array.isArray(t.li)
+            ? t.li.slice(0, 15).map((it) => ({
+                name: String(it.n || ""),
+                category: String(it.c || "Included Service"),
+                qty: Math.max(0, Number(it.q) ?? 1),
+                unit: String(it.u || "job"),
+                unitPrice: Math.max(0, Number(it.r) || 0),
+                note: String(it.d || "")
+              }))
+            : []
         }))
       : [];
     if (tiers.length === 0) return null;
@@ -134,6 +167,9 @@ window.BidLiftCodec = (function () {
             id: String(a.id || `addon-${idx}`),
             title: String(a.t || ""),
             description: String(a.d || ""),
+            category: String(a.c || ""),
+            qty: Math.max(1, Number(a.q) || 1),
+            unit: String(a.u || ""),
             price: Math.max(0, Number(a.p) || 0),
             selected: Boolean(a.s)
           }))
