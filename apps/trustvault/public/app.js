@@ -22,7 +22,9 @@
     activeTab: "portal", // "portal" | "autofill"
     billingCycle: "annual", // "annual" | "monthly"
     proUnlocked: false,
+    proPlanLabel: "",
     proModalOpen: false,
+    legalModalOpen: false,
     proFocusTier: "pro", // "pro" | "dfy"
     ndaModalOpen: false,
     editingPillarId: "",
@@ -82,12 +84,50 @@
     };
   }
 
+  function computeFnv1aHex(inputStr) {
+    let hash = 2166136261;
+    for (let i = 0; i < inputStr.length; i++) {
+      hash ^= inputStr.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).toUpperCase().padStart(8, "0");
+  }
+
+  function verifyLicenseKey(rawKey) {
+    const clean = String(rawKey || "").trim().toUpperCase();
+    const match = /^TV-PRO-([A-Z0-9]{6})-([A-F0-9]{4})$/.exec(clean);
+    if (!match) return false;
+    const expected = computeFnv1aHex(`TRUSTVAULT_V1|${match[1]}`).slice(0, 4);
+    return match[2] === expected;
+  }
+
+  function activateProState(cleanKey, planLabel) {
+    const label = planLabel || "TrustVault Pro Enterprise";
+    state.proUnlocked = true;
+    state.proPlanLabel = label;
+    if (state.portal) state.portal.whiteLabel = true;
+    try {
+      localStorage.setItem(STORAGE_KEYS.PRO_LICENSE, JSON.stringify({ active: true, label, key: cleanKey }));
+    } catch (e) {}
+  }
+
   function loadProState() {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.PRO_LICENSE);
-      if (saved && saved.startsWith(CFG.LICENSE_PREFIX || "TV-PRO-")) {
+      if (!saved) return;
+      if (saved.startsWith("{")) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.active && verifyLicenseKey(parsed.key)) {
+          state.proUnlocked = true;
+          state.proPlanLabel = parsed.label || "TrustVault Pro Enterprise";
+          return;
+        }
+      } else if (verifyLicenseKey(saved)) {
         state.proUnlocked = true;
+        state.proPlanLabel = "TrustVault Pro Enterprise";
+        return;
       }
+      localStorage.removeItem(STORAGE_KEYS.PRO_LICENSE);
     } catch (e) {}
   }
 
@@ -885,6 +925,28 @@
       `;
     }
 
+    if (state.legalModalOpen) {
+      const supportEmail = CFG.SUPPORT_EMAIL || "bidliftco@gmail.com";
+      html += `
+        <div class="tv-modal-backdrop" id="modal-legal" role="dialog" aria-modal="true" aria-label="Privacy, Security & 14-Day Refund Policy">
+          <div class="tv-modal narrow">
+            <div class="tv-modal-head">
+              <div>
+                <h2>Privacy, Security &amp; 14-Day Refund Policy</h2>
+                <div style="font-size:12.5px;color:var(--tv-text-muted);">TrustVault Zero-Backend Architecture &amp; Polar.sh Billing Terms</div>
+              </div>
+              <button type="button" class="tv-close-btn" data-action="close-modals" aria-label="Close modal">×</button>
+            </div>
+            <div style="display:grid;gap:12px;font-size:13px;line-height:1.6;color:var(--tv-text-secondary);">
+              <div><strong style="color:var(--tv-text-primary);">1. Zero-Server Privacy:</strong> Trust Portal data, subprocessors, CSV question uploads, and answers remain strictly inside your browser storage and compressed <code>#t=</code> URL fragments—never stored on or trained into external servers.</div>
+              <div><strong style="color:var(--tv-text-primary);">2. SHA-256 Attestation Digest:</strong> Exports and live portals compute client-side <code>SHA-256</code> integrity hashes so enterprise security reviewers can verify exact timestamped disclosures.</div>
+              <div><strong style="color:var(--tv-text-primary);">3. Polar.sh Billing &amp; 14-Day Refund Guarantee:</strong> Pro, Scale, and Done-For-You orders are fulfilled via Polar.sh (Merchant of Record) with global VAT/sales tax compliance. Cancel anytime or email <a href="mailto:${escHtml(supportEmail)}">${escHtml(supportEmail)}</a> within 14 days for a full refund.</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     return html;
   }
 
@@ -1146,6 +1208,7 @@
             <a href="calculator.html">Deal-Velocity &amp; GRC Calculator</a>
             <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Proposals</a>
             <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock-kgt9.onrender.com/")}" target="_blank" rel="noopener noreferrer">ScopeLock SOWs</a>
+            <button type="button" class="btn btn-outline btn-xs" style="color:#e2e8f0;border-color:rgba(255,255,255,0.22);background:transparent;" data-action="open-legal-modal">Privacy &amp; 14-Day Refund</button>
           </div>
         </div>
       </footer>
@@ -1512,22 +1575,27 @@
       });
     });
 
+    document.querySelectorAll("[data-action='open-legal-modal']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.legalModalOpen = true;
+        render();
+      });
+    });
+
     const actBtn = document.querySelector("[data-action='activate-license']");
     if (actBtn) {
       actBtn.addEventListener("click", () => {
         const inp = document.getElementById("pro-license-input");
         const val = (inp ? inp.value : "").trim().toUpperCase();
         const prefix = CFG.LICENSE_PREFIX || "TV-PRO-";
-        if (val.startsWith(prefix) && val.length >= prefix.length + 4) {
-          try {
-            localStorage.setItem(STORAGE_KEYS.PRO_LICENSE, val);
-          } catch (e) {}
-          state.proUnlocked = true;
+        if (verifyLicenseKey(val)) {
+          activateProState(val, "TrustVault Pro Enterprise");
+          ANALYTICS.track("pro_unlocked", { method: "manual" });
           state.proModalOpen = false;
           render();
           showToast("TrustVault Pro Enterprise unlocked!");
         } else {
-          showToast(`Enter a valid ${prefix}XXXX license key or email ${CFG.SUPPORT_EMAIL}.`);
+          showToast(`Enter a valid signed key (e.g. ${prefix}XXXXXX-XXXX) or email ${CFG.SUPPORT_EMAIL}.`);
         }
       });
     }
@@ -1536,6 +1604,7 @@
       btn.addEventListener("click", () => {
         state.proModalOpen = false;
         state.ndaModalOpen = false;
+        state.legalModalOpen = false;
         render();
       });
     });
@@ -1582,6 +1651,31 @@
 
     const params = new URLSearchParams(window.location.search || "");
     const hash = window.location.hash || "";
+
+    const unlockParam = (params.get("unlock") || "").trim();
+    const planParam = (params.get("plan") || "").trim().toLowerCase();
+    let unlockedToast = "";
+    if (unlockParam && verifyLicenseKey(unlockParam)) {
+      const tvPlanMap = {
+        annual: "TrustVault Pro Enterprise (Annual)",
+        monthly: "TrustVault Pro Enterprise (Monthly)",
+        scale_annual: "TrustVault Scale (Annual)",
+        scale_monthly: "TrustVault Scale (Monthly)",
+        dfy: "TrustVault 48-Hr DFY Concierge License"
+      };
+      const label = tvPlanMap[planParam] || "TrustVault Pro Enterprise";
+      activateProState(unlockParam.toUpperCase(), label);
+      unlockedToast = `${label} activated automatically! Unlimited CSV exports & white-label unlocked.`;
+      ANALYTICS.track("pro_unlocked", { method: "redirect", plan: planParam || "pro" });
+      try {
+        params.delete("unlock");
+        params.delete("plan");
+        params.delete("checkout_id");
+        const rem = params.toString();
+        const cleanUrl = `${window.location.pathname}${rem ? "?" + rem : ""}${hash}`;
+        window.history.replaceState({}, "", cleanUrl);
+      } catch (e) {}
+    }
 
     if (params.get("embed") === "1") {
       state.isEmbed = true;
@@ -1637,6 +1731,9 @@
     refreshPortalDigest();
     refreshQaDigest();
     render();
+    if (unlockedToast) {
+      showToast(unlockedToast);
+    }
 
     ANALYTICS.track("studio_loaded", {
       preset_id: state.portal.presetId,

@@ -346,15 +346,45 @@
     }
   }
 
+  function computeFnv1aHex(inputStr) {
+    let hash = 2166136261;
+    for (let i = 0; i < inputStr.length; i++) {
+      hash ^= inputStr.charCodeAt(i);
+      hash = Math.imul(hash, 16777619);
+    }
+    return (hash >>> 0).toString(16).toUpperCase().padStart(8, "0");
+  }
+
+  function verifyLicenseKey(rawKey) {
+    const clean = String(rawKey || "").trim().toUpperCase();
+    const match = /^SL-PRO-([A-Z0-9]{6})-([A-F0-9]{4})$/.exec(clean);
+    if (!match) return false;
+    const expected = computeFnv1aHex(`SCOPELOCK_V1|${match[1]}`).slice(0, 4);
+    return match[2] === expected;
+  }
+
+  function activateProState(cleanKey, planLabel) {
+    const label = planLabel || "ScopeLock Pro";
+    state.isPro = true;
+    state.proPlanLabel = label;
+    if (state.co) state.co.whiteLabel = true;
+    try {
+      const key = (CONFIG.STORAGE_KEYS && CONFIG.STORAGE_KEYS.PRO_LICENSE) || "scopelock_pro_v1";
+      localStorage.setItem(key, JSON.stringify({ active: true, label, key: cleanKey }));
+    } catch (e) {}
+  }
+
   function loadProState() {
     try {
       const key = (CONFIG.STORAGE_KEYS && CONFIG.STORAGE_KEYS.PRO_LICENSE) || "scopelock_pro_v1";
       const raw = localStorage.getItem(key);
       if (!raw) return;
       const parsed = JSON.parse(raw);
-      if (parsed && parsed.active) {
+      if (parsed && parsed.active && verifyLicenseKey(parsed.key)) {
         state.isPro = true;
-        state.proPlanLabel = parsed.label || "Pro Active";
+        state.proPlanLabel = parsed.label || "ScopeLock Pro";
+      } else {
+        localStorage.removeItem(key);
       }
     } catch (e) {}
   }
@@ -421,20 +451,15 @@
   function activateLicenseKey(rawCode) {
     const clean = String(rawCode || "").trim().toUpperCase();
     const prefix = CONFIG.LICENSE_PREFIX || "SL-PRO-";
-    if (clean.startsWith(prefix) && clean.length >= prefix.length + 6) {
-      state.isPro = true;
-      state.proPlanLabel = "ScopeLock Pro";
-      if (state.co) state.co.whiteLabel = true;
-      try {
-        const key = (CONFIG.STORAGE_KEYS && CONFIG.STORAGE_KEYS.PRO_LICENSE) || "scopelock_pro_v1";
-        localStorage.setItem(key, JSON.stringify({ active: true, label: "ScopeLock Pro", key: clean }));
-      } catch (e) {}
+    if (verifyLicenseKey(clean)) {
+      activateProState(clean, "ScopeLock Pro");
+      if (TELEMETRY) TELEMETRY.track("pro_unlocked", { method: "manual" });
       closeModal("modal-pro");
       showToast("ScopeLock Pro white-label activated!");
       render();
       return;
     }
-    showToast(`Enter a valid license key starting with ${prefix}`);
+    showToast(`Enter a valid signed license key (e.g. ${prefix}XXXXXX-XXXX).`);
   }
 
   function deactivateLicense() {
@@ -661,6 +686,28 @@
               <input id="pro-license-input" class="input" style="flex:1;min-width:200px;" type="text" placeholder="Enter license key (e.g. ${escapeHtml(prefix)}XXXXXX)" />
               <button type="button" class="btn btn-primary" data-action="activate-license">Activate Key</button>
             </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderLegalModal() {
+    const supportEmail = CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com";
+    return `
+      <div id="modal-legal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-legal-title">
+        <div class="modal-dialog" style="max-width:620px;">
+          <div class="modal-header">
+            <div>
+              <h2 id="modal-legal-title">Privacy, ESIGN &amp; 14-Day Refund Policy</h2>
+              <p class="card-sub">ScopeLock zero-server architecture &amp; Merchant-of-Record terms</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-legal" aria-label="Close modal">✕ Close</button>
+          </div>
+          <div style="display:grid;gap:12px;font-size:13px;line-height:1.6;color:var(--text-secondary);">
+            <div><strong style="color:var(--text-primary);">1. Zero-Server Privacy:</strong> All Change Orders, contract rollups, photos, and client signatures live exclusively in your browser storage or compressed <code>#c=</code> URL fragments, never on our servers.</div>
+            <div><strong style="color:var(--text-primary);">2. ESIGN &amp; SHA-256 Digest:</strong> Clients check explicit ESIGN electronic acceptance prior to signing, locking line items, schedule delta, and totals under a cryptographic <code>SHA-256</code> integrity hash.</div>
+            <div><strong style="color:var(--text-primary);">3. Polar.sh Billing &amp; 14-Day Refund Guarantee:</strong> Paid Pro and Suite subscriptions are processed securely by Polar.sh (Merchant of Record). Cancel anytime or email <a href="mailto:${escapeHtml(supportEmail)}">${escapeHtml(supportEmail)}</a> within 14 days for a full refund.</div>
           </div>
         </div>
       </div>
@@ -973,11 +1020,13 @@
             <a href="./calculator.html?ref=footer">Scope-Creep Margin Calculator</a>
             <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Quoting</a>
             <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault</a>
+            <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy &amp; 14-Day Refund</button>
           </div>
         </div>
       </footer>
 
       ${renderProModal()}
+      ${renderLegalModal()}
     `;
   }
 
@@ -1717,8 +1766,33 @@
       }
     }
 
-    // Check Query Params (?tpl=&biz=&city=&orig=&delta=&demo=1&ref=)
+    // Check Query Params (?unlock=&plan=&tpl=&biz=&city=&orig=&delta=&demo=1&ref=)
     const params = new URLSearchParams(window.location.search || "");
+    const unlockParam = (params.get("unlock") || "").trim();
+    const planParam = (params.get("plan") || "").trim().toLowerCase();
+    let unlockedToast = "";
+    if (unlockParam && verifyLicenseKey(unlockParam)) {
+      const slLabelMap = {
+        annual: "ScopeLock Pro Annual",
+        monthly: "ScopeLock Pro Monthly",
+        dfy: "ScopeLock DFY Setup License"
+      };
+      const label = slLabelMap[planParam] || "ScopeLock Pro";
+      activateProState(unlockParam.toUpperCase(), label);
+      unlockedToast = `${label} activated automatically!`;
+      if (TELEMETRY) {
+        TELEMETRY.track("pro_unlocked", { method: "redirect", plan: planParam || "pro" });
+      }
+      try {
+        params.delete("unlock");
+        params.delete("plan");
+        params.delete("checkout_id");
+        const rem = params.toString();
+        const cleanUrl = `${window.location.pathname}${rem ? "?" + rem : ""}${window.location.hash || ""}`;
+        window.history.replaceState({}, "", cleanUrl);
+      } catch (e) {}
+    }
+
     const tplParam = (params.get("tpl") || "").trim();
     const bizParam = (params.get("biz") || "").trim();
     const cityParam = (params.get("city") || "").trim();
@@ -1750,6 +1824,9 @@
 
     bindEvents();
     render();
+    if (unlockedToast) {
+      showToast(unlockedToast);
+    }
 
     if (TELEMETRY) {
       if (demoParam) {

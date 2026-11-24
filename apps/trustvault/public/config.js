@@ -18,7 +18,7 @@ window.TRUSTVAULT_CONFIG = {
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_9zw6rx3cVFk3gXM3EHvwKSD9BtFQ09j5QlUZS0zHwRj",
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_LwKbP7PZWf605V43J1D0biKoZ2WXb2kK6Zw1A41KM8z",
   CHECKOUT_SCALE_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_7XD8nSEfriaNT8DqBmrbaIzBU1qBNPdbcsaPw3dRwKB",
-  CHECKOUT_SCALE_ANNUAL_LINK: "",
+  CHECKOUT_SCALE_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_tzhc6RRgSKzebdAvArMlXYryv7VkU8wQLuUYt3N8ZSY",
   CHECKOUT_DFY_LINK: "https://buy.polar.sh/polar_cl_oY1oDFJUtStsdEjpo4vMoWbIyL5GD7bP2TzmL3PF2Ff",
   CROSS_LINKS: {
     BIDLIFT_URL: "https://bidlift-5ias.onrender.com/",

@@ -4012,18 +4012,25 @@
 
     state.activeCloudToken = "";
 
-    // Handle automated post-checkout redirect (?unlock=<key>&plan=monthly|annual)
+    // Handle automated post-checkout redirect (?unlock=<key>&plan=...)
     const unlockParam = search.get("unlock");
-    const planParam = search.get("plan");
+    const planParam = (search.get("plan") || "").trim().toLowerCase();
     if (unlockParam && verifyLicenseKey(unlockParam)) {
-      const normalizedPlan = planParam === "annual" ? "annual" : "monthly";
-      const label = normalizedPlan === "annual" ? "Pro Annual License" : "Pro Monthly License";
+      const planLabelMap = {
+        annual: "Pro Annual License",
+        monthly: "Pro Monthly License",
+        suite_annual: "BidLift + ScopeLock Margin Suite (Annual)",
+        suite_monthly: "BidLift + ScopeLock Margin Suite (Monthly)",
+        dfy: "Done-For-You Enterprise Suite"
+      };
+      const label = planLabelMap[planParam] || "Pro White-Label License";
       activateProState(unlockParam, label);
-      trackEvent("pro_unlocked", { method: "redirect", plan: normalizedPlan });
+      trackEvent("pro_unlocked", { method: "redirect", plan: planParam || "monthly" });
       state.pendingToast = `${label} activated automatically! Welcome to BidLift Pro.`;
       try {
         search.delete("unlock");
         search.delete("plan");
+        search.delete("checkout_id");
         const remainingSearch = search.toString();
         const cleanUrl = `${window.location.pathname}${remainingSearch ? "?" + remainingSearch : ""}${hash}`;
         window.history.replaceState({}, "", cleanUrl);
