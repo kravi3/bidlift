@@ -1917,7 +1917,6 @@
     const iframeSnippet = `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="920" style="border:0;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.08);" loading="lazy"></iframe>`;
     const activeShareUrl = state.cloudShareUrl || state.shareUrl;
     const pitchText = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${activeShareUrl}`;
-    const waShareUrl = `https://wa.me/?text=${encodeURIComponent(pitchText)}`;
     const cloudReady = Boolean(CLOUD && CLOUD.isConfigured());
     const cloudLoggedIn = Boolean(state.cloudSession && state.cloudSession.user);
 
@@ -1946,7 +1945,7 @@
             <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
               <button type="button" class="btn btn-primary" data-action="copy-share-url">${ICONS.copy} Copy Client Link</button>
               <a class="btn btn-outline" id="open-client-link" href="${escapeHtml(state.shareUrl)}" target="_blank" rel="noopener noreferrer">${ICONS.external} Open Client View</a>
-              <a class="btn btn-outline" href="${escapeHtml(waShareUrl)}" target="_blank" rel="noopener noreferrer">Share via WhatsApp</a>
+              <button type="button" class="btn btn-outline" data-action="copy-rich-email-link">${ICONS.copy} Copy Clean Email Link</button>
             </div>
             <div class="cloud-status-card" style="margin-top:14px;">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
@@ -1963,7 +1962,7 @@
               ` : `<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">${cloudReady ? (cloudLoggedIn ? "Publish once to create a clean short URL with live view & e-sign tracking." : "Sign in cleanly via Magic Link to track client opens & signatures.") : "Running in $0 browser-local mode. Plug Supabase URL/Key into config.js to unlock #p= short links & instant open/sign emails."}</div>`}
             </div>
             <div style="margin-top:16px;">
-              <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / Email Pitch</div>
               <div class="code-box" style="font-family:var(--font-body);">${escapeHtml(pitchText)}</div>
               <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" data-action="copy-pitch-text">${ICONS.copy} Copy Message + Link</button>
             </div>
@@ -3319,6 +3318,30 @@
       return;
     }
 
+    if (action === "copy-rich-email-link") {
+      const p = state.proposal;
+      const activeUrl = state.cloudShareUrl || state.shareUrl;
+      const linkLabel = `View Your Custom Interactive Proposal — ${p.projectTitle || "Project"}`;
+      const htmlStr = `<a href="${escapeHtml(activeUrl)}">${escapeHtml(linkLabel)} →</a>`;
+      const plainStr = `${linkLabel}: ${activeUrl}`;
+      (async () => {
+        try {
+          if (navigator.clipboard && navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
+            await navigator.clipboard.write([
+              new ClipboardItem({
+                "text/html": new Blob([htmlStr], { type: "text/html" }),
+                "text/plain": new Blob([plainStr], { type: "text/plain" })
+              })
+            ]);
+            showToast("Clean clickable email link copied!");
+            return;
+          }
+        } catch (err) {}
+        copyText(activeUrl, "Client proposal link copied!");
+      })();
+      return;
+    }
+
     if (action === "copy-pitch-text") {
       const p = state.proposal;
       const pitch = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${state.cloudShareUrl || state.shareUrl}`;
@@ -3842,6 +3865,9 @@
     // Studio / Deep-Linked Template Mode
     const tplParam = (search.get("tpl") || "").trim().toLowerCase();
     const flatParam = search.get("flat");
+    const bizParam = (search.get("biz") || "").trim().slice(0, 80);
+    const cityParam = (search.get("city") || "").trim().slice(0, 80);
+    const projParam = (search.get("proj") || "").trim().slice(0, 100);
     const demoParam = search.get("demo") === "1";
 
     state.embedMode = false;
@@ -3867,6 +3893,15 @@
     if (flatParam !== null && flatParam !== "") {
       applyFlatBudgetScaling(state.proposal, Number(flatParam));
     }
+    if (bizParam) {
+      state.proposal.businessName = bizParam;
+    }
+    if (cityParam) {
+      state.proposal.projectLocation = cityParam;
+    }
+    if (projParam) {
+      state.proposal.projectTitle = projParam;
+    }
     if (state.isPro) {
       state.proposal.whiteLabel = true;
     }
@@ -3874,7 +3909,7 @@
     state.demoPreviewReturn = demoParam;
     state.mode = demoParam ? "client" : "studio";
     state.selectedTierIdx = Math.min(state.proposal.tiers.length - 1, Math.max(0, Number(state.proposal.recommendedTierIndex ?? 1)));
-    if (!demoParam && (tplParam || flatParam)) {
+    if (!demoParam && (tplParam || flatParam || bizParam || cityParam || projParam)) {
       saveCurrentDraftLocal();
     }
     renderApp();
