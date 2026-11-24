@@ -586,6 +586,14 @@
     const lower = text.toLowerCase();
 
     const tradeRules = [
+      { id: "ai_automation", re: /\b(ai agent|ai workflow|automation|zapier|make\.com|n8n|rag|llm agent)\b/i },
+      { id: "ai_training", re: /\b(ai training|ai workshop|prompt|enablement|chatgpt training|ai bootcamp)\b/i },
+      { id: "it_msp", re: /\b(msp|managed it|cybersecurity|endpoint|helpdesk|soc2|network security)\b/i },
+      { id: "tutoring", re: /\b(tutor|tutoring|sat prep|act prep|math prep|test prep|homework)\b/i },
+      { id: "coaching", re: /\b(coach|coaching|executive coach|leadership coach|career coach)\b/i },
+      { id: "accounting", re: /\b(cfo|bookkeep|accounting|cpa|tax prep|quickbooks|payroll)\b/i },
+      { id: "legal_consulting", re: /\b(legal|contract review|msa|redline|attorney|counsel|trademark)\b/i },
+      { id: "events", re: /\b(event|conference|gala|wedding|av|uplighting|livestream|run of show)\b/i },
       { id: "hvac", re: /\b(hvac|ac|a\/c|air condition|furnace|heat pump|seer|condenser|duct|ton)\b/i },
       { id: "roofing", re: /\b(roof|roofing|shingle|gutter|skylight|squares|hail|flashing)\b/i },
       { id: "plumbing", re: /\b(plumb|plumbing|water heater|tankless|pipe|drain|sewer|valve|leak)\b/i },
@@ -1930,7 +1938,7 @@
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-share">✕</button>
           </div>
           <p style="margin:0 0 12px;font-size:13px;color:var(--text-secondary);">
-            <strong>100% Zero-Server Privacy:</strong> Your compressed <code>#q=</code> link stores client data cleanly in the URL hash—or use Phase 2 Cloud Sync for clean short links &amp; open/sign alerts.
+            <strong>100% Zero-Server Privacy:</strong> Your compressed <code>#q=</code> link stores client data cleanly in the URL hash—every quote runs privately in your browser with zero server storage.
           </p>
           <div style="display:flex;gap:8px;margin-bottom:12px;">
             <button type="button" class="btn btn-sm ${state.shareTab === "link" ? "btn-primary" : "btn-outline"}" data-action="switch-share-tab" data-tab="link">${ICONS.share} Client Proposal Link</button>
@@ -1949,20 +1957,30 @@
               <button type="button" class="btn btn-outline" data-action="copy-rich-email-link">${ICONS.copy} Copy Clean Email Link</button>
               <a class="btn btn-outline" href="${escapeHtml(waShareUrl)}" target="_blank" rel="noopener noreferrer">Share via WhatsApp</a>
             </div>
+            ${cloudReady ? `
             <div class="cloud-status-card" style="margin-top:14px;">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
-                <strong style="font-size:12.5px;">Short Link &amp; Open/Sign Alerts (Phase 2)</strong>
-                ${cloudReady && cloudLoggedIn
-                  ? `<button type="button" class="btn btn-accent btn-sm" data-action="publish-cloud-proposal">${ICONS.bolt} Publish Tracked Short Link (#p=)</button>`
-                  : `<button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">${cloudReady ? "Sign In for Short Links" : "Configure Cloud Sync ($0 Free Tier)"}</button>`}
+                <strong style="font-size:12.5px;">Tracked Short Link &amp; Instant Open/Sign Alerts</strong>
+                ${cloudLoggedIn
+                  ? `<button type="button" class="btn btn-accent btn-sm" data-action="publish-cloud-proposal">${ICONS.bolt} Publish Tracked Short Link</button>`
+                  : `<button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">Sign In for Short Links</button>`}
               </div>
               ${state.cloudShareUrl ? `
                 <div style="margin-top:8px;">
                   <div class="code-box" style="margin-bottom:6px;">${escapeHtml(state.cloudShareUrl)}</div>
                   <button type="button" class="btn btn-primary btn-xs" data-action="copy-cloud-share-url">${ICONS.copy} Copy Short Cloud Link</button>
                 </div>
-              ` : `<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">${cloudReady ? (cloudLoggedIn ? "Publish once to create a clean short URL with live view & e-sign tracking." : "Sign in cleanly via Magic Link to track client opens & signatures.") : "Running in $0 browser-local mode. Plug Supabase URL/Key into config.js to unlock #p= short links & instant open/sign emails."}</div>`}
-            </div>
+              ` : `<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">${cloudLoggedIn ? "Publish once to create a short tracked URL with instant view &amp; signature alerts." : "Sign in cleanly via Magic Link to track client opens &amp; signatures."}</div>`}
+            </div>` : `
+            <div class="cloud-status-card" style="margin-top:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
+                <div>
+                  <strong style="font-size:12.5px;">Want Short Links + Instant Client Open &amp; Sign Alerts?</strong>
+                  <div style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">Included in <strong>BidLift Advanced Pro</strong> alongside cross-device sync &amp; team seats.</div>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-pro">Compare Plans →</button>
+              </div>
+            </div>`}
             <div style="margin-top:16px;">
               <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
               <div class="code-box" style="font-family:var(--font-body);">${escapeHtml(pitchText)}</div>
@@ -1999,33 +2017,12 @@
 
       <!-- Monetization / Go Pro Modal -->
       <div class="modal-backdrop" id="modal-pro" role="dialog" aria-modal="true">
-        <div class="modal-card" style="max-width:720px;">
+        <div class="modal-card" style="max-width:860px;">
           <div class="modal-header">
-            <h3>Upgrade to BidLift Pro</h3>
+            <h3>BidLift Plans — Free Forever vs. Pro &amp; Advanced Pro</h3>
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-pro">✕</button>
           </div>
-          <p style="margin:0 0 10px;font-size:13px;color:var(--text-secondary);">
-            One upgraded job pays for BidLift Pro for years. Remove BidLift branding and present 100% white-label luxury proposals.
-          </p>
-          <div class="pricing-grid">
-            <div class="plan-box">
-              <strong>Starter</strong>
-              <div class="plan-price">$0</div>
-              <span style="font-size:12px;color:var(--text-muted);">Unlimited Good/Better/Best quotes, add-ons, ESIGN SHA-256 audit &amp; deposit links. Includes tasteful "Powered by BidLift" footer.</span>
-            </div>
-            <div class="plan-box">
-              <strong>Pro Monthly</strong>
-              <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">100% White-Label, multi-currency &amp; tax, priority financing framing &amp; Phase 2 tracked short-links / open alerts. Launch Week code: <strong>PH30</strong> (30% off).</span>
-              <button type="button" class="btn btn-primary btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="monthly">Get Pro Monthly</button>
-            </div>
-            <div class="plan-box featured">
-              <strong>Pro Annual <span style="font-size:11px;color:var(--success);font-weight:700;">(Save 56%)</span></strong>
-              <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")}</div>
-              <span style="font-size:12px;color:var(--text-muted);">~$8.25/mo billed annually. 100% White-Label + instant browser unlock after checkout (use code <strong>PH30</strong> through Nov 30).</span>
-              <button type="button" class="btn btn-accent btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="annual">Get Pro Annual</button>
-            </div>
-          </div>
+          ${renderPricingCompareHtml(true)}
 
           <div class="card-box" style="margin-top:12px;">
             <div style="font-size:12.5px;font-weight:700;margin-bottom:6px;">
@@ -2055,11 +2052,11 @@
         </div>
       </div>
 
-      <!-- Cloud Sync & Instant Open/Sign Alerts Modal (Phase 2) -->
+      <!-- Tracked Cloud Quotes & Open Alerts Modal -->
       <div class="modal-backdrop" id="modal-cloud" role="dialog" aria-modal="true">
         <div class="modal-card" style="max-width:560px;">
           <div class="modal-header">
-            <h3>Phase 2 Cloud Sync &amp; Client Open Alerts</h3>
+            <h3>Saved Cloud Quotes &amp; Open Alerts</h3>
             <button type="button" class="btn btn-ghost btn-sm" data-action="close-modal" data-modal="modal-cloud">✕</button>
           </div>
           ${cloudReady ? `
@@ -2068,10 +2065,9 @@
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
                   <div>
                     <strong style="font-size:13px;color:var(--success);">✓ Connected: ${escapeHtml(state.cloudSession.user?.email || "Contractor")}</strong>
-                    <div style="font-size:12px;color:var(--text-muted);">Cloud proposals create clean <code>#p=</code> links with open &amp; e-sign email alerts.</div>
+                    <div style="font-size:12px;color:var(--text-muted);">Saved quotes generate short tracked links with instant view &amp; e-sign email alerts.</div>
                   </div>
                   <div style="display:flex;gap:6px;">
-                    <a class="btn btn-outline btn-xs" href="#admin">Super Admin</a>
                     <button type="button" class="btn btn-outline btn-xs" data-action="cloud-signout">Sign Out</button>
                   </div>
                 </div>
@@ -2087,13 +2083,13 @@
                       <strong style="font-size:13px;">${escapeHtml(cp.project_title)}</strong>
                       <div style="font-size:11.5px;color:var(--text-muted);">${escapeHtml(cp.client_name || "Client")} • Status: <strong>${escapeHtml(cp.status)}</strong> • Views: <strong>${Number(cp.view_count || 0)}</strong></div>
                     </div>
-                    <a class="btn btn-outline btn-xs" href="#p=${escapeHtml(cp.share_token)}" target="_blank">Open #p=</a>
+                    <a class="btn btn-outline btn-xs" href="#p=${escapeHtml(cp.share_token)}" target="_blank">Open Link</a>
                   </div>
                 `).join("") : `<p style="font-size:12.5px;color:var(--text-muted);">No cloud quotes published yet.</p>`}
               </div>
             ` : `
               <p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;">
-                Sign in cleanly with a 1-click Magic Link email to sync quotes across phone &amp; laptop, send short <code>#p=</code> URLs, and receive instant alerts when clients view or sign.
+                Sign in with a 1-click Magic Link email to sync quotes across phone &amp; laptop, send short tracked URLs, and receive instant alerts when clients view or sign.
               </p>
               <div style="display:flex;gap:8px;flex-wrap:wrap;">
                 <input id="cloud-login-email" type="email" placeholder="you@company.com" style="flex:1;min-width:210px;padding:9px 11px;border-radius:8px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text-primary);" />
@@ -2102,15 +2098,13 @@
             `}
           ` : `
             <div class="cloud-status-card">
-              <strong style="font-size:13.5px;display:block;margin-bottom:6px;">Zero-Cost ($0/mo) Cloud Layer Ready to Connect</strong>
+              <strong style="font-size:13.5px;display:block;margin-bottom:6px;">BidLift Advanced Pro — Cloud Sync &amp; Open Alerts</strong>
               <p style="margin:0 0 10px;font-size:12.5px;color:var(--text-secondary);line-height:1.55;">
-                Your Phase 2 Postgres schema (<code>phase2/supabase_schema.sql</code>), Polar Pro webhook (<code>phase2/polar_webhook_edge_fn.ts</code>), Resend instant alert Edge Function (<code>phase2/notify_proposal_event_fn.ts</code>), and REST client (<code>public/cloud.js</code>) are built.
+                Upgrade to Advanced Pro for instant client view &amp; ESIGN alerts, short tracked proposal links, cross-device draft sync, and multi-user team seats. Need unlimited local quotes right now? Free Forever requires zero login.
               </p>
-              <ol style="margin:0;padding-left:18px;font-size:12.5px;color:var(--text-secondary);line-height:1.6;">
-                <li>Create a free <strong>Supabase</strong> project (<code>$0/mo</code>) and run <code>phase2/supabase_schema.sql</code>.</li>
-                <li>Deploy <code>polar_webhook_edge_fn.ts</code> &amp; <code>notify_proposal_event_fn.ts</code> (Resend free tier: 3,000 alert emails/mo).</li>
-                <li>Add your Supabase URL &amp; Anon Key in <code>public/config.js</code> to enable Magic Link login, clean <code>#p=</code> links, Open/Sign notifications &amp; <code>#admin</code> metrics.</li>
-              </ol>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button type="button" class="btn btn-primary btn-sm" data-action="open-modal" data-modal="modal-pro">Compare Plans &amp; Early Access</button>
+              </div>
             </div>
           `}
         </div>
@@ -2145,6 +2139,188 @@
     `;
   }
 
+  const TEMPLATE_CATEGORY_ORDER = [
+    "Home Trades & Construction",
+    "AI, Tech & Digital Agencies",
+    "Education, Coaching & Advisory",
+    "Creative, Real Estate & Events"
+  ];
+  const HERO_QUICK_TEMPLATE_IDS = ["hvac", "agency", "ai_training", "tutoring"];
+
+  function applyTemplateSelection(tplId) {
+    if (!tplId || !TEMPLATES[tplId]) return;
+    state.proposal = createProposalFromTemplate(tplId);
+    state.selectedTierIdx = state.proposal.recommendedTierIndex ?? 1;
+    state.approved = false;
+    state.approvalReceipt = null;
+    state.hasSignatureInk = false;
+    state.signatureDataUrl = "";
+    state.clientSignerName = "";
+    state.clientSignerEmail = "";
+    state.esignConsent = false;
+    saveCurrentDraftLocal();
+    renderApp();
+    trackEvent("template_selected", { template_id: tplId });
+    showToast(`Loaded "${TEMPLATES[tplId]?.label}" template`);
+  }
+
+  function renderTemplateDropdownHtml(selectedId) {
+    const allTemplates = Object.values(TEMPLATES);
+    const groups = new Map();
+    TEMPLATE_CATEGORY_ORDER.forEach((cat) => groups.set(cat, []));
+    allTemplates.forEach((tpl) => {
+      const cat = tpl.category || "Other Services";
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(tpl);
+    });
+
+    const optGroupsHtml = Array.from(groups.entries())
+      .filter(([, list]) => list.length > 0)
+      .map(([cat, list]) => `
+        <optgroup label="${escapeHtml(cat)}">
+          ${list.map((tpl) => `<option value="${escapeHtml(tpl.id)}" ${tpl.id === selectedId ? "selected" : ""}>${escapeHtml(tpl.label)}</option>`).join("")}
+        </optgroup>
+      `)
+      .join("");
+
+    const quickBtnsHtml = HERO_QUICK_TEMPLATE_IDS
+      .filter((id) => TEMPLATES[id])
+      .map((id) => {
+        const tpl = TEMPLATES[id];
+        return `
+          <button type="button" class="template-pill ${id === selectedId ? "active" : ""}"
+                  data-action="load-template" data-template-id="${escapeHtml(id)}">
+            <span>${escapeHtml(tpl.label)}</span>
+          </button>
+        `;
+      })
+      .join("");
+
+    return `
+      <div class="template-dropdown-bar">
+        <label class="template-select-wrap">
+          <span class="template-select-label">Template (${allTemplates.length}):</span>
+          <select id="template-dropdown" class="template-select" aria-label="Choose Industry Template">
+            ${optGroupsHtml}
+          </select>
+        </label>
+        <div class="template-quick-picks" aria-label="Popular Quick Templates">
+          ${quickBtnsHtml}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderPricingCompareHtml(isModal) {
+    const promoCode = CONFIG.PROMO_CODE || "PH30";
+    const rows = [
+      ["Unlimited Good / Better / Best Quotes", true, true, true],
+      ["All 18 Industry, Tech, AI & Advisory Templates", true, true, true],
+      ["Client-Toggleable Add-Ons & Monthly Financing Framing", true, true, true],
+      ["ESIGN Consent + SHA-256 Verified PDF Receipt", true, true, true],
+      ["0% Fee Direct Deposit Links (Stripe / PayPal / Zelle)", true, true, true],
+      ["Browser Drafts & Local JSON Backup Export", true, true, true],
+      ["100% White-Label (Removes BidLift Footer & Logo)", false, true, true],
+      ["Multi-Currency & Custom Tax Presets", false, true, true],
+      ["Short Tracked Client Proposal Links", false, false, true],
+      ["Instant Client Open & E-Sign Email Alerts", false, false, true],
+      ["Cross-Device Cloud Sync & Team Seats", false, false, true]
+    ];
+    const mark = (ok) => ok
+      ? `<span class="chk-yes" aria-label="Included">✓</span>`
+      : `<span class="chk-no" aria-label="Not included">✕</span>`;
+
+    const innerHtml = `
+      <div class="thanksgiving-banner">
+        <div>
+          <strong>Thanksgiving Deal Extended (Ends Nov 30):</strong> Use code <span class="thanksgiving-code">${escapeHtml(promoCode)}</span> for <strong>30% Off Pro</strong>. Need $0? You can stay on <strong>Free Forever</strong> with unlimited quotes.
+        </div>
+      </div>
+
+      ${isModal ? "" : `
+        <div class="pricing-section-head">
+          <div>
+            <h2>Simple Plans — Free Forever, Pro, and Advanced Pro</h2>
+            <p class="pricing-free-reassurance">Use Free Forever without limits, upgrade to remove BidLift branding on client quotes, or join Advanced Pro for instant client open alerts.</p>
+          </div>
+          ${!state.isPro ? `<button type="button" class="btn btn-accent btn-sm" data-action="checkout-pro" data-plan="annual">Upgrade to Pro · 30% Off (${escapeHtml(promoCode)})</button>` : `<span class="pro-pill active-pro">✓ ${escapeHtml(state.proPlanLabel || "Pro Active")}</span>`}
+        </div>
+      `}
+
+      <div class="pricing-grid">
+        <div class="plan-box">
+          <span class="plan-badge">Always $0</span>
+          <strong>Free Forever</strong>
+          <div class="plan-price">$0 <span style="font-size:12px;font-weight:500;color:var(--text-muted);">/ forever</span></div>
+          <ul class="plan-bullets">
+            <li>Unlimited 3-tier quotes &amp; all 18 templates</li>
+            <li>SHA-256 ESIGN receipts &amp; PDF exports</li>
+            <li>0% BidLift cut on direct deposit links</li>
+          </ul>
+          ${state.isPro
+            ? `<button type="button" class="btn btn-outline btn-sm" style="margin-top:auto;" data-action="deactivate-license">Switch to Free Forever</button>`
+            : isModal
+              ? `<button type="button" class="btn btn-outline btn-sm" style="margin-top:auto;" data-action="close-modal" data-modal="modal-pro">✓ Active — Continue Free</button>`
+              : `<span class="btn btn-outline btn-sm" style="margin-top:auto;cursor:default;">✓ Active — Free Forever</span>`}
+        </div>
+
+        <div class="plan-box featured">
+          <span class="plan-badge">Most Popular · Save 56% Annual</span>
+          <strong>Pro White-Label</strong>
+          <div class="plan-price">${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")} <span style="font-size:12px;font-weight:600;color:var(--success);">or ${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")}</span></div>
+          <ul class="plan-bullets">
+            <li>Everything in Free Forever</li>
+            <li>Removes all BidLift branding on client quotes</li>
+            <li>Instant checkout unlock (code <strong>${escapeHtml(promoCode)}</strong> thru Nov 30)</li>
+          </ul>
+          <div style="display:grid;gap:6px;margin-top:auto;">
+            <button type="button" class="btn btn-accent btn-sm" data-action="checkout-pro" data-plan="annual">Get Pro Annual (${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")})</button>
+            <button type="button" class="btn btn-primary btn-sm" data-action="checkout-pro" data-plan="monthly">Get Pro Monthly (${escapeHtml(CONFIG.PRO_PRICE_MONTHLY || "$19/mo")})</button>
+          </div>
+        </div>
+
+        <div class="plan-box">
+          <span class="plan-badge">Team &amp; Alerts</span>
+          <strong>Advanced Pro</strong>
+          <div class="plan-price">${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_MONTHLY || "$39/mo")} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">or ${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_ANNUAL || "$299/yr")}</span></div>
+          <ul class="plan-bullets">
+            <li>Everything in Pro White-Label</li>
+            <li>Short tracked URLs + instant view/sign email alerts</li>
+            <li>Cloud draft sync across devices &amp; team seats</li>
+          </ul>
+          <button type="button" class="btn btn-outline btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="advanced">Request Early Access →</button>
+        </div>
+      </div>
+
+      <div class="pricing-compare-wrap">
+        <table class="pricing-compare-table" aria-label="BidLift Plan Comparison">
+          <thead>
+            <tr>
+              <th>Capability</th>
+              <th>Free Forever ($0)</th>
+              <th>Pro ($19/mo · $99/yr)</th>
+              <th>Advanced Pro ($39/mo)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(([cap, f, p, a]) => `
+              <tr>
+                <td>${escapeHtml(cap)}</td>
+                <td>${mark(f)}</td>
+                <td>${mark(p)}</td>
+                <td>${mark(a)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    return isModal
+      ? innerHtml
+      : `<section class="pricing-section no-print" id="pricing-compare" aria-label="Plans and Feature Comparison">${innerHtml}</section>`;
+  }
+
   // =========================================================================
   // Below-the-Fold Studio Traction, ROI & FAQ Section (SEO & Conversion)
   // =========================================================================
@@ -2153,7 +2329,7 @@
       <section class="studio-traction-section no-print" aria-label="Why Interactive Quotes Convert Higher">
         <div class="traction-head">
           <h2>Built to Increase Customer Revenue From Quote #1</h2>
-          <p>Why thousands of contractors, real estate pros, agencies, and local trades switch from flat PDF estimates to Good / Better / Best interactive links.</p>
+          <p>Why thousands of contractors, educators, agencies, and advisory teams switch from flat PDF estimates to Good / Better / Best interactive links.</p>
         </div>
 
         <div class="roi-grid">
@@ -2192,11 +2368,11 @@
         <div class="seo-templates-bar">
           <div class="seo-templates-head">
             <h3>Free Industry Templates &amp; Good / Better / Best Deal-Lift Calculator</h3>
-            <p>Explore ready-to-customize multi-option proposal templates or calculate your exact revenue lift first.</p>
+            <p>Explore ready-to-customize multi-option proposal templates across 18 industries or calculate your exact revenue lift first.</p>
           </div>
           <div class="seo-links-grid">
             <a class="seo-link-chip is-primary" href="templates/good-better-best-pricing-calculator.html">GBB Profit &amp; Deal-Lift Calculator →</a>
-            <a class="seo-link-chip" href="templates/">All 10 Templates Hub</a>
+            <a class="seo-link-chip" href="templates/">All 18 Templates Hub</a>
             <a class="seo-link-chip" href="templates/hvac-estimate-template.html">HVAC Estimate Template</a>
             <a class="seo-link-chip" href="templates/roofing-proposal-template.html">Roofing Proposal Template</a>
             <a class="seo-link-chip" href="templates/plumbing-quote-template.html">Plumbing Quote Template</a>
@@ -2208,6 +2384,8 @@
           </div>
         </div>
       </section>
+
+      ${renderPricingCompareHtml(false)}
 
       <footer class="studio-footer no-print">
         <div class="studio-footer-inner">
@@ -2231,14 +2409,8 @@
     const p = state.proposal;
     const cur = p.currency || "USD";
     const lift = calculateLiftMetrics(p);
-    const templatePillsHtml = Object.values(TEMPLATES)
-      .map((tpl) => `
-        <button type="button" class="template-pill ${p.id === tpl.id ? "active" : ""}"
-                data-action="load-template" data-template-id="${tpl.id}">
-          <span>${escapeHtml(tpl.label)}</span>
-        </button>
-      `)
-      .join("");
+    const cloudReady = Boolean(CLOUD && CLOUD.isConfigured());
+    const templateDropdownHtml = renderTemplateDropdownHtml(p.id);
 
     return `
       <header class="topbar no-print">
@@ -2251,14 +2423,16 @@
             </div>
           </a>
           <button type="button" class="pro-pill ${state.isPro ? "active-pro" : ""}" data-action="open-modal" data-modal="modal-pro">
-            ${state.isPro ? "PRO WHITE-LABEL" : "GO PRO"}
+            ${state.isPro ? "PRO WHITE-LABEL" : "Upgrade to Pro · 30% Off (PH30)"}
           </button>
         </div>
 
         <div class="topbar-actions">
-          <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">
-            ${ICONS.bolt} ${state.cloudSession ? "Cloud ●" : "Cloud Sync"}
-          </button>
+          ${cloudReady ? `
+            <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-cloud">
+              ${ICONS.bolt} ${state.cloudSession ? "Cloud ●" : "Saved Cloud"}
+            </button>
+          ` : ""}
           <button type="button" class="btn btn-outline btn-sm" data-action="open-modal" data-modal="modal-drafts">
             ${ICONS.folder} Drafts <span class="badge-count">${state.drafts.length}</span>
           </button>
@@ -2278,16 +2452,17 @@
         <div class="hero-inner">
           <div class="hero-copy">
             ${state.heroCollapsed
-              ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><strong>Quick Templates:</strong> <div class="template-pills" style="margin-top:0;">${templatePillsHtml}</div></div>`
+              ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;"><strong>Quick Switch:</strong> ${templateDropdownHtml}</div>`
               : `
-                <h1>Turn Flat Quotes Into +28% Bigger Deals <span style="font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,0.16);font-weight:700;">Zero Signup • Zero Server PII</span></h1>
-                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick an industry template, frame monthly options &amp; add-ons, and send a live ESIGN + deposit link in 60 seconds.</p>
+                <h1>Turn Flat Quotes Into +28% Bigger Deals <span style="font-size:12px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,0.16);font-weight:700;">Zero Signup • Free Forever</span></h1>
+                <p>Stop sending 1-price PDFs that push clients to shop on price. Pick from 18 industry templates—trades, AI consulting, tutoring, coaching, agencies—frame monthly options &amp; add-ons, and send a live ESIGN + deposit link in 60 seconds.</p>
                 <div class="hero-cta-row">
                   <button type="button" class="btn btn-accent btn-sm" data-action="open-live-client-demo">${ICONS.bolt} Try Live Client View (Demo)</button>
+                  <button type="button" class="btn btn-outline btn-sm hero-pro-btn" data-action="open-modal" data-modal="modal-pro">Free Forever vs. Pro (PH30 30% Off thru Nov 30)</button>
                   <a class="hero-calc-link" href="templates/good-better-best-pricing-calculator.html">GBB Profit Calculator →</a>
-                  <a class="hero-calc-link" href="templates/">10 Free Trade Templates →</a>
+                  <a class="hero-calc-link" href="templates/">18 Free Industry Templates →</a>
                 </div>
-                <div class="template-pills">${templatePillsHtml}</div>
+                ${templateDropdownHtml}
               `
             }
           </div>
@@ -2413,15 +2588,15 @@
         <div class="proposal-sheet" style="max-width:900px;padding:28px;">
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px;">
             <div>
-              <h2 style="font-size:22px;">BidLift Super Admin Platform Metrics</h2>
-              <p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary);">Live telemetry via <code>get_admin_platform_metrics()</code> (Phase 2 Supabase RLS gated to super_admin).</p>
+              <h2 style="font-size:22px;">BidLift Platform Telemetry</h2>
+              <p style="margin:4px 0 0;font-size:13px;color:var(--text-secondary);">Restricted owner telemetry view.</p>
             </div>
             <a class="btn btn-outline btn-sm" href="${escapeHtml(getBaseStudioUrl())}">← Back to Studio</a>
           </div>
           ${!isConfigured ? `
             <div class="cloud-status-card">
-              <strong>Supabase Cloud Layer Not Yet Connected ($0 Mode)</strong>
-              <p style="margin:6px 0 0;font-size:13px;color:var(--text-secondary);">Configure <code>SUPABASE.URL</code> and <code>SUPABASE.ANON_KEY</code> in <code>public/config.js</code> after running <code>phase2/supabase_schema.sql</code> to inspect live DB metrics here.</p>
+              <strong>Cloud Telemetry Offline</strong>
+              <p style="margin:6px 0 0;font-size:13px;color:var(--text-secondary);">Active quotes run strictly client-side in your browser.</p>
             </div>
           ` : state.adminError ? `
             <div class="cloud-status-card">
@@ -2718,20 +2893,7 @@
     }
 
     if (action === "load-template") {
-      const tplId = target.dataset.templateId;
-      state.proposal = createProposalFromTemplate(tplId);
-      state.selectedTierIdx = state.proposal.recommendedTierIndex ?? 1;
-      state.approved = false;
-      state.approvalReceipt = null;
-      state.hasSignatureInk = false;
-      state.signatureDataUrl = "";
-      state.clientSignerName = "";
-      state.clientSignerEmail = "";
-      state.esignConsent = false;
-      saveCurrentDraftLocal();
-      renderApp();
-      trackEvent("template_selected", { template_id: tplId });
-      showToast(`Loaded "${TEMPLATES[tplId]?.label}" template`);
+      applyTemplateSelection(target.dataset.templateId);
       return;
     }
 
@@ -3255,7 +3417,7 @@
 
     if (action === "publish-cloud-proposal") {
       if (!CLOUD || !CLOUD.isConfigured()) {
-        showToast("Configure Supabase URL & Anon Key in config.js first.");
+        showToast("Short tracked links require BidLift Advanced Pro.");
         return;
       }
       try {
@@ -3298,7 +3460,7 @@
       state.cloudSession = null;
       state.cloudProposals = [];
       renderApp();
-      showToast("Signed out of Cloud Sync.");
+      showToast("Signed out.");
       return;
     }
 
@@ -3428,14 +3590,24 @@
 
     // Monetization / Pro License
     if (action === "checkout-pro") {
-      const plan = target.dataset.plan === "annual" ? "annual" : "monthly";
+      const plan = target.dataset.plan === "annual"
+        ? "annual"
+        : (target.dataset.plan === "advanced" ? "advanced" : "monthly");
       trackEvent("pro_checkout_clicked", { plan });
+      if (plan === "advanced") {
+        const supportEmail = CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com";
+        const subj = encodeURIComponent("BidLift Advanced Pro Early Access (PH30)");
+        const body = encodeURIComponent("Hi BidLift Team,\n\nI'd like Early Access to BidLift Advanced Pro (tracked short links, instant open alerts & cloud sync) with promo code PH30.\n");
+        window.location.href = `mailto:${supportEmail}?subject=${subj}&body=${body}`;
+        showToast(`Opening Advanced Pro Early Access request to ${supportEmail}`);
+        return;
+      }
       const rawUrl = plan === "annual" ? CONFIG.CHECKOUT_PRO_ANNUAL_LINK : CONFIG.CHECKOUT_PRO_MONTHLY_LINK;
       const safeUrl = sanitizeHttpsUrl(rawUrl);
       if (safeUrl) {
         window.open(safeUrl, "_blank", "noopener,noreferrer");
       } else {
-        showToast(`Checkout links are being finalized—email ${CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com"} or complete Polar.sh checkout setup in config.js.`);
+        showToast(`Checkout links unavailable right now—email ${CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com"} for instant activation.`);
       }
       return;
     }
@@ -3615,6 +3787,11 @@
   document.addEventListener("change", async (e) => {
     const el = e.target;
 
+    if (el.id === "template-dropdown") {
+      applyTemplateSelection(el.value);
+      return;
+    }
+
     if (el.id === "client-esign-consent") {
       state.esignConsent = el.checked;
       return;
@@ -3747,7 +3924,7 @@
       const authSess = await CLOUD.handleAuthCallbackFromHash();
       if (authSess) {
         state.cloudSession = authSess;
-        state.pendingToast = `Signed in via Cloud Sync as ${authSess.user?.email || "Contractor"}!`;
+        state.pendingToast = `Signed in as ${authSess.user?.email || "Contractor"}!`;
       } else {
         state.cloudSession = CLOUD.getSession();
       }
@@ -3865,7 +4042,7 @@
     }
 
     // Studio / Deep-Linked Template Mode
-    const tplParam = (search.get("tpl") || "").trim().toLowerCase();
+    const tplParam = (search.get("tpl") || search.get("template") || "").trim().toLowerCase();
     const flatParam = search.get("flat");
     const bizParam = (search.get("biz") || "").trim().slice(0, 80);
     const cityParam = (search.get("city") || "").trim().slice(0, 80);

@@ -115,6 +115,54 @@ window.BIDLIFT_STARTER_SERVICES = {
     { name: "6-Pack Gimbal LED Recessed Ceiling Lights", category: "Lighting", qty: 6, unit: "fixtures", unitPrice: 140, note: "IC-rated 2700K–5000K selectable trim + dimmer switch" },
     { name: "Whole-Home Interconnected Smoke & CO Swap", category: "Life Safety", qty: 4, unit: "alarms", unitPrice: 90, note: "Hardwired with 10-year sealed battery backup" },
     { name: "Quiet 110 CFM Humidity-Sensing Bath Fan", category: "Ventilation", qty: 1, unit: "unit", unitPrice: 420, note: "Insulated exterior vent ducting & timer switch" }
+  ],
+  ai_training: [
+    { name: "Extra Department AI Lab (Sales / Ops / Finance)", category: "Hands-On Lab", qty: 1, unit: "session", unitPrice: 500, note: "90-minute tailored workshop using your team's real workflows" },
+    { name: "Custom Role Prompt Library Pack", category: "Playbook", qty: 1, unit: "pack", unitPrice: 450, note: "25 tested prompts + guardrails formatted for Notion/Docs" },
+    { name: "1-on-1 Executive AI Coaching Session", category: "Coaching", qty: 1, unit: "hour", unitPrice: 280, note: "Private screen-share build of personal productivity copilots" },
+    { name: "Data Privacy & Shadow-AI Policy Brief", category: "Governance", qty: 1, unit: "doc", unitPrice: 480, note: "Employee safe-use policy & PII redaction checklist" }
+  ],
+  ai_automation: [
+    { name: "CRM + Email AI Triage Connection", category: "Automation", qty: 1, unit: "flow", unitPrice: 850, note: "Auto-classifies inbound leads, drafts replies & logs CRM notes" },
+    { name: "RAG Knowledge Base Index Setup", category: "AI Brain", qty: 1, unit: "build", unitPrice: 1400, note: "Vector indexing for internal SOPs, PDFs & product docs" },
+    { name: "Slack / Teams Human Approval Bot", category: "Guardrails", qty: 1, unit: "bot", unitPrice: 650, note: "One-click approve/edit gate before customer messages send" },
+    { name: "Monthly Monitoring & Prompt Tuning", category: "Retainer", qty: 1, unit: "month", unitPrice: 390, note: "Error fallback checks, latency audits & model upgrades" }
+  ],
+  it_msp: [
+    { name: "Managed EDR + Email Security Seat", category: "Cybersecurity", qty: 5, unit: "seats", unitPrice: 55, note: "24/7 endpoint threat response + Microsoft 365 phishing filter" },
+    { name: "Immutable Cloud Backup Vault", category: "Backup", qty: 1, unit: "org", unitPrice: 400, note: "Automated daily snapshots + quarterly test restore" },
+    { name: "Zero-Trust Password Manager + MFA Rollout", category: "Identity", qty: 1, unit: "org", unitPrice: 250, note: "Company vault deployment & hardware/app MFA enforcement" },
+    { name: "Firewall & Business Wi-Fi Segmentation", category: "Network", qty: 1, unit: "site", unitPrice: 490, note: "Separate guest/IoT VLANs + VPN remote access hardening" }
+  ],
+  tutoring: [
+    { name: "Diagnostic Learning Assessment", category: "Assessment", qty: 1, unit: "eval", unitPrice: 90, note: "Full benchmark score report & customized study roadmap" },
+    { name: "1-on-1 Focused Tutoring Hour", category: "1-on-1 Hours", qty: 4, unit: "hrs", unitPrice: 85, note: "Live interactive whiteboard instruction + recorded recap" },
+    { name: "Proctored Timed Mock Exam + Review", category: "Exam Prep", qty: 1, unit: "exam", unitPrice: 80, note: "Scored test simulation with question-by-question error breakdown" },
+    { name: "Async Homework Check-In Pass", category: "Support", qty: 1, unit: "month", unitPrice: 95, note: "Same-day photo/chat explanations between scheduled lessons" }
+  ],
+  coaching: [
+    { name: "1-on-1 Executive Strategy Session", category: "Coaching", qty: 2, unit: "calls", unitPrice: 200, note: "60-minute leadership, decision, or career pivot coaching call" },
+    { name: "360 Stakeholder Feedback Audit", category: "Discovery", qty: 1, unit: "audit", unitPrice: 550, note: "Structured peer/team interviews synthesized into action themes" },
+    { name: "Compensation / Offer Negotiation Prep", category: "Strategy", qty: 1, unit: "pkg", unitPrice: 320, note: "Counter-offer modeling, roleplay scripts & term-sheet checklist" },
+    { name: "Done-With-You Executive Bio & LinkedIn Refresh", category: "Positioning", qty: 1, unit: "pkg", unitPrice: 450, note: "Headline, about narrative & leadership authority alignment" }
+  ],
+  accounting: [
+    { name: "Monthly Bank & Card Reconciliation", category: "Bookkeeping", qty: 1, unit: "month", unitPrice: 450, note: "Categorized transactions + clean CPA-ready monthly close" },
+    { name: "Executive Cash-Flow & KPI Review Call", category: "CFO Advisory", qty: 1, unit: "call", unitPrice: 350, note: "Gross margin, burn rate & tax reserve forecast walkthrough" },
+    { name: "13-Week Rolling Cash & Hiring Model", category: "Forecasting", qty: 1, unit: "model", unitPrice: 850, note: "Scenario model covering payroll, tax & AR collection timing" },
+    { name: "Historical Books Cleanup (Per Quarter)", category: "Cleanup", qty: 1, unit: "qtr", unitPrice: 490, note: "Rebuilds prior-period ledger & clears uncategorized suspense" }
+  ],
+  legal_consulting: [
+    { name: "Commercial MSA / Client Contract Redline", category: "Contract Review", qty: 1, unit: "doc", unitPrice: 650, note: "Line-by-line risk edits + plain-English negotiation memo" },
+    { name: "Custom Privacy Policy & ESIGN Terms Kit", category: "Compliance", qty: 1, unit: "pkg", unitPrice: 450, note: "Tailored website terms, privacy notice & consent language" },
+    { name: "IP Assignment & Contractor Agreement", category: "HR & IP", qty: 1, unit: "doc", unitPrice: 420, note: "Protects company code, brand assets & confidentiality" },
+    { name: "24-Hour Express Review Upgrade", category: "Priority", qty: 1, unit: "doc", unitPrice: 350, note: "Guaranteed next-business-day redline turnaround" }
+  ],
+  events: [
+    { name: "Minute-by-Minute Run of Show & Floorplan", category: "Planning", qty: 1, unit: "plan", unitPrice: 400, note: "Master vendor schedule, load-in cues & contingency sheet" },
+    { name: "2-Speaker PA + Wireless Mic + AV Tech", category: "Audio & Mic", qty: 1, unit: "rig", unitPrice: 1150, note: "Crisp speech reinforcement for keynotes, toasts & panels" },
+    { name: "16-Fixture Wireless LED Uplighting", category: "Lighting", qty: 1, unit: "pkg", unitPrice: 750, note: "Custom brand-color ambient wash synced across room zones" },
+    { name: "360 Photo Booth & Instant SMS Gallery", category: "Guest Experience", qty: 1, unit: "setup", unitPrice: 690, note: "Attendant-staffed booth with custom branded frame overlay" }
   ]
 };
 
@@ -122,6 +170,7 @@ window.BIDLIFT_TEMPLATES = {
   contractor: {
     id: "contractor",
     label: "Home Remodel",
+    category: "Home Trades & Construction",
     icon: "hammer",
     businessName: "Summit Craft Remodeling",
     businessTagline: "Licensed & Insured • 5-Year Craftsmanship Warranty",
@@ -263,6 +312,7 @@ window.BIDLIFT_TEMPLATES = {
   realestate: {
     id: "realestate",
     label: "Real Estate & Staging",
+    category: "Creative, Real Estate & Events",
     icon: "home",
     businessName: "Apex Listing Media & Staging",
     businessTagline: "Elevated Property Presentation That Commands Top Dollar",
@@ -400,6 +450,7 @@ window.BIDLIFT_TEMPLATES = {
   agency: {
     id: "agency",
     label: "Web & SEO Agency",
+    category: "AI, Tech & Digital Agencies",
     icon: "sparkles",
     businessName: "Northstar Digital Growth",
     businessTagline: "Conversion-First Websites & Local Search Dominance",
@@ -536,6 +587,7 @@ window.BIDLIFT_TEMPLATES = {
   landscaping: {
     id: "landscaping",
     label: "Landscaping",
+    category: "Home Trades & Construction",
     icon: "leaf",
     businessName: "Evergreen Outdoor Architecture",
     businessTagline: "Curb Appeal & Resort-Grade Outdoor Spaces",
@@ -676,6 +728,7 @@ window.BIDLIFT_TEMPLATES = {
   cleaning: {
     id: "cleaning",
     label: "Executive Cleaning",
+    category: "Home Trades & Construction",
     icon: "sparkle",
     businessName: "PureNest White-Glove Cleaning",
     businessTagline: "50-Point Checklist • Background-Checked Teams • 100% Satisfaction",
@@ -810,6 +863,7 @@ window.BIDLIFT_TEMPLATES = {
   media: {
     id: "media",
     label: "Photo & Video",
+    category: "Creative, Real Estate & Events",
     icon: "camera",
     businessName: "FrameHouse Visual Studio",
     businessTagline: "Commercial Storytelling Built for Social & Sales Conversion",
@@ -944,6 +998,7 @@ window.BIDLIFT_TEMPLATES = {
   hvac: {
     id: "hvac",
     label: "HVAC Install",
+    category: "Home Trades & Construction",
     icon: "bolt",
     businessName: "Summit Air & Heating Co.",
     businessTagline: "NATE-Certified Comfort Specialists • 10-Yr Parts Warranty",
@@ -1046,6 +1101,7 @@ window.BIDLIFT_TEMPLATES = {
   roofing: {
     id: "roofing",
     label: "Roofing",
+    category: "Home Trades & Construction",
     icon: "shield",
     businessName: "Crestline Roofing & Exteriors",
     businessTagline: "GAF Master Craftsmanship • Storm-Tested Warranties",
@@ -1148,6 +1204,7 @@ window.BIDLIFT_TEMPLATES = {
   plumbing: {
     id: "plumbing",
     label: "Plumbing",
+    category: "Home Trades & Construction",
     icon: "shield",
     businessName: "TrueFlow Plumbing & Mechanical",
     businessTagline: "Master Licensed Plumbers • Upfront Flat-Rate Quotes",
@@ -1250,6 +1307,7 @@ window.BIDLIFT_TEMPLATES = {
   electrical: {
     id: "electrical",
     label: "Electrical",
+    category: "Home Trades & Construction",
     icon: "bolt",
     businessName: "Beacon Volt Electrical",
     businessTagline: "Master Electricians • Clean NEC Code Upgrades",
@@ -1346,6 +1404,805 @@ window.BIDLIFT_TEMPLATES = {
       { id: "elec-led-6", title: "6 Gimbal Dimmable LED Recessed Lights", description: "Clean hole-saw install + Lutron smart dimmer switch included.", category: "Lighting", qty: 6, unit: "fixtures", price: 840, selected: false },
       { id: "elec-bath-fan", title: "Ultra-Quiet 110 CFM Humidity Bath Fan", description: "Replaces noisy exhaust fan with moisture-sensing switch.", category: "Ventilation", qty: 1, unit: "unit", price: 420, selected: false },
       { id: "elec-smoke", title: "4 Interconnected Smart Smoke + CO Alarms", description: "Hardwired life-safety detectors with 10-year backup battery.", category: "Life Safety", qty: 4, unit: "alarms", price: 360, selected: false }
+    ]
+  },
+
+  ai_training: {
+    id: "ai_training",
+    label: "AI Training & Enablement",
+    category: "AI, Tech & Digital Agencies",
+    icon: "sparkles",
+    businessName: "AppliedAI Academy & Enablement",
+    businessTagline: "Practical Team AI Adoption • Safe Data Workflows",
+    businessEmail: "workshops@appliedai.example",
+    businessPhone: "(415) 555-0162",
+    logoData: "",
+    paletteId: "navy-gold",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-812",
+    clientName: "Riverdale Operations Team",
+    projectTitle: "Company-Wide AI Productivity & Prompt Enablement Program",
+    projectLocation: "San Francisco / Remote Hybrid",
+    introText: "Designed so every non-technical team member saves 4–7 hours weekly without risking proprietary company data. Pick the training depth tailored to your department rollout.",
+    recommendedBadge: "Most Popular Choice",
+    trustBadges: ["Custom Role Playbooks", "SOC2 Safe-Use Guidelines", "Recorded Session Library"],
+    validDays: 14,
+    fastActionDiscount: 300,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% seat reservation deposit upon ESIGN approval; 50% upon final workshop delivery.",
+    terms: "Client receives full internal license to recordings, prompt libraries, and policy templates across active employees.",
+    financingEnabled: true,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Workshop Essentials",
+        subtitle: "Fast executive & staff kick-start",
+        price: 1800,
+        timeline: "1 Week",
+        autoCalcPrice: true,
+        features: [
+          "Live 2-hour interactive team workshop + Q&A",
+          "Curated Prompt Playbook PDF tailored to your roles",
+          "HD session recording + 7-day async email Q&A"
+        ],
+        lineItems: [
+          { name: "Live 2-Hr Executive & Team AI Workshop", category: "Training", qty: 1, unit: "session", unitPrice: 1100, note: "Customized demos covering writing, research, spreadsheets & SOPs" },
+          { name: "Prompt Playbook & Role Templates (PDF)", category: "Playbook", qty: 1, unit: "kit", unitPrice: 450, note: "25 tested role prompts ready for immediate daily copy-paste" },
+          { name: "Recording + 7-Day Q&A Support Pass", category: "Support", qty: 1, unit: "pkg", unitPrice: 250, note: "Indexed HD replay plus direct follow-up troubleshooting" }
+        ]
+      },
+      {
+        name: "Team Enablement Bootcamp",
+        subtitle: "Hands-on labs + internal AI safety policy",
+        price: 4200,
+        timeline: "3 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Workshop Essentials",
+          "3 department-specific hands-on breakout labs",
+          "Company AI safe-use policy & shared prompt vault",
+          "30-day office hours & adoption scorecard"
+        ],
+        lineItems: [
+          { name: "Everything in Workshop Essentials Scope", category: "Base Scope", qty: 1, unit: "pkg", unitPrice: 1800, note: "Live kickoff workshop, role playbook & team replay library" },
+          { name: "3 Department-Specific Hands-On Labs", category: "Hands-On Labs", qty: 3, unit: "labs", unitPrice: 500, note: "Separate Sales, Ops & Support workshops using your live tasks" },
+          { name: "Internal AI Policy & Shared Prompt Vault", category: "Governance", qty: 1, unit: "suite", unitPrice: 600, note: "Shadow-AI guardrails, PII redaction rules & Notion/Drive vault" },
+          { name: "30-Day Office Hours & Adoption Check-In", category: "Follow-Up", qty: 1, unit: "month", unitPrice: 300, note: "Bi-weekly Q&A clinics to lock in team habits" }
+        ]
+      },
+      {
+        name: "Enterprise AI Transformation",
+        subtitle: "Custom internal copilots + KPI audit",
+        price: 8500,
+        timeline: "6 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Team Enablement Bootcamp",
+          "Custom internal GPTs / knowledge workspace build",
+          "Executive ROI scorecard & vendor security review",
+          "90-day leadership coaching & refresher clinic"
+        ],
+        lineItems: [
+          { name: "Everything in Team Enablement Bootcamp", category: "Bootcamp Base", qty: 1, unit: "pkg", unitPrice: 4200, note: "Full kickoff, 3 departmental labs, policy & 30-day office hours" },
+          { name: "Custom Workspace & Internal Knowledge Copilots", category: "Custom Tools", qty: 1, unit: "build", unitPrice: 2200, note: "Private workspace configured with company SOPs & style guides" },
+          { name: "Executive KPI ROI Scorecard & Security Audit", category: "Strategy", qty: 1, unit: "audit", unitPrice: 1200, note: "Time-saved telemetry benchmark & vendor privacy verification" },
+          { name: "90-Day Priority Coaching & Refresher Clinic", category: "Advisory", qty: 1, unit: "pkg", unitPrice: 900, note: "Quarterly model update briefing & leadership Slack access" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "ai-extra-seat", title: "Additional Department Cohort (Up to 25 Staff)", description: "Dedicated 90-minute workshop tailored for Finance, HR, or Engineering.", category: "Cohort", qty: 1, unit: "session", price: 650, selected: false },
+      { id: "ai-workflow", title: "1 Custom n8n / Zapier AI Workflow Build", description: "Turn your highest-volume manual copy/paste task into an automated flow.", category: "Automation", qty: 1, unit: "flow", price: 950, selected: false },
+      { id: "ai-retainer", title: "Monthly AI Coach & Model Updates Retainer", description: "Ongoing team office hours as frontier models evolve.", category: "Retainer", qty: 1, unit: "month", price: 550, selected: false },
+      { id: "ai-compliance", title: "GDPR / SOC2 Vendor AI Risk Policy Packet", description: "Client-ready disclosure language & internal data governance addendum.", category: "Governance", qty: 1, unit: "packet", price: 480, selected: false }
+    ]
+  },
+
+  ai_automation: {
+    id: "ai_automation",
+    label: "AI Agents & Automation",
+    category: "AI, Tech & Digital Agencies",
+    icon: "bolt",
+    businessName: "RelayCraft AI Systems",
+    businessTagline: "Production LLM Workflows • Human-Reviewed Guardrails",
+    businessEmail: "builds@relaycraft.example",
+    businessPhone: "(512) 555-0197",
+    logoData: "",
+    paletteId: "obsidian-luxe",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-845",
+    clientName: "Apex Logistics Partners",
+    projectTitle: "Autonomous Lead Triage & CRM Operations Agent Suite",
+    projectLocation: "Austin, TX / Cloud Infrastructure",
+    introText: "Eliminate manual lead routing, proposal drafting, and CRM data entry. Every workflow deploys directly inside your own API keys with human approval checks and full error alerting.",
+    recommendedBadge: "Highest ROI",
+    trustBadges: ["You Own 100% Code & Prompts", "Zero Hallucination Guardrails", "14–90 Day SLA Support"],
+    validDays: 14,
+    fastActionDiscount: 400,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% build sprint kickoff deposit; 50% upon production cutover & SOP sign-off.",
+    terms: "Client retains 100% intellectual property over prompts, n8n/Make blueprints, and custom webhook middleware.",
+    financingEnabled: true,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Lead & Intake Bot",
+        subtitle: "Single high-impact CRM workflow",
+        price: 2400,
+        timeline: "2 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Workflow architecture map & CRM schema audit",
+          "1 production AI qualification & enrichment flow",
+          "Slack error alerting + 14-day launch hypercare"
+        ],
+        lineItems: [
+          { name: "Workflow Mapping & CRM Data Audit", category: "Discovery", qty: 1, unit: "audit", unitPrice: 500, note: "Bottleneck teardown, webhook spec & latency budget" },
+          { name: "1 Production AI Lead Qualification Workflow", category: "Automation", qty: 1, unit: "flow", unitPrice: 1400, note: "Auto-scores inbound inquiries, enriches company data & logs CRM" },
+          { name: "Error Alerts, Testing & 14-Day Hypercare", category: "QA & Care", qty: 1, unit: "pkg", unitPrice: 500, note: "Dead-letter retry logic, prompt tests & rapid fixes" }
+        ]
+      },
+      {
+        name: "Multi-Agent Ops Suite",
+        subtitle: "3 connected agents + approval queue",
+        price: 5600,
+        timeline: "4 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Lead & Intake Bot",
+          "3 connected agents: Inbox Triage, CRM Sync & Proposal Drafts",
+          "Human-in-the-loop approval dashboard & Slack triggers",
+          "Recorded team SOPs + 30-day accuracy tuning"
+        ],
+        lineItems: [
+          { name: "Everything in Lead & Intake Bot Scope", category: "Core Flow", qty: 1, unit: "pkg", unitPrice: 2400, note: "Audit, lead enrichment pipeline & alerting foundation" },
+          { name: "3 Connected AI Agents (Inbox, CRM, Drafts)", category: "Agent Suite", qty: 3, unit: "agents", unitPrice: 700, note: "Classifies email threads, updates deal stages & drafts summaries" },
+          { name: "Human-in-the-Loop Approval Queue", category: "Guardrails", qty: 1, unit: "setup", unitPrice: 650, note: "One-click Slack/web approve before external emails fire" },
+          { name: "Team SOP Video Walkthrough & 30-Day Tuning", category: "Handover", qty: 1, unit: "pkg", unitPrice: 450, note: "Loom documentation + weekly prompt calibration" }
+        ]
+      },
+      {
+        name: "Autonomous Revenue Engine",
+        subtitle: "Custom RAG brain + eval harness",
+        price: 11500,
+        timeline: "6–8 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Multi-Agent Ops Suite",
+          "Private RAG knowledge base & custom REST API tools",
+          "Automated test eval harness & token cost guardrails",
+          "90-day dedicated AI engineering retainer"
+        ],
+        lineItems: [
+          { name: "Everything in Multi-Agent Ops Suite", category: "Suite Base", qty: 1, unit: "pkg", unitPrice: 5600, note: "Complete 3-agent CRM/inbox stack + human approval layer" },
+          { name: "RAG Vector Knowledge Base & API Connectors", category: "Engineering", qty: 1, unit: "build", unitPrice: 3200, note: "Chunked company docs synced securely to ERP/billing APIs" },
+          { name: "Automated Eval Harness & Cost Guardrails", category: "Reliability", qty: 1, unit: "suite", unitPrice: 1500, note: "Golden dataset regression checks & fallback routing" },
+          { name: "90-Day Dedicated AI Engineer Retainer", category: "Retainer", qty: 1, unit: "pkg", unitPrice: 1200, note: "Priority Slack channel & continuous model upgrades" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "auto-voice", title: "AI Voice Receptionist Integration", description: "24/7 natural inbound phone call screening & instant calendar booking.", category: "Voice AI", qty: 1, unit: "line", price: 1250, selected: false },
+      { id: "auto-monitor", title: "Monthly Token Cost & SLA Monitoring", description: "Daily uptime checks, token cap protection & model version updates.", category: "Retainer", qty: 1, unit: "month", price: 390, selected: false },
+      { id: "auto-sync", title: "QuickBooks / Xero Invoice Auto-Reconcile", description: "Extracts PDF vendor receipts & matches line items automatically.", category: "Finance Flow", qty: 1, unit: "flow", price: 750, selected: false }
+    ]
+  },
+
+  it_msp: {
+    id: "it_msp",
+    label: "Managed IT & Security (MSP)",
+    category: "AI, Tech & Digital Agencies",
+    icon: "shield",
+    businessName: "IronGate Managed IT & Cyber",
+    businessTagline: "15-Min SLA Support • Zero-Trust Endpoint Defense",
+    businessEmail: "security@irongateit.example",
+    businessPhone: "(312) 555-0136",
+    logoData: "",
+    paletteId: "navy-gold",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-870",
+    clientName: "Harborview Medical Group",
+    projectTitle: "10-Seat Managed IT, Cybersecurity & Cloud Backup Coverage",
+    projectLocation: "Chicago, IL • Suite 400",
+    introText: "Eliminate downtime and cyber-insurance compliance gaps. All tiers include proactive endpoint patching and seamless onboarding without interrupting staff workflows.",
+    recommendedBadge: "Cyber Insurance Ready",
+    trustBadges: ["15-Min SLA Response", "HIPAA & SOC2 Controls", "No Long-Term Lock-In"],
+    validDays: 14,
+    fastActionDiscount: 150,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% onboarding + Month 1 activation upon signing; automated monthly billing thereafter.",
+    terms: "Includes silent after-hours agent rollout, legacy vendor handoff, and documented asset inventory.",
+    financingEnabled: false,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Core Helpdesk & Patch",
+        subtitle: "Reliable remote IT + OS updates",
+        price: 1450,
+        timeline: "3–5 Days",
+        autoCalcPrice: true,
+        features: [
+          "10-endpoint RMM deployment & hardware asset audit",
+          "Automated Windows/macOS & 3rd-party app patching",
+          "Business-hours US remote support desk"
+        ],
+        lineItems: [
+          { name: "10-Endpoint RMM Agent Deployment & Audit", category: "Endpoints", qty: 10, unit: "seats", unitPrice: 65, note: "Health telemetry, disk encryption check & software inventory" },
+          { name: "Automated OS & Third-Party Patching", category: "Patching", qty: 1, unit: "system", unitPrice: 450, note: "Scheduled vulnerability updates with zero workday interruptions" },
+          { name: "Business-Hours US Remote Helpdesk", category: "Helpdesk", qty: 1, unit: "month", unitPrice: 350, note: "Ticket portal, phone & remote screen remediation" }
+        ]
+      },
+      {
+        name: "Shield Security & Backup",
+        subtitle: "Managed EDR + MFA + immutable cloud backup",
+        price: 2650,
+        timeline: "5–7 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Core Helpdesk & Patch",
+          "Managed EDR ransomware defense + M365 phishing guard",
+          "Automated immutable Microsoft 365 / workstation backups",
+          "Company password vault & hardware/app MFA rollout"
+        ],
+        lineItems: [
+          { name: "Everything in Core Helpdesk & Patch Scope", category: "Core IT", qty: 1, unit: "pkg", unitPrice: 1450, note: "RMM monitoring, automated patching & remote support desk" },
+          { name: "Managed EDR + M365 Phishing Defense (10 Seats)", category: "Cybersecurity", qty: 10, unit: "seats", unitPrice: 55, note: "Real-time behavioral threat quarantine & email link scanning" },
+          { name: "Immutable Cloud Backup & Restore Drill", category: "Backup", qty: 1, unit: "setup", unitPrice: 400, note: "Air-gapped daily snapshots for SharePoint, Mail & endpoints" },
+          { name: "Password Vault + MFA Enforcement", category: "Identity", qty: 1, unit: "org", unitPrice: 250, note: "Shared team vault & zero-trust conditional access rules" }
+        ]
+      },
+      {
+        name: "Zero-Trust vCIO & 24/7 SOC",
+        subtitle: "24/7 threat hunting + compliance readiness",
+        price: 4400,
+        timeline: "2 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Shield Security & Backup",
+          "24/7/365 managed SOC threat hunting & SIEM retention",
+          "Cyber insurance / HIPAA / SOC2 gap audit packet",
+          "Quarterly vCIO executive hardware & budget roadmap"
+        ],
+        lineItems: [
+          { name: "Everything in Shield Security & Backup", category: "Shield Base", qty: 1, unit: "pkg", unitPrice: 2650, note: "Helpdesk, EDR, email security, cloud backup & MFA" },
+          { name: "24/7 SOC Threat Hunting & SIEM Retention", category: "24/7 SOC", qty: 1, unit: "org", unitPrice: 950, note: "Round-the-clock human security analyst escalation" },
+          { name: "Compliance Readiness Audit Packet", category: "Compliance", qty: 1, unit: "audit", unitPrice: 500, note: "Questionnaire responses & policy attestation for underwriters" },
+          { name: "Quarterly vCIO IT Budget Roadmap", category: "vCIO", qty: 1, unit: "review", unitPrice: 300, note: "3-year workstation refresh & cloud license savings plan" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "msp-seat", title: "5 Additional Managed Workstation Seats", description: "Expand full RMM, EDR & cloud backup coverage to 5 more staff.", category: "Seats", qty: 1, unit: "5-pack", price: 375, selected: false },
+      { id: "msp-wifi", title: "Enterprise Mesh Wi-Fi & Firewall Hardening", description: "VLAN isolation for guest Wi-Fi, VoIP phones & IoT printers.", category: "Network", qty: 1, unit: "site", price: 490, selected: false },
+      { id: "msp-phish", title: "Quarterly Phishing Simulation & Training", description: "Automated realistic spoof tests + 5-min micro-training modules.", category: "Training", qty: 1, unit: "org", price: 295, selected: false }
+    ]
+  },
+
+  tutoring: {
+    id: "tutoring",
+    label: "Private Tutoring & Test Prep",
+    category: "Education, Coaching & Advisory",
+    icon: "sparkles",
+    businessName: "ScholarPath Academic Coaching",
+    businessTagline: "Mastery-First 1-on-1 Tutoring • Guaranteed Score Lift",
+    businessEmail: "hello@scholarpath.example",
+    businessPhone: "(617) 555-0142",
+    logoData: "",
+    paletteId: "forest-copper",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-905",
+    clientName: "The Patel Family (Grade 11)",
+    projectTitle: "SAT / AP Math Mastery & Academic Confidence Package",
+    projectLocation: "Live Online Whiteboard / Boston",
+    introText: "Following our free 20-minute academic consultation, here are three personalized 1-on-1 tutoring roadmaps designed to close foundational gaps quickly and boost exam-day confidence.",
+    recommendedBadge: "Best Score Improvement",
+    trustBadges: ["Vetted Top 1% Educators", "Weekly Parent Recaps", "24-Hr Free Rescheduling"],
+    validDays: 10,
+    fastActionDiscount: 50,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% enrollment reserve upon acceptance; remaining 50% halfway through package.",
+    terms: "Unused hours roll forward for 12 months. Parent progress summaries sent cleanly after every session.",
+    financingEnabled: true,
+    financingMonths: 6,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Foundation 6-Session Pack",
+        subtitle: "Targeted skill boost & homework rhythm",
+        price: 660,
+        timeline: "3 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Initial diagnostic gap assessment & study roadmap",
+          "Six 60-minute live 1-on-1 tutoring sessions",
+          "Weekly parent progress email & recorded whiteboard notes"
+        ],
+        lineItems: [
+          { name: "Diagnostic Skills & Gap Assessment", category: "Assessment", qty: 1, unit: "eval", unitPrice: 90, note: "Pinpoints core concept gaps before session #1" },
+          { name: "1-on-1 Live 60-Min Tutoring Sessions", category: "1-on-1 Hours", qty: 6, unit: "hrs", unitPrice: 85, note: "Interactive digital whiteboard + custom practice drills" },
+          { name: "Weekly Parent Progress Digest", category: "Reporting", qty: 1, unit: "plan", unitPrice: 60, note: "Clear summary of mastered topics & next focus areas" }
+        ]
+      },
+      {
+        name: "Honor Roll 12-Session Accelerator",
+        subtitle: "Steady GPA + standardized score climb",
+        price: 1290,
+        timeline: "6 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Full diagnostic assessment + customized weekly syllabus",
+          "Twelve 60-min 1-on-1 sessions (priority weekly slot)",
+          "2 scored timed practice exams + error-log drills",
+          "Mid-program parent strategy check-in + async Q&A"
+        ],
+        lineItems: [
+          { name: "Diagnostic Assessment + Custom Study Roadmap", category: "Assessment", qty: 1, unit: "eval", unitPrice: 90, note: "Section-by-section baseline score & pacing calibration" },
+          { name: "1-on-1 Live Tutoring Sessions (Priority Slot)", category: "1-on-1 Hours", qty: 12, unit: "hrs", unitPrice: 80, note: "Reserved recurring weekly time + full whiteboard PDF notes" },
+          { name: "Scored Timed Practice Exams & Drills", category: "Exam Prep", qty: 2, unit: "exams", unitPrice: 75, note: "Realistic pacing check + categorized question review" },
+          { name: "Mid-Program Strategy Call & Text Check-Ins", category: "Support", qty: 1, unit: "pkg", unitPrice: 90, note: "Direct quick-help pass between lessons" }
+        ]
+      },
+      {
+        name: "VIP Mastery & SAT Intensive",
+        subtitle: "Maximum target score + unlimited Q&A",
+        price: 2280,
+        timeline: "10–12 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Comprehensive multi-section diagnostic + study binder",
+          "Twenty 60-min intensive 1-on-1 coaching sessions",
+          "4 full-length proctored mock exams + video review",
+          "Unlimited async homework help + bi-weekly parent calls"
+        ],
+        lineItems: [
+          { name: "Multi-Section Diagnostic + Custom Study Binder", category: "Diagnostic", qty: 1, unit: "pkg", unitPrice: 150, note: "Custom digital workbook, formula deck & pacing schedule" },
+          { name: "1-on-1 Intensive Coaching (Flexible Times)", category: "1-on-1 Hours", qty: 20, unit: "hrs", unitPrice: 78, note: "Deep mastery pacing & high-difficulty problem sets" },
+          { name: "4 Proctored Mock Exams + Video Review", category: "Mock Exams", qty: 4, unit: "exams", unitPrice: 80, note: "Full timing analytics & recorded solution walkthroughs" },
+          { name: "Unlimited Async Q&A & Parent Conferences", category: "VIP Access", qty: 1, unit: "term", unitPrice: 250, note: "Priority support right up through test morning" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "tut-sibling", title: "Sibling Shared Study Pass (4 Bonus Hrs)", description: "Allocate 4 flexible review hours for another student in your household.", category: "Family Bonus", qty: 1, unit: "4 hrs", price: 240, selected: false },
+      { id: "tut-essay", title: "College Admissions Essay Polish (3 Drafts)", description: "Brainstorming, structural outline & 3 detailed line-edit rounds.", category: "Admissions", qty: 1, unit: "essay", price: 320, selected: false },
+      { id: "tut-calc", title: "Executive Functioning & Test Anxiety Toolkit", description: "Planner cadence, Pomodoro pacing & calm test-day routine.", category: "Study Skills", qty: 1, unit: "kit", price: 140, selected: false }
+    ]
+  },
+
+  coaching: {
+    id: "coaching",
+    label: "Executive & Career Coaching",
+    category: "Education, Coaching & Advisory",
+    icon: "sparkles",
+    businessName: "Vantage Point Leadership Co.",
+    businessTagline: "ICF-Certified Executive Coaches • Measurable Growth",
+    businessEmail: "advisory@vantagepoint.example",
+    businessPhone: "(212) 555-0155",
+    logoData: "",
+    paletteId: "obsidian-luxe",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-918",
+    clientName: "Elena Vance — VP Product",
+    projectTitle: "Executive Presence, Scope Expansion & Compensation Coaching",
+    projectLocation: "New York / Confidential Zoom",
+    introText: "Confidential, outcome-driven coaching designed for high-performing leaders stepping into larger mandates, board visibility, or critical career negotiations.",
+    recommendedBadge: "Client Favorite",
+    trustBadges: ["Strict Mutual Confidentiality", "Corporate Stipend Invoice Ready", "Between-Call Access"],
+    validDays: 14,
+    fastActionDiscount: 200,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% initial commitment upon signing (corporate L&D receipts generated cleanly); 50% at midpoint.",
+    terms: "All session notes and 360 interviews remain strictly confidential between coach and coachee.",
+    financingEnabled: true,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "90-Day Clarity Sprint",
+        subtitle: "Focused 3-month breakthrough plan",
+        price: 1800,
+        timeline: "3 Months",
+        autoCalcPrice: true,
+        features: [
+          "360° strengths & career goal alignment audit",
+          "Six bi-weekly 60-min 1-on-1 coaching sessions",
+          "Personalized 90-day action plan & scorecard"
+        ],
+        lineItems: [
+          { name: "360° Strengths & Career Goal Alignment Audit", category: "Discovery", qty: 1, unit: "audit", unitPrice: 350, note: "Pinpoints high-leverage leadership blindspots & wins" },
+          { name: "6 Bi-Weekly 60-Min 1-on-1 Strategy Calls", category: "Coaching", qty: 6, unit: "calls", unitPrice: 200, note: "Tactical problem-solving, framing & stakeholder calibration" },
+          { name: "90-Day Action Plan & Accountability Tracker", category: "Playbook", qty: 1, unit: "plan", unitPrice: 250, note: "Weekly milestone tracker & reflection prompts" }
+        ]
+      },
+      {
+        name: "Leadership Accelerator (6-Mo)",
+        subtitle: "Executive presence + promotion/comp strategy",
+        price: 3600,
+        timeline: "6 Months",
+        autoCalcPrice: true,
+        features: [
+          "Stakeholder interview synthesis & positioning map",
+          "Twelve bi-weekly 60-min executive coaching calls",
+          "Async Slack / voice memo check-ins between sessions",
+          "Promotion case & compensation negotiation prep"
+        ],
+        lineItems: [
+          { name: "Deep-Dive 360 Feedback & Positioning Map", category: "Discovery", qty: 1, unit: "pkg", unitPrice: 600, note: "Anonymous stakeholder pulse + executive narrative positioning" },
+          { name: "12 Bi-Weekly 60-Min Executive Coaching Calls", category: "Coaching", qty: 12, unit: "calls", unitPrice: 200, note: "Sustained 6-month transformation & crisis sounding board" },
+          { name: "Async Voice / Slack Check-Ins (6 Months)", category: "Async Access", qty: 6, unit: "mos", unitPrice: 65, note: "Pre-meeting pep briefs & rapid decision second opinions" },
+          { name: "Promotion & Compensation Script Review", category: "Prep", qty: 1, unit: "pkg", unitPrice: 210, note: "Equity, base & title negotiation modeling" }
+        ]
+      },
+      {
+        name: "VIP Boardroom Partner",
+        subtitle: "Weekly priority advisory + live rehearsals",
+        price: 6800,
+        timeline: "6 Months",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Leadership Accelerator (6-Mo)",
+          "Weekly 1-on-1 priority cadence (+12 extra calls)",
+          "2 live mock board / all-hands presentation rehearsals",
+          "Unlimited review of decks, memos & LinkedIn bio"
+        ],
+        lineItems: [
+          { name: "Everything in Leadership Accelerator (6-Mo)", category: "Core Program", qty: 1, unit: "pkg", unitPrice: 3600, note: "360 synthesis, 12 base calls, async Slack & comp prep" },
+          { name: "Weekly Priority Advisory (+12 Extra Calls)", category: "Weekly Cadence", qty: 12, unit: "calls", unitPrice: 180, note: "Weekly high-stakes preparation for C-suite leaders" },
+          { name: "Live Mock Board / Keynote Rehearsals", category: "Rehearsal", qty: 2, unit: "labs", unitPrice: 320, note: "Line-by-line Q&A pressure testing with video playback" },
+          { name: "Unlimited Executive Bio, LinkedIn & Deck Edits", category: "VIP Review", qty: 1, unit: "pkg", unitPrice: 400, note: "48-hr asynchronous redline on board & strategy memos" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "coach-linkedin", title: "Done-With-You Executive LinkedIn Overhaul", description: "Craft C-suite positioning headline, bio narrative & board profile.", category: "Positioning", qty: 1, unit: "pkg", price: 450, selected: false },
+      { id: "coach-offsite", title: "Half-Day Direct Report Team Workshop", description: "3-hour facilitated alignment offsite for up to 12 direct reports.", category: "Team Alignment", qty: 1, unit: "session", price: 950, selected: false },
+      { id: "coach-disc", title: "Team Strengths & Communication Profile", description: "Hogan / DISC executive assessment with 45-min debrief.", category: "Assessment", qty: 1, unit: "eval", price: 280, selected: false }
+    ]
+  },
+
+  accounting: {
+    id: "accounting",
+    label: "Fractional CFO & Tax",
+    category: "Education, Coaching & Advisory",
+    icon: "shield",
+    businessName: "LedgerCraft Advisory & CPA",
+    businessTagline: "Clean Books by the 10th • Proactive Tax Strategy",
+    businessEmail: "advisory@ledgercraft.example",
+    businessPhone: "(206) 555-0181",
+    logoData: "",
+    paletteId: "navy-gold",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-934",
+    clientName: "Cascade Service Co.",
+    projectTitle: "Monthly Bookkeeping, Tax Planning & Fractional CFO Retainer",
+    projectLocation: "Seattle, WA / QuickBooks Online",
+    introText: "Always know your exact job margins, cash runway, and quarterly tax obligations without chasing receipts. Monthly books close reliably by the 10th business day.",
+    recommendedBadge: "Best Tax & Margin Clarity",
+    trustBadges: ["Close by 10th Business Day", "Flat Predictable Retainer", "Audit-Ready Workpapers"],
+    validDays: 14,
+    fastActionDiscount: 150,
+    fastActionHours: 72,
+    depositPercent: 100,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "Month 1 flat retainer due at kick-off; cancel anytime with 30 days' notice.",
+    terms: "Includes encrypted read-only bank/QuickBooks onboarding and year-end CPA handoff package.",
+    financingEnabled: false,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Monthly Books & Close",
+        subtitle: "Clean GAAP-aligned financials every month",
+        price: 750,
+        timeline: "Monthly",
+        autoCalcPrice: true,
+        features: [
+          "Bank & credit card reconciliation (up to 3 accounts)",
+          "Monthly P&L, Balance Sheet & Cash Flow report pack",
+          "CPA-ready trial balance & organized receipt archive"
+        ],
+        lineItems: [
+          { name: "Bank & Card Reconciliation (Up to 3 Accts)", category: "Bookkeeping", qty: 1, unit: "month", unitPrice: 450, note: "Accurate job-cost coding & rule-based categorization" },
+          { name: "Monthly P&L, Balance Sheet & Cash Flow", category: "Reporting", qty: 1, unit: "pack", unitPrice: 200, note: "Executive dashboard summary delivered by the 10th" },
+          { name: "CPA-Ready Workpapers & Receipt Vault", category: "Compliance", qty: 1, unit: "month", unitPrice: 100, note: "Audit-proof ledger trail for stress-free tax filing" }
+        ]
+      },
+      {
+        name: "Growth Controller + Tax",
+        subtitle: "Proactive margin reviews & tax savings",
+        price: 1650,
+        timeline: "Monthly",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Monthly Books & Close",
+          "Multi-state sales tax & nexus compliance support",
+          "Monthly 45-min margin & cash-flow KPI review call",
+          "Quarterly estimated tax & S-Corp optimization plan"
+        ],
+        lineItems: [
+          { name: "Everything in Monthly Books & Close Scope", category: "Books Base", qty: 1, unit: "month", unitPrice: 750, note: "Reconciliations, financial close pack & receipt archive" },
+          { name: "Sales Tax & Multi-State Nexus Filing", category: "Tax Compliance", qty: 1, unit: "month", unitPrice: 350, note: "Clean accrual tracking & state filing reconciliation" },
+          { name: "Monthly 45-Min KPI Margin Review Call", category: "Advisory", qty: 1, unit: "call", unitPrice: 350, note: "Spot margin leaks, pricing gaps & overdue AR early" },
+          { name: "Quarterly Estimated Tax Projection", category: "Tax Plan", qty: 1, unit: "plan", unitPrice: 200, note: "Zero April surprises with safe-harbor tax reserves" }
+        ]
+      },
+      {
+        name: "Fractional CFO Partner",
+        subtitle: "13-week cash model & board-level strategy",
+        price: 3400,
+        timeline: "Monthly",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Growth Controller + Tax",
+          "Dynamic 13-week rolling cash & hiring forecast",
+          "Bi-weekly executive unit-economics strategy calls",
+          "Bank credit line & investor board deck financials"
+        ],
+        lineItems: [
+          { name: "Everything in Growth Controller + Tax", category: "Controller Base", qty: 1, unit: "month", unitPrice: 1650, note: "Full close, sales tax, monthly KPI call & tax plan" },
+          { name: "13-Week Rolling Cash & Hiring Model", category: "Forecasting", qty: 1, unit: "model", unitPrice: 850, note: "Live hiring capacity, cap-ex & break-even scenario planning" },
+          { name: "Bi-Weekly Executive Strategy Reviews", category: "CFO Advisory", qty: 2, unit: "calls", unitPrice: 300, note: "Pricing experiments, vendor terms & capital allocation" },
+          { name: "Investor / Lender Board Deck Financials", category: "Board Prep", qty: 1, unit: "pkg", unitPrice: 300, note: "Lender covenants & investor KPI narrative" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "acct-catchup", title: "Historical Books Cleanup (Per Quarter)", description: "Catch up uncategorized transactions and reconcile past statements.", category: "Cleanup", qty: 1, unit: "quarter", price: 490, selected: false },
+      { id: "acct-payroll", title: "Gusto / ADP Payroll Setup & W-2 Sync", description: "Clean employee/contractor onboarding & state unemployment IDs.", category: "Payroll", qty: 1, unit: "setup", price: 350, selected: false },
+      { id: "acct-scorp", title: "S-Corp Tax Savings Study & Filing Packet", description: "Reasonable-comp study + Form 2553 filing readiness check.", category: "Tax Strategy", qty: 1, unit: "packet", price: 550, selected: false }
+    ]
+  },
+
+  legal_consulting: {
+    id: "legal_consulting",
+    label: "Legal & Contract Advisory",
+    category: "Education, Coaching & Advisory",
+    icon: "shield",
+    businessName: "Harborstone Commercial Counsel",
+    businessTagline: "Transparent Flat-Fee Business Law • Fast Redlines",
+    businessEmail: "counsel@harborstone.example",
+    businessPhone: "(646) 555-0174",
+    logoData: "",
+    paletteId: "navy-gold",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-951",
+    clientName: "Vertex SaaS Studios",
+    projectTitle: "Commercial Client Contracts, MSA & IP Protection Suite",
+    projectLocation: "Delaware / Nationwide Remote",
+    introText: "Predictable flat-fee legal protection without unpredictable six-minute billing increments. Choose single-contract review or turnkey client & IP contract infrastructure.",
+    recommendedBadge: "Most Popular for Founders",
+    trustBadges: ["Flat-Fee Predictable Billing", "48–72 Hr Turnaround", "Plain-English Risk Memos"],
+    validDays: 14,
+    fastActionDiscount: 150,
+    fastActionHours: 72,
+    depositPercent: 50,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "50% engagement retainer upon ESIGN & conflict check; 50% upon final redline delivery.",
+    terms: "Formal Attorney-Client Engagement Letter attaches post-conflict screening. Scope covers U.S. commercial law.",
+    financingEnabled: false,
+    financingMonths: 12,
+    financingApr: 0,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Single Contract Redline",
+        subtitle: "Rapid risk review on 1 active agreement",
+        price: 950,
+        timeline: "3–5 Days",
+        autoCalcPrice: true,
+        features: [
+          "Clause-by-clause redline of 1 MSA, SaaS, or Vendor contract",
+          "Plain-English liability, IP & indemnity risk memo",
+          "30-minute attorney negotiation strategy debrief"
+        ],
+        lineItems: [
+          { name: "Full Clause-by-Clause Agreement Redline", category: "Review", qty: 1, unit: "doc", unitPrice: 650, note: "Tracks liability caps, IP ownership, payment & termination" },
+          { name: "Plain-English Risk & Negotiation Memo", category: "Memo", qty: 1, unit: "brief", unitPrice: 200, note: "Fallback clauses ready to paste back to counterparty" },
+          { name: "30-Min Attorney Strategy Debrief", category: "Consult", qty: 1, unit: "call", unitPrice: 100, note: "Walkthrough of must-win vs. tradeable deal points" }
+        ]
+      },
+      {
+        name: "Startup Contract Vault",
+        subtitle: "Turnkey MSA, SOW, NDA & website terms",
+        price: 2450,
+        timeline: "7–10 Days",
+        autoCalcPrice: true,
+        features: [
+          "Custom Master Services Agreement (MSA), SOW & Mutual NDA",
+          "Tailored Privacy Policy, SaaS Terms & ESIGN Consent kit",
+          "2 rounds of revisions + team deal-desk walkthrough"
+        ],
+        lineItems: [
+          { name: "Custom Client MSA, SOW & NDA Suite", category: "Contract Suite", qty: 3, unit: "docs", unitPrice: 550, note: "Protects IP, milestone payments, scope creep & late fees" },
+          { name: "Privacy Policy, Terms & ESIGN Consent Clauses", category: "Compliance", qty: 1, unit: "pkg", unitPrice: 450, note: "CCPA/GDPR disclosures & electronic acceptance clauses" },
+          { name: "2 Revision Rounds + Deal-Desk Walkthrough", category: "Advisory", qty: 1, unit: "pkg", unitPrice: 350, note: "Tailored playbook so your sales team closes faster" }
+        ]
+      },
+      {
+        name: "Fractional Outside Counsel",
+        subtitle: "30-day deal desk + contractor/IP protection",
+        price: 4800,
+        timeline: "30 Days",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Startup Contract Vault",
+          "30 days unlimited counterparty redlines & deal support",
+          "Contractor + Employee PIIA / IP assignment agreements",
+          "24-hour priority Slack/email turnaround SLA"
+        ],
+        lineItems: [
+          { name: "Everything in Startup Contract Vault Scope", category: "Vault Base", qty: 1, unit: "pkg", unitPrice: 2450, note: "Complete custom MSA, SOW, NDA, privacy & ESIGN templates" },
+          { name: "Unlimited Deal-Desk Redlines (30 Days)", category: "Deal Desk", qty: 1, unit: "month", unitPrice: 1400, note: "Direct redline turnaround on active customer procurement" },
+          { name: "Contractor & Employee IP Assignment Kit", category: "HR & IP", qty: 1, unit: "kit", unitPrice: 650, note: "Secures clean chain-of-title on all code & creative assets" },
+          { name: "24-Hr Priority Counsel Response SLA", category: "Priority", qty: 1, unit: "month", unitPrice: 300, note: "Same-day/next-day urgency for closing revenue deals" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "legal-tm", title: "USPTO Trademark Clearance & Filing", description: "Comprehensive brand knock-out search + federal TEAS application prep.", category: "Brand IP", qty: 1, unit: "mark", price: 790, selected: false },
+      { id: "legal-entity", title: "LLC Operating Agreement / Cap-Table Audit", description: "Review founder vesting, buyout & governance protections.", category: "Corporate", qty: 1, unit: "audit", price: 650, selected: false },
+      { id: "legal-rush", title: "24-Hour Express Turnaround Upgrade", description: "Priority overnight redline turnaround for urgent deal closings.", category: "Express", qty: 1, unit: "doc", price: 350, selected: false }
+    ]
+  },
+
+  events: {
+    id: "events",
+    label: "Event Planning & AV",
+    category: "Creative, Real Estate & Events",
+    icon: "sparkles",
+    businessName: "Marquee Event Production & AV",
+    businessTagline: "Seamless Run-of-Show • Concert-Grade Sound & Lighting",
+    businessEmail: "events@marqueeav.example",
+    businessPhone: "(615) 555-0169",
+    logoData: "",
+    paletteId: "obsidian-luxe",
+    customBrandColor: "",
+    currency: "USD",
+    taxRate: 0,
+    taxLabel: "Sales Tax",
+    quoteNumber: "Q-2026-980",
+    clientName: "Midtown Tech Summit / Clara Chen",
+    projectTitle: "Annual Leadership Summit Coordination, Staging & AV Production",
+    projectLocation: "The Peabody Ballroom (220 Guests)",
+    introText: "Whether you just need a battle-tested Day-Of Coordinator to run vendors smoothly or turnkey multi-screen AV + ambient lighting for a packed room, pick the production level that fits your event.",
+    recommendedBadge: "Full AV + Peace of Mind",
+    trustBadges: ["Dedicated On-Site Producer", "Redundant Backup Audio", "Zero Overtime Surprises"],
+    validDays: 14,
+    fastActionDiscount: 250,
+    fastActionHours: 72,
+    depositPercent: 30,
+    paymentProvider: "stripe",
+    paymentLink: "",
+    paymentNote: "30% date-hold retainer upon ESIGN approval; 70% balance 7 days prior to load-in.",
+    terms: "Locks venue dates, backup audio/power redundancy, and full breakdown after final guest departure.",
+    financingEnabled: true,
+    financingMonths: 12,
+    financingApr: 9.99,
+    financingUrl: "",
+    singleTierMode: false,
+    recommendedTierIndex: 1,
+    tiers: [
+      {
+        name: "Day-Of Coordination",
+        subtitle: "Flawless vendor timing & run-of-show",
+        price: 1950,
+        timeline: "Event Week",
+        autoCalcPrice: true,
+        features: [
+          "Pre-event venue walkthrough & vendor cue confirmation",
+          "Minute-by-minute master Run of Show & floorplan",
+          "10 hrs on-site Lead Producer + 1 Operations Assistant"
+        ],
+        lineItems: [
+          { name: "Venue Walkthrough & Vendor Confirmation", category: "Pre-Event", qty: 1, unit: "audit", unitPrice: 450, note: "Loading dock access, power drops & catering coordination" },
+          { name: "Master Run of Show & Scaled Floorplan", category: "Planning", qty: 1, unit: "plan", unitPrice: 400, note: "Shared cue sheet distributed across every vendor" },
+          { name: "10 Hrs Lead Producer + Assistant On-Site", category: "Event Day", qty: 1, unit: "event", unitPrice: 1100, note: "Setup oversight, speaker wrangling & smooth strike" }
+        ]
+      },
+      {
+        name: "Full Production + Sound & Light",
+        subtitle: "Complete PA, wireless mics & LED wash",
+        price: 4250,
+        timeline: "4–6 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Day-Of Coordination",
+          "Pro PA sound array, 4 wireless mics & live AV tech",
+          "16-fixture custom brand LED room uplighting + stage wash",
+          "Vendor sourcing review & full rehearsal direction"
+        ],
+        lineItems: [
+          { name: "Everything in Day-Of Coordination Scope", category: "Coordination", qty: 1, unit: "pkg", unitPrice: 1950, note: "Walkthrough, master cue sheet & 2-person event staff" },
+          { name: "PA Array, 4 Wireless Mics & Dedicated AV Tech", category: "Audio & Mic", qty: 1, unit: "rig", unitPrice: 1150, note: "Zero feedback, lapel + handheld mics & walk-on music" },
+          { name: "Stage Wash + 16 Wireless LED Uplights", category: "Lighting", qty: 1, unit: "pkg", unitPrice: 750, note: "Crisp speaker key lighting & custom room color atmosphere" },
+          { name: "Vendor Management & Rehearsal Direction", category: "Management", qty: 1, unit: "pkg", unitPrice: 400, note: "AV tech check + speaker mic rehearsal prior to doors" }
+        ]
+      },
+      {
+        name: "VIP Gala / Conference Experience",
+        subtitle: "Dual LED screens + multi-cam livestream",
+        price: 7900,
+        timeline: "8–12 Weeks",
+        autoCalcPrice: true,
+        features: [
+          "Everything in Full Production + Sound & Light",
+          "Dual 120\" HD projection / LED screens + confidence monitor",
+          "2-camera livestream broadcast + 90-sec highlight reel",
+          "VIP speaker greenroom concierge & custom signage suite"
+        ],
+        lineItems: [
+          { name: "Everything in Full Production + Sound & Light", category: "Production Base", qty: 1, unit: "pkg", unitPrice: 4250, note: "Day-of team, concert PA, wireless mics & uplighting" },
+          { name: "Dual 120\" HD Screens + Confidence Monitor", category: "Visual Display", qty: 1, unit: "pkg", unitPrice: 1650, note: "Seamless slide switcher & presenter countdown timer" },
+          { name: "Multi-Cam Livestream + Highlight Sizzle Edit", category: "Livestream", qty: 1, unit: "shoot", unitPrice: 1350, note: "1080p stream + edited social recap within 72 hours" },
+          { name: "VIP Greenroom Concierge & Custom Signage", category: "Hospitality", qty: 1, unit: "pkg", unitPrice: 650, note: "Branded step-and-repeat check-in & VIP speaker hospitality" }
+        ]
+      }
+    ],
+    addons: [
+      { id: "evt-photo", title: "360° Glam Photo Booth + Instant SMS Sharing", description: "Attendant-staffed booth with custom branded frame overlay.", category: "Guest Fun", qty: 1, unit: "setup", price: 690, selected: false },
+      { id: "evt-decor", title: "Custom Stage Backdrop & Acrylic Signage", description: "Branded 8x10 matte stage backdrop + directional easel signs.", category: "Scenic", qty: 1, unit: "set", price: 540, selected: false },
+      { id: "evt-staff", title: "Additional Event Operations Coordinator (8 Hrs)", description: "Dedicated check-in & VIP seating liaison for 150+ guest events.", category: "Staffing", qty: 1, unit: "staff", price: 420, selected: false }
     ]
   }
 };
