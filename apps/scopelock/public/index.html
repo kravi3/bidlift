@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com https://*.supabase.co; object-src 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>ScopeLock — Interactive Field &amp; Agency Change-Order Authorization Studio</title>
+  <meta name="description" content="Lock post-award scope changes in 60 seconds with photo evidence, sequential contract ledger math, schedule delta tracking, ESIGN SHA-256 authorization receipts, and 0%-fee direct payment links. Zero server PII." />
+  <link rel="canonical" href="https://scopelock.onrender.com/" />
+  <meta property="og:title" content="ScopeLock — Stop Losing Margin to Unbilled Scope Creep" />
+  <meta property="og:description" content="Photo-backed field & agency change orders with sequential contract rollups, +X day schedule updates, and cryptographic SHA-256 e-sign receipts." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://scopelock.onrender.com/" />
+  <meta property="og:image" content="https://scopelock.onrender.com/og-card.svg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ScopeLock — Interactive Change-Order Authorization Studio" />
+  <meta name="twitter:description" content="Turn verbal field & client scope requests into photo-verified, SHA-256 signed Change Orders in 60 seconds." />
+  <meta name="twitter:image" content="https://scopelock.onrender.com/og-card.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230f294a'/%3E%3Cstop offset='100%25' stop-color='%23c89d3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M22 30V24a10 10 0 0 1 20 0v6M18 30h28v18H18z' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=1" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "ScopeLock",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "url": "https://scopelock.onrender.com/",
+        "description": "Zero-server Change-Order Authorization Studio with field photo evidence compression, sequential contract ledger math, ESIGN SHA-256 verified e-signatures, and 0%-fee direct payment handoffs.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How does ScopeLock prevent unbilled scope creep on active jobs?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "ScopeLock turns a verbal field discovery or client Slack request into a clear itemized Change Order in under 60 seconds, showing the original contract, prior approved COs, new delta, revised total, and schedule shift before work proceeds."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Does ScopeLock store my client names, pricing, or job photos on a server?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. ScopeLock is 100% browser-local and zero-server. Every Change Order—including up to 4 compressed field photos—is encoded into the #c= URL hash fragment, which browsers never transmit in server requests."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Are ScopeLock client authorizations legally verifiable?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. Clients check an explicit ESIGN consent confirmation and sign on the signature pad with a printed name. ScopeLock generates a cryptographic SHA-256 Authorization Digest over the contract totals, schedule delta, line items, terms, and UTC timestamp."
+            }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="config.js?v=1"></script>
+  <script src="templates.js?v=1"></script>
+  <script src="codec.js?v=1"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>

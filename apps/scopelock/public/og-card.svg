@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#08172b"/>
+      <stop offset="55%" stop-color="#0f294a"/>
+      <stop offset="100%" stop-color="#193b68"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#c89d3c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1060" cy="110" r="240" fill="#c89d3c" opacity="0.09"/>
+  <circle cx="140" cy="560" r="220" fill="#10b981" opacity="0.06"/>
+
+  <!-- Brand Mark -->
+  <rect x="76" y="72" width="60" height="60" rx="16" fill="url(#gold)"/>
+  <path d="M98 100V94a8 8 0 0 1 16 0v6M94 100h24v16H94z" stroke="#08172b" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="154" y="114" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="38" font-weight="800" letter-spacing="-1">ScopeLock</text>
+
+  <!-- Main Headline -->
+  <text x="76" y="216" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" letter-spacing="-1.5">Lock Scope Changes</text>
+  <text x="76" y="282" fill="#fbbf24" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="800" letter-spacing="-1.5">With Photo Proof &amp; ESIGN</text>
+
+  <text x="76" y="344" fill="#cbd5e1" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="500">Sequential contract rollup ledger, +X day schedule updates,</text>
+  <text x="76" y="380" fill="#cbd5e1" font-family="system-ui, -apple-system, sans-serif" font-size="24" font-weight="500">SHA-256 verification digest, and 0%-fee direct payouts.</text>
+
+  <!-- Trust Pills -->
+  <rect x="76" y="438" width="230" height="48" rx="24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.22)"/>
+  <text x="191" y="469" text-anchor="middle" fill="#34d399" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700">Zero Server PII</text>
+
+  <rect x="322" y="438" width="290" height="48" rx="24" fill="rgba(255,255,255,0.10)" stroke="rgba(255,255,255,0.22)"/>
+  <text x="467" y="469" text-anchor="middle" fill="#fbbf24" font-family="system-ui, -apple-system, sans-serif" font-size="19" font-weight="700">12 Trade &amp; Agency COs</text>
+
+  <!-- Sequential Ledger Card Preview -->
+  <rect x="734" y="114" width="390" height="394" rx="20" fill="#102542" stroke="#fbbf24" stroke-width="2.5"/>
+  <rect x="764" y="142" width="166" height="28" rx="14" fill="rgba(251,191,36,0.18)"/>
+  <text x="847" y="161" text-anchor="middle" fill="#fbbf24" font-family="system-ui, sans-serif" font-size="12" font-weight="800">HIDDEN CONDITION · CO-02</text>
+
+  <text x="764" y="210" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Original Contract</text>
+  <text x="1094" y="210" text-anchor="end" fill="#e2e8f0" font-family="monospace" font-size="18" font-weight="700">$14,800</text>
+
+  <text x="764" y="250" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Prior Approved COs</text>
+  <text x="1094" y="250" text-anchor="end" fill="#e2e8f0" font-family="monospace" font-size="18" font-weight="700">+$450</text>
+
+  <text x="764" y="290" fill="#fbbf24" font-family="system-ui, sans-serif" font-size="16" font-weight="700">This Change Order</text>
+  <text x="1094" y="290" text-anchor="end" fill="#fbbf24" font-family="monospace" font-size="20" font-weight="800">+$1,880</text>
+
+  <line x1="764" y1="316" x2="1094" y2="316" stroke="#334155" stroke-width="2"/>
+
+  <text x="764" y="356" fill="#ffffff" font-family="system-ui, sans-serif" font-size="17" font-weight="800">Revised Total</text>
+  <text x="1094" y="358" text-anchor="end" fill="#34d399" font-family="monospace" font-size="26" font-weight="800">$17,130</text>
+
+  <text x="764" y="396" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="14" font-weight="600">Schedule Impact: +2 Days</text>
+
+  <rect x="764" y="426" width="330" height="48" rx="12" fill="#10b981"/>
+  <text x="929" y="456" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="16" font-weight="800">✓ ESIGN + SHA-256 Authorized</text>
+
+  <text x="76" y="572" fill="#94a3b8" font-family="monospace" font-size="20" font-weight="600">scopelock.onrender.com</text>
+</svg>

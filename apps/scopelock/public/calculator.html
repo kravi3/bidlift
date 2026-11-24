@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com https://*.supabase.co; object-src 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Scope-Creep Margin Leak Calculator — ScopeLock</title>
+  <meta name="description" content="Calculate how much annual net profit your contracting business or agency loses to unbilled scope creep—and launch a photo-backed Change Order in 1 click." />
+  <link rel="canonical" href="https://scopelock.onrender.com/calculator.html" />
+  <meta property="og:title" content="Scope-Creep Margin Leak Calculator | ScopeLock" />
+  <meta property="og:description" content="Measure annual unbilled scope creep, recoverable net profit, and ScopeLock Pro ROI in 15 seconds." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://scopelock.onrender.com/calculator.html" />
+  <meta property="og:image" content="https://scopelock.onrender.com/og-card.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%230f294a'/%3E%3Cstop offset='100%25' stop-color='%23c89d3c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M22 30V24a10 10 0 0 1 20 0v6M18 30h28v18H18z' stroke='white' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=1" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "ScopeLock Scope-Creep Margin Leak Calculator",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web",
+    "url": "https://scopelock.onrender.com/calculator.html",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+  }
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand-link" href="./?ref=seo_calc">
+        <span class="brand-mark" aria-hidden="true">SL</span>
+        <span>
+          <strong class="brand-title">ScopeLock</strong>
+          <small class="brand-sub">Change-Order Studio</small>
+        </span>
+      </a>
+      <nav class="topbar-actions" aria-label="Calculator Navigation">
+        <a class="btn btn-ghost btn-sm" href="./?ref=seo_calc">Open CO Studio</a>
+        <a class="btn btn-primary btn-sm" href="./?demo=1&amp;ref=seo_calc">Try Live Client Sign-Off →</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="calc-hero">
+    <div class="calc-hero-inner">
+      <div class="calc-breadcrumb"><a href="./?ref=seo_calc">ScopeLock Studio</a> / Scope-Creep Margin Leak Calculator</div>
+      <span class="calc-pill">Free Margin Diagnostic • Zero Signup</span>
+      <h1>Scope-Creep Margin Leak Calculator</h1>
+      <p>Every unbilled decking sheet, extra landing page, or undocumented site visit comes straight out of your net profit. Plug in your average contract value to quantify your annual leak and launch a ready-to-sign Change Order in one click.</p>
+    </div>
+  </section>
+
+  <main class="calc-container">
+    <section class="calc-card">
+      <div class="calc-layout">
+        <div>
+          <h2>1. Enter Your Project Baseline</h2>
+          <p class="calc-sub">Quick industry presets:</p>
+          <div class="calc-presets">
+            <button type="button" class="preset-btn" data-calc-preset="14800" data-preset-trade="roofing_co" data-preset-leak="12">Roofing ($14.8k)</button>
+            <button type="button" class="preset-btn" data-calc-preset="9600" data-preset-trade="hvac_co" data-preset-leak="15">HVAC ($9.6k)</button>
+            <button type="button" class="preset-btn" data-calc-preset="28500" data-preset-trade="remodel_co" data-preset-leak="11">Remodel ($28.5k)</button>
+            <button type="button" class="preset-btn" data-calc-preset="8500" data-preset-trade="agency_co" data-preset-leak="22">Agency ($8.5k)</button>
+            <button type="button" class="preset-btn" data-calc-preset="12000" data-preset-trade="ai_co" data-preset-leak="20">AI Ops ($12k)</button>
+          </div>
+
+          <div class="calc-form-grid">
+            <div class="field-group">
+              <label for="calc-trade">Industry Change-Order Template</label>
+              <select id="calc-trade" class="input">
+                <optgroup label="Home Trades &amp; Construction">
+                  <option value="roofing_co">Roofing Decking &amp; Flashing Rot</option>
+                  <option value="hvac_co">HVAC Code &amp; Duct Modification</option>
+                  <option value="plumbing_co">Sub-Slab / PRV Code Discovery</option>
+                  <option value="electrical_co">Concealed Junction / Panel Upgrade</option>
+                  <option value="remodel_co">Framing &amp; Moisture Discovery</option>
+                  <option value="landscaping_co">Hidden Rock &amp; Irrigation Reroute</option>
+                </optgroup>
+                <optgroup label="Agencies, Tech &amp; Advisory">
+                  <option value="agency_co">Web/SEO Extra Landing Pages &amp; Revisions</option>
+                  <option value="ai_co">AI Agent &amp; Workflow Scope Addition</option>
+                  <option value="msp_co">Emergency Seats &amp; Security Hardware</option>
+                  <option value="media_co">Additional Shoot Day &amp; Social Cutdowns</option>
+                  <option value="cfo_co">Prior-Quarter Catch-Up Cleanup</option>
+                  <option value="legal_co">Additional Counterparty Redline Round</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="calc-orig">Average Original Contract Value ($ USD)</label>
+              <input id="calc-orig" class="input" type="number" min="250" max="1000000" step="100" value="14800" />
+            </div>
+
+            <div class="field-row-2">
+              <div class="field-group">
+                <label for="calc-jobs">Active Jobs / Projects Per Month</label>
+                <input id="calc-jobs" class="input" type="number" min="1" max="500" step="1" value="6" />
+              </div>
+              <div class="field-group">
+                <label for="calc-leak-pct">Unbilled Scope Creep (% of Contract)</label>
+                <input id="calc-leak-pct" class="input" type="number" min="1" max="60" step="1" value="12" />
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div class="field-group">
+                <label for="calc-margin">Target Gross Margin (%)</label>
+                <input id="calc-margin" class="input" type="number" min="10" max="90" step="1" value="42" />
+              </div>
+              <div class="field-group">
+                <label for="calc-recovery">ScopeLock Capture Rate (%)</label>
+                <select id="calc-recovery" class="input">
+                  <option value="65">Conservative (65% captured)</option>
+                  <option value="80" selected>Standard (80% captured)</option>
+                  <option value="92">Disciplined Field Protocol (92%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h2>2. Your Annual Margin Leak &amp; Recovery</h2>
+          <p class="calc-sub">What formal photo-backed Change Orders recover before invoices go out:</p>
+
+          <div class="calc-kpis">
+            <div class="calc-kpi is-danger">
+              <span>Annual Unbilled Scope Value</span>
+              <strong id="res-unbilled-rev" class="mono">$127,872 / yr</strong>
+            </div>
+            <div class="calc-kpi is-danger">
+              <span>Annual Unbilled Margin Leaked</span>
+              <strong id="res-margin-leaked" class="mono">$53,706 / yr</strong>
+            </div>
+            <div class="calc-kpi is-highlight">
+              <span>Recoverable Net Profit</span>
+              <strong id="res-recoverable-profit" class="mono">+$42,965 / yr</strong>
+            </div>
+            <div class="calc-kpi is-highlight">
+              <span>ScopeLock Pro Annual ROI</span>
+              <strong id="res-roi-multiple" class="mono">240x ROI</strong>
+            </div>
+          </div>
+
+          <div class="calc-breakdown-box">
+            <div class="calc-breakdown-row">
+              <span>Avg Unbilled Change Order / Job</span>
+              <strong id="res-co-delta" class="mono">$1,780</strong>
+            </div>
+            <div class="calc-breakdown-row">
+              <span>Monthly Net Profit Recovered</span>
+              <strong id="res-monthly-profit" class="mono">+$3,580 / mo</strong>
+            </div>
+            <div class="calc-breakdown-row">
+              <span>ScopeLock Pro Annual Plan</span>
+              <strong class="mono">$179 / yr (30% off w/ PH30)</strong>
+            </div>
+          </div>
+
+          <p id="res-roi-note" class="calc-roi-note"></p>
+
+          <div class="calc-actions">
+            <a id="calc-launch-studio-btn" class="btn btn-primary" href="./?tpl=roofing_co&amp;orig=14800&amp;delta=1780&amp;ref=seo_calc">Launch Roofing CO in Studio →</a>
+            <a id="calc-demo-btn" class="btn btn-outline" href="./?tpl=roofing_co&amp;orig=14800&amp;delta=1780&amp;demo=1&amp;ref=seo_calc">Preview Client Sign-Off</a>
+            <button type="button" id="calc-copy-result-btn" class="btn btn-accent">Copy Shareable Result</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="calc-card">
+      <h2>Why Verbal "While You're Here" Approvals Destroy Net Profit</h2>
+      <div class="calc-compare-grid">
+        <div class="calc-compare-box">
+          <h3>Verbal / Text Thread Scope Creep</h3>
+          <ul class="calc-bullets">
+            <li>Crew absorbs extra decking, breakers, or agency revision hours to avoid awkward billing calls.</li>
+            <li>No sequential ledger showing Original Contract + Prior COs = Revised Total.</li>
+            <li>Schedule delays go undocumented, triggering disputes at final milestone payout.</li>
+          </ul>
+        </div>
+        <div class="calc-compare-box is-win">
+          <h3>ScopeLock 60-Second Change Order</h3>
+          <ul class="calc-bullets">
+            <li>Up to 4 compressed jobsite photos prove hidden conditions or code mandates visually.</li>
+            <li>Clients tap ESIGN consent and sign on mobile with a SHA-256 Authorization Digest.</li>
+            <li>Optional 0%-fee direct Stripe, Venmo, PayPal, or Square link collects the delta immediately.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span><strong>ScopeLock</strong> — Zero-Server Change-Order Authorization Studio</span>
+      <div class="footer-links">
+        <a href="./?ref=seo_calc">CO Studio</a>
+        <a href="https://bidlift-5ias.onrender.com/" target="_blank" rel="noopener noreferrer">BidLift Quoting</a>
+        <a href="https://trustvault.onrender.com/" target="_blank" rel="noopener noreferrer">TrustVault</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="config.js?v=1"></script>
+  <script src="templates.js?v=1"></script>
+  <script src="calculator.js?v=1"></script>
+</body>
+</html>

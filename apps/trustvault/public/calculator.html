@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://us.i.posthog.com https://eu.i.posthog.com https://*.supabase.co; object-src 'none'; base-uri 'self';" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <title>Enterprise Deal-Velocity &amp; GRC Savings Calculator | TrustVault</title>
+  <meta name="description" content="Calculate how much you save switching from $15,000/yr Vanta/Drata GRC tools to TrustVault ($1,190/yr), engineering hours reclaimed per security questionnaire, and accelerated enterprise ARR." />
+  <link rel="canonical" href="https://trustvault.onrender.com/calculator.html" />
+  <meta property="og:title" content="Enterprise Deal-Velocity &amp; GRC Savings Calculator — TrustVault" />
+  <meta property="og:description" content="Compare $1,190/yr TrustVault vs $15,000/yr legacy GRC, reclaim 100+ engineering hours/yr, and accelerate enterprise ARR." />
+  <meta property="og:image" content="https://trustvault.onrender.com/og-card.svg" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='tv' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23071224'/%3E%3Cstop offset='100%25' stop-color='%23059669'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23tv)'/%3E%3Cpath d='M32 13L48 20V31C48 41.5 41.1 49.4 32 52C22.9 49.4 16 41.5 16 31V20L32 13Z' fill='none' stroke='white' stroke-width='4' stroke-linejoin='round'/%3E%3Cpath d='M25 32L30 37L40 26' fill='none' stroke='%2334d399' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css?v=1" />
+</head>
+<body>
+  <header class="tv-header">
+    <div class="tv-header-inner">
+      <a href="./" class="tv-brand">
+        <div class="tv-brand-mark">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
+        <div>
+          <span class="tv-brand-title">TrustVault <span class="tv-brand-tag">ROI Calculator</span></span>
+          <span class="tv-brand-sub">Enterprise Deal-Velocity &amp; GRC Cost Savings</span>
+        </div>
+      </a>
+      <nav class="tv-header-actions">
+        <a href="./" class="tv-nav-link">← Back to TrustVault Studio</a>
+        <a href="./?demo=1&amp;ref=tv_calc" class="btn btn-ghost-dark btn-sm">Live Buyer Demo</a>
+        <a id="calc-top-launch" href="./?ref=tv_calc" class="btn btn-primary btn-sm">Launch Free Trust Portal →</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="tv-hero">
+    <div class="tv-hero-inner">
+      <div>
+        <span class="tv-hero-kicker">Enterprise GRC &amp; Pipeline Velocity Model</span>
+        <h1>How Much Does Security Review Friction Cost Your Pipeline?</h1>
+        <p>Compare <strong>$1,190/yr TrustVault Pro</strong> against <strong>$15,000/yr legacy GRC platforms (Vanta / Drata)</strong>, quantify engineering hours reclaimed from manual SIG questionnaires, and model accelerated enterprise ARR.</p>
+      </div>
+      <div class="tv-hero-metrics">
+        <div class="tv-stat-box">
+          <div class="tv-stat-val">$1,190</div>
+          <div class="tv-stat-lbl">TrustVault Pro / yr</div>
+        </div>
+        <div class="tv-stat-box">
+          <div class="tv-stat-val">$15,000</div>
+          <div class="tv-stat-lbl">Typical Legacy GRC / yr</div>
+        </div>
+        <div class="tv-stat-box">
+          <div class="tv-stat-val">85%</div>
+          <div class="tv-stat-lbl">Questionnaire Time Saved</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <main class="tv-calc-grid">
+    <section class="tv-card">
+      <div class="tv-card-title"><span>Your Enterprise Sales &amp; Security Inputs</span></div>
+      <div class="tv-field">
+        <label class="tv-label" for="calc-preset">Industry Posture Preset</label>
+        <select id="calc-preset" class="tv-select">
+          <option value="saas">B2B SaaS Startup</option>
+          <option value="ai_platform">AI Agents &amp; LLM Platform</option>
+          <option value="msp">Managed IT &amp; Security MSP</option>
+          <option value="agency">Enterprise Dev / Digital Agency</option>
+          <option value="healthtech">Healthcare / HIPAA SaaS</option>
+          <option value="fintech">FinTech &amp; Advisory</option>
+        </select>
+      </div>
+      <div class="tv-field">
+        <label class="tv-label" for="calc-biz">Company Name (Pre-fills Your Trust Portal)</label>
+        <input id="calc-biz" type="text" class="tv-input" placeholder="e.g., Acme Cloud Systems" value="Acme Cloud Systems" />
+      </div>
+      <div class="tv-field-row">
+        <div class="tv-field">
+          <label class="tv-label" for="calc-acv">Avg Enterprise ACV ($)</label>
+          <input id="calc-acv" type="number" class="tv-input" min="5000" max="1000000" step="1000" value="36000" />
+        </div>
+        <div class="tv-field">
+          <label class="tv-label" for="calc-q-year">Questionnaires / Year</label>
+          <input id="calc-q-year" type="number" class="tv-input" min="1" max="300" step="1" value="18" />
+        </div>
+      </div>
+      <div class="tv-field-row">
+        <div class="tv-field">
+          <label class="tv-label" for="calc-hours">Eng Hours / Questionnaire</label>
+          <input id="calc-hours" type="number" class="tv-input" min="1" max="80" step="1" value="14" />
+        </div>
+        <div class="tv-field">
+          <label class="tv-label" for="calc-rate">Blended Eng / CISO Rate ($/hr)</label>
+          <input id="calc-rate" type="number" class="tv-input" min="50" max="500" step="10" value="175" />
+        </div>
+      </div>
+      <div class="tv-field-row">
+        <div class="tv-field">
+          <label class="tv-label" for="calc-delay">Current Security Delay (Days)</label>
+          <input id="calc-delay" type="number" class="tv-input" min="3" max="120" step="1" value="28" />
+        </div>
+        <div class="tv-field">
+          <label class="tv-label" for="calc-legacy-cost">Legacy GRC Alternative ($/yr)</label>
+          <select id="calc-legacy-cost" class="tv-select">
+            <option value="15000" selected>$15,000/yr (Vanta / Drata avg)</option>
+            <option value="24000">$24,000/yr (Enterprise GRC Suite)</option>
+            <option value="9500">$9,500/yr (Starter GRC Tier)</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="tv-calc-hero-card">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:#cbd5e1;margin-bottom:4px;">Total First-Year Economic Impact (GRC Savings + Eng Time + Pipeline Velocity)</div>
+        <div class="tv-calc-hero-val" id="res-total-impact">$88,270 / yr</div>
+        <div id="res-roi-sub" style="font-size:13px;color:#e2e8f0;margin-top:6px;">74x return on TrustVault Pro Annual ($1,190/yr · or $833/yr with FOUNDER30)</div>
+      </div>
+
+      <div class="tv-calc-results-grid">
+        <div class="tv-kpi-card">
+          <div class="tv-kpi-val emerald" id="res-grc-savings">$13,810 / yr</div>
+          <div class="tv-kpi-lbl">Direct Software Savings vs Legacy GRC</div>
+          <div id="res-grc-note" style="font-size:11.5px;color:var(--tv-text-muted);margin-top:4px;">$1,190/yr TrustVault vs $15,000/yr Vanta/Drata</div>
+        </div>
+        <div class="tv-kpi-card">
+          <div class="tv-kpi-val" id="res-hours-saved">214.2 hrs / yr</div>
+          <div class="tv-kpi-lbl">Engineering Hours Reclaimed (85% Auto-Fill)</div>
+          <div id="res-labor-val" style="font-size:11.5px;color:var(--tv-text-muted);margin-top:4px;">$37,485/yr engineering capacity unlocked</div>
+        </div>
+        <div class="tv-kpi-card">
+          <div class="tv-kpi-val emerald" id="res-accel-arr">$36,975 / yr</div>
+          <div class="tv-kpi-lbl">Accelerated Enterprise Pipeline ARR</div>
+          <div id="res-delay-note" style="font-size:11.5px;color:var(--tv-text-muted);margin-top:4px;">Cuts 28-day security bottleneck to ~10 days</div>
+        </div>
+        <div class="tv-kpi-card">
+          <div class="tv-kpi-val" id="res-payback">1 Deal</div>
+          <div class="tv-kpi-lbl">Payback Period on $1,190/yr Pro Plan</div>
+          <div style="font-size:11.5px;color:var(--tv-text-muted);margin-top:4px;">Pays for itself in &lt; 1 enterprise review</div>
+        </div>
+      </div>
+
+      <div class="tv-card">
+        <div class="tv-card-title"><span>Launch Pre-Filled TrustVault Portal Now</span></div>
+        <p style="margin:0 0 14px;color:var(--tv-text-muted);">
+          Your selected industry posture and company name will load automatically into TrustVault Studio with our 64-control vault and 20-question SIG-Lite auto-filler ready to test.
+        </p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a id="calc-launch-studio" href="./?preset=saas&amp;biz=Acme%20Cloud%20Systems&amp;ref=tv_calc" class="btn btn-primary btn-lg">Launch My Pre-Filled Trust Portal →</a>
+          <a id="calc-launch-demo" href="./?preset=saas&amp;biz=Acme%20Cloud%20Systems&amp;demo=1&amp;ref=tv_calc" class="btn btn-navy btn-lg">Preview Live Buyer View</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="tv-footer">
+    <div class="tv-footer-inner">
+      <div>
+        <strong>TrustVault</strong> · Zero-Backend Enterprise Security Trust Portal &amp; Auto-Filler · Support: <a href="mailto:bidliftco@gmail.com" style="color:#34d399;">bidliftco@gmail.com</a>
+      </div>
+      <div class="tv-footer-links">
+        <a href="./">TrustVault Studio</a>
+        <a href="https://bidlift-5ias.onrender.com/" target="_blank" rel="noopener noreferrer">BidLift Proposals</a>
+        <a href="https://scopelock.onrender.com/" target="_blank" rel="noopener noreferrer">ScopeLock SOWs</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="config.js?v=1"></script>
+  <script src="analytics.js?v=1"></script>
+  <script src="calculator.js?v=1"></script>
+</body>
+</html>

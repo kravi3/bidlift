@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://scopelock.onrender.com/sitemap.xml
