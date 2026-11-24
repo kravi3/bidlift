@@ -15,6 +15,7 @@
   };
 
   let trackedOnce = false;
+  let lastShareText = "";
 
   function fmt(num) {
     const val = Math.round(Number(num) || 0);
@@ -101,10 +102,42 @@
       demoBtn.href = `../?tpl=${encodeURIComponent(trade)}&flat=${encodeURIComponent(goodPrice)}&demo=1&ref=seo_calc`;
     }
 
+    lastShareText = `Switching from ${fmt(goodPrice)} flat ${tplLabel} bids to Good/Better/Best adds ~+${fmt(perDealLift)}/job (+${fmt(annualLift)}/yr) — run your own numbers free: https://bidlift-5ias.onrender.com/templates/good-better-best-pricing-calculator.html?ref=calc_share`;
+
     if (!trackedOnce && ANALYTICS && typeof ANALYTICS.track === "function") {
       trackedOnce = true;
       ANALYTICS.track("calculator_used", { template_id: trade, entry_source: "seo_calc" });
     }
+  }
+
+  function copyShareSummary(btn) {
+    if (!lastShareText) return;
+    const prevLabel = btn.textContent;
+    const markCopied = () => {
+      btn.textContent = "✓ Result Copied for Sharing!";
+      setTimeout(() => { btn.textContent = prevLabel; }, 2200);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastShareText).then(markCopied).catch(() => {
+        fallbackCopy(lastShareText, markCopied);
+      });
+      return;
+    }
+    fallbackCopy(lastShareText, markCopied);
+  }
+
+  function fallbackCopy(text, onDone) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand("copy");
+      onDone();
+    } catch (e) {}
+    ta.remove();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -127,6 +160,11 @@
         updateCalculator();
       });
     });
+
+    const copyBtn = document.getElementById("calc-copy-result-btn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", () => copyShareSummary(copyBtn));
+    }
 
     updateCalculator();
   });
