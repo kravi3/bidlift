@@ -984,6 +984,7 @@
             }
             <button type="button" class="btn btn-outline" data-action="copy-sms-receipt">${ICONS.copy} Copy SMS Receipt</button>
             <button type="button" class="btn btn-outline" data-action="print-proposal">${ICONS.print} Download PDF</button>
+            <a class="btn btn-outline" href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock-kgt9.onrender.com/")}" target="_blank" rel="noopener noreferrer">${ICONS.bolt} Lock Mid-Job Change Order (ScopeLock)</a>
             <button type="button" class="btn btn-ghost btn-sm" data-action="reset-approval">Edit Selection</button>
           </div>
         </div>
@@ -2280,15 +2281,31 @@
         </div>
 
         <div class="plan-box">
-          <span class="plan-badge">Team &amp; Alerts</span>
-          <strong>Advanced Pro</strong>
-          <div class="plan-price">${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_MONTHLY || "$39/mo")} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">or ${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_ANNUAL || "$299/yr")}</span></div>
+          <span class="plan-badge">Full Revenue Suite</span>
+          <strong>Margin Suite + Advanced Pro</strong>
+          <div class="plan-price">${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_MONTHLY || "$39/mo")} <span style="font-size:12px;font-weight:500;color:var(--text-muted);">or ${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_ANNUAL || "$249/yr")}</span></div>
           <ul class="plan-bullets">
-            <li>Everything in Pro White-Label</li>
+            <li>Everything in Pro + ScopeLock Change-Order Pro</li>
             <li>Short tracked URLs + instant view/sign email alerts</li>
             <li>Cloud draft sync across devices &amp; team seats</li>
           </ul>
-          <button type="button" class="btn btn-outline btn-sm" style="margin-top:auto;" data-action="checkout-pro" data-plan="advanced">Request Early Access →</button>
+          <div style="display:grid;gap:6px;margin-top:auto;">
+            <button type="button" class="btn btn-primary btn-sm" data-action="checkout-pro" data-plan="suite_annual">Get Suite Annual (${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_ANNUAL || "$249/yr")})</button>
+            <button type="button" class="btn btn-outline btn-sm" data-action="checkout-pro" data-plan="suite_monthly">Get Suite Monthly (${escapeHtml(CONFIG.PRO_ADVANCED_PRICE_MONTHLY || "$39/mo")})</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cloud-status-card" style="margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div>
+          <strong style="font-size:13px;">Enterprise Security Trust Portal or Done-For-You Launch?</strong>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">
+            Unlock <strong>TrustVault Enterprise</strong> ($149/mo · $1,190/yr · code <code>FOUNDER30</code>) to auto-answer enterprise security questionnaires, or book our <strong>48-Hr Done-For-You Trust &amp; Revenue Setup (${escapeHtml(CONFIG.DFY_SETUP_PRICE || "$1,499")})</strong>.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <a class="btn btn-outline btn-sm" href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer">Open TrustVault →</a>
+          <button type="button" class="btn btn-accent btn-sm" data-action="checkout-pro" data-plan="dfy">Book DFY Setup (${escapeHtml(CONFIG.DFY_SETUP_PRICE || "$1,499")})</button>
         </div>
       </div>
 
@@ -2299,7 +2316,7 @@
               <th>Capability</th>
               <th>Free Forever ($0)</th>
               <th>Pro ($19/mo · $99/yr)</th>
-              <th>Advanced Pro ($39/mo)</th>
+              <th>Margin Suite ($39/mo · $249/yr)</th>
             </tr>
           </thead>
           <tbody>
@@ -2393,6 +2410,8 @@
           <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
             <a href="templates/" class="btn btn-ghost btn-sm">Free Templates</a>
             <a href="templates/good-better-best-pricing-calculator.html" class="btn btn-ghost btn-sm">Profit Calculator</a>
+            <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock-kgt9.onrender.com/")}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">ScopeLock Change Orders</a>
+            <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer" class="btn btn-ghost btn-sm">TrustVault Enterprise</a>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy Policy &amp; ESIGN Terms</button>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-pro">Pricing</button>
             <a href="mailto:${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}" class="btn btn-ghost btn-sm">${escapeHtml(CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com")}</a>
@@ -3590,25 +3609,29 @@
 
     // Monetization / Pro License
     if (action === "checkout-pro") {
-      const plan = target.dataset.plan === "annual"
-        ? "annual"
-        : (target.dataset.plan === "advanced" ? "advanced" : "monthly");
+      const plan = String(target.dataset.plan || "monthly").trim();
       trackEvent("pro_checkout_clicked", { plan });
-      if (plan === "advanced") {
-        const supportEmail = CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com";
-        const subj = encodeURIComponent("BidLift Advanced Pro Early Access (PH30)");
-        const body = encodeURIComponent("Hi BidLift Team,\n\nI'd like Early Access to BidLift Advanced Pro (tracked short links, instant open alerts & cloud sync) with promo code PH30.\n");
-        window.location.href = `mailto:${supportEmail}?subject=${subj}&body=${body}`;
-        showToast(`Opening Advanced Pro Early Access request to ${supportEmail}`);
-        return;
-      }
-      const rawUrl = plan === "annual" ? CONFIG.CHECKOUT_PRO_ANNUAL_LINK : CONFIG.CHECKOUT_PRO_MONTHLY_LINK;
-      const safeUrl = sanitizeHttpsUrl(rawUrl);
+      const urlMap = {
+        monthly: CONFIG.CHECKOUT_PRO_MONTHLY_LINK,
+        annual: CONFIG.CHECKOUT_PRO_ANNUAL_LINK,
+        suite_monthly: CONFIG.CHECKOUT_SUITE_MONTHLY_LINK,
+        suite_annual: CONFIG.CHECKOUT_SUITE_ANNUAL_LINK,
+        dfy: CONFIG.CHECKOUT_DFY_LINK
+      };
+      const safeUrl = sanitizeHttpsUrl(urlMap[plan]);
       if (safeUrl) {
         window.open(safeUrl, "_blank", "noopener,noreferrer");
-      } else {
-        showToast(`Checkout links unavailable right now—email ${CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com"} for instant activation.`);
+        return;
       }
+      if (plan === "advanced") {
+        const supportEmail = CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com";
+        const subj = encodeURIComponent("BidLift Margin Suite Early Access (PH30)");
+        const body = encodeURIComponent("Hi BidLift Team,\n\nI'd like Early Access to BidLift Margin Suite + ScopeLock with promo code PH30.\n");
+        window.location.href = `mailto:${supportEmail}?subject=${subj}&body=${body}`;
+        showToast(`Opening Margin Suite concierge request to ${supportEmail}`);
+        return;
+      }
+      showToast(`Checkout links unavailable right now—email ${CONFIG.SUPPORT_EMAIL || "bidliftco@gmail.com"} for instant activation.`);
       return;
     }
 

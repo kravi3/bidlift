@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://trustvault.onrender.com/sitemap.xml
+Sitemap: https://trustvault-zdof.onrender.com/sitemap.xml

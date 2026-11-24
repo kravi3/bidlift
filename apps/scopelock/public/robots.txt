@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://scopelock.onrender.com/sitemap.xml
+Sitemap: https://scopelock-kgt9.onrender.com/sitemap.xml

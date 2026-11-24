@@ -23,7 +23,7 @@ window.SCOPELOCK_CONFIG = {
   LICENSE_PREFIX: "SL-PRO-",
   CROSS_LINKS: {
     BIDLIFT_URL: "https://bidlift-5ias.onrender.com/",
-    TRUSTVAULT_URL: "https://trustvault.onrender.com/"
+    TRUSTVAULT_URL: "https://trustvault-zdof.onrender.com/"
   },
   ANALYTICS: {
     PROVIDER: "posthog",

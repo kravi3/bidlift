@@ -69,7 +69,7 @@
       demoBtn.href = `./?${query}&demo=1`;
     }
 
-    lastShareText = `Our ${tplLabel} Scope-Creep Diagnostic: ${leakPct}% unbilled scope creep on ${fmt(orig)} jobs leaks ~${fmt(annualMarginLeaked)}/yr in margin. Capturing ${recoveryPct}% recovers +${fmt(recoverableNetProfit)}/yr (${proRoiMultiple}x Pro ROI): https://scopelock.onrender.com/calculator.html?ref=calc_share`;
+    lastShareText = `Our ${tplLabel} Scope-Creep Diagnostic: ${leakPct}% unbilled scope creep on ${fmt(orig)} jobs leaks ~${fmt(annualMarginLeaked)}/yr in margin. Capturing ${recoveryPct}% recovers +${fmt(recoverableNetProfit)}/yr (${proRoiMultiple}x Pro ROI): https://scopelock-kgt9.onrender.com/calculator.html?ref=calc_share`;
 
     if (!trackedOnce && TELEMETRY && typeof TELEMETRY.track === "function") {
       trackedOnce = true;

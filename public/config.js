@@ -10,11 +10,19 @@ window.BIDLIFT_CONFIG = {
   PRO_PRICE_MONTHLY: "$19/mo",
   PRO_PRICE_ANNUAL: "$99/yr",
   PRO_ADVANCED_PRICE_MONTHLY: "$39/mo",
-  PRO_ADVANCED_PRICE_ANNUAL: "$299/yr",
+  PRO_ADVANCED_PRICE_ANNUAL: "$249/yr",
+  DFY_SETUP_PRICE: "$1,499",
   PROMO_CODE: "PH30",
   PROMO_DEADLINE_LABEL: "Extended through Thanksgiving Week (Ends Nov 30)",
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_CmzuvzfKFA3NJsP5hBbWpQg1EwRRLmGfxaQuO0yifJp",
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
+  CHECKOUT_SUITE_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_DRpXrTa6Futy9tmH6RK960bo0u2f1TV3Z1noS2VrQQb",
+  CHECKOUT_SUITE_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_yX5SEsSkbr2d2S1u5SbhLPuyF8N8A51b6tjp5249JZf",
+  CHECKOUT_DFY_LINK: "https://buy.polar.sh/polar_cl_oY1oDFJUtStsdEjpo4vMoWbIyL5GD7bP2TzmL3PF2Ff",
+  CROSS_LINKS: {
+    SCOPELOCK_URL: "https://scopelock-kgt9.onrender.com/",
+    TRUSTVAULT_URL: "https://trustvault-zdof.onrender.com/"
+  },
   SUPPORT_EMAIL: "bidliftco@gmail.com",
   LICENSE_PREFIX: "BL-PRO-",
   SUPABASE: {

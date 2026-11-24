@@ -972,7 +972,7 @@
           <div class="footer-links">
             <a href="./calculator.html?ref=footer">Scope-Creep Margin Calculator</a>
             <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Quoting</a>
-            <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault</a>
+            <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault</a>
           </div>
         </div>
       </footer>
@@ -1061,7 +1061,7 @@
             <span>Powered by <strong>ScopeLock</strong> &amp; <strong>BidLift</strong> (0% transaction cut)</span>
             <div style="display:flex;gap:12px;flex-wrap:wrap;">
               <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">Create 3-Tier Quotes with BidLift →</a>
-              <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault Proof →</a>
+              <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault Proof →</a>
             </div>
           </div>
         </div>

@@ -1145,7 +1145,7 @@
           <div class="tv-footer-links">
             <a href="calculator.html">Deal-Velocity &amp; GRC Calculator</a>
             <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Proposals</a>
-            <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock.onrender.com/")}" target="_blank" rel="noopener noreferrer">ScopeLock SOWs</a>
+            <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock-kgt9.onrender.com/")}" target="_blank" rel="noopener noreferrer">ScopeLock SOWs</a>
           </div>
         </div>
       </footer>

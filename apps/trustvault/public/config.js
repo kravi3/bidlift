@@ -22,7 +22,7 @@ window.TRUSTVAULT_CONFIG = {
   CHECKOUT_DFY_LINK: "https://buy.polar.sh/polar_cl_oY1oDFJUtStsdEjpo4vMoWbIyL5GD7bP2TzmL3PF2Ff",
   CROSS_LINKS: {
     BIDLIFT_URL: "https://bidlift-5ias.onrender.com/",
-    SCOPELOCK_URL: "https://scopelock.onrender.com/"
+    SCOPELOCK_URL: "https://scopelock-kgt9.onrender.com/"
   },
   ANALYTICS: {
     PROVIDER: "posthog",
