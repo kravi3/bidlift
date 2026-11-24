@@ -1917,6 +1917,7 @@
     const iframeSnippet = `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="920" style="border:0;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.08);" loading="lazy"></iframe>`;
     const activeShareUrl = state.cloudShareUrl || state.shareUrl;
     const pitchText = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${activeShareUrl}`;
+    const waShareUrl = `https://wa.me/?text=${encodeURIComponent(pitchText)}`;
     const cloudReady = Boolean(CLOUD && CLOUD.isConfigured());
     const cloudLoggedIn = Boolean(state.cloudSession && state.cloudSession.user);
 
@@ -1946,6 +1947,7 @@
               <button type="button" class="btn btn-primary" data-action="copy-share-url">${ICONS.copy} Copy Client Link</button>
               <a class="btn btn-outline" id="open-client-link" href="${escapeHtml(state.shareUrl)}" target="_blank" rel="noopener noreferrer">${ICONS.external} Open Client View</a>
               <button type="button" class="btn btn-outline" data-action="copy-rich-email-link">${ICONS.copy} Copy Clean Email Link</button>
+              <a class="btn btn-outline" href="${escapeHtml(waShareUrl)}" target="_blank" rel="noopener noreferrer">Share via WhatsApp</a>
             </div>
             <div class="cloud-status-card" style="margin-top:14px;">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
@@ -1962,7 +1964,7 @@
               ` : `<div style="font-size:11.5px;color:var(--text-muted);margin-top:5px;">${cloudReady ? (cloudLoggedIn ? "Publish once to create a clean short URL with live view & e-sign tracking." : "Sign in cleanly via Magic Link to track client opens & signatures.") : "Running in $0 browser-local mode. Plug Supabase URL/Key into config.js to unlock #p= short links & instant open/sign emails."}</div>`}
             </div>
             <div style="margin-top:16px;">
-              <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / Email Pitch</div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
               <div class="code-box" style="font-family:var(--font-body);">${escapeHtml(pitchText)}</div>
               <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" data-action="copy-pitch-text">${ICONS.copy} Copy Message + Link</button>
             </div>
