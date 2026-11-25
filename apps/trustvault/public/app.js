@@ -19,7 +19,7 @@
   let state = {
     viewMode: "studio", // "studio" | "buyer"
     isEmbed: false,
-    activeTab: "portal", // "portal" | "autofill"
+    activeTab: "portal", // "portal" | "autofill" | "policies"
     billingCycle: "annual", // "annual" | "monthly"
     proUnlocked: false,
     proPlanLabel: "",
@@ -157,6 +157,8 @@
       state.portalDigest = hex;
       const el = document.getElementById("portal-digest-val");
       if (el) el.textContent = hex;
+      const polEl = document.getElementById("policy-digest-val");
+      if (polEl) polEl.textContent = hex.slice(0, 18) + "…";
     });
   }
 
@@ -384,6 +386,18 @@
     const base = window.location.origin + window.location.pathname;
     const query = forEmbed ? "?embed=1" : "";
     return `${base}${query}#t=${encoded}`;
+  }
+
+  function downloadMarkdownFile(filename, content) {
+    const blob = new Blob([String(content || "")], { type: "text/markdown;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function copyText(text, successMsg) {
@@ -1058,6 +1072,120 @@
     `;
   }
 
+  function renderPoliciesGridHtml() {
+    const templates = KB.POLICY_TEMPLATES || [];
+    const buildDoc = KB.buildPolicyDocument || (() => "");
+    const p = state.portal || {};
+    const promo = CFG.PROMO_CODE || "FOUNDER30";
+    const proMonthly = CFG.PRO_PRICE_MONTHLY || "$149/mo";
+    const dfyPrice = CFG.DFY_SETUP_PRICE || "$1,499";
+
+    return templates
+      .map((pol) => {
+        const isUnlocked = Boolean(pol.freeTier || state.proUnlocked);
+        const fullDoc = buildDoc(pol, p);
+        const lines = fullDoc.split("\n");
+        const previewLines = lines.slice(0, 14).join("\n");
+        const lockedLines = lines.slice(14).join("\n");
+
+        const statusBadge = pol.freeTier
+          ? `<span class="tv-policy-tier free">Free Core Policy</span>`
+          : isUnlocked
+          ? `<span class="tv-policy-tier free">Pro Unlocked</span>`
+          : `<span class="tv-policy-tier pro">Pro Enterprise</span>`;
+
+        const actionsHtml = isUnlocked
+          ? `
+            <div class="tv-policy-card-actions no-print">
+              <button type="button" class="btn btn-outline btn-sm" data-action="copy-policy" data-policy-id="${escHtml(pol.id)}">Copy Policy</button>
+              <button type="button" class="btn btn-primary btn-sm" data-action="download-policy" data-policy-id="${escHtml(pol.id)}">Download .md</button>
+            </div>
+          `
+          : "";
+
+        const bodyHtml = isUnlocked
+          ? `<pre class="tv-policy-body">${escHtml(fullDoc)}</pre>`
+          : `
+            <pre class="tv-policy-body tv-policy-preview-top">${escHtml(previewLines)}</pre>
+            <div class="tv-policy-locked">
+              <pre class="tv-policy-body tv-policy-blur" aria-hidden="true">${escHtml(lockedLines || fullDoc)}</pre>
+              <div class="tv-policy-lock-overlay no-print">
+                <div class="tv-policy-lock-title">${escHtml(pol.id)} Locked on Free Forever</div>
+                <p class="tv-policy-lock-desc">Unlock full auditor-ready ${escHtml(pol.framework)} policy export (.md &amp; PDF) tailored to ${escHtml(p.company || "your organization")}.</p>
+                <div class="tv-policy-lock-btns">
+                  <button type="button" class="btn btn-primary btn-sm" data-action="open-pro-modal">Unlock All 6 Policies + Unlimited SIG-Lite (${escHtml(proMonthly)} · ${escHtml(promo)})</button>
+                  <button type="button" class="btn btn-navy btn-sm" data-action="open-dfy-modal">Book 48-Hr DFY Setup (${escHtml(dfyPrice)})</button>
+                </div>
+              </div>
+            </div>
+          `;
+
+        return `
+          <article class="tv-policy-card ${isUnlocked ? "" : "is-locked"}" data-policy-card="${escHtml(pol.id)}">
+            <div class="tv-policy-card-head">
+              <div>
+                <div class="tv-policy-meta-row">
+                  <span class="tv-policy-id mono">${escHtml(pol.id)}</span>
+                  <span class="tv-policy-framework">${escHtml(pol.framework)}</span>
+                  ${statusBadge}
+                </div>
+                <h3 class="tv-policy-title">${escHtml(pol.title)}</h3>
+                <p class="tv-policy-summary">${escHtml(KB.applyTemplateVars ? KB.applyTemplateVars(pol.summary, p) : pol.summary)}</p>
+              </div>
+              ${actionsHtml}
+            </div>
+            ${bodyHtml}
+          </article>
+        `;
+      })
+      .join("");
+  }
+
+  function renderPoliciesTabHtml() {
+    const p = state.portal || {};
+    const templates = KB.POLICY_TEMPLATES || [];
+    const unlockedCount = state.proUnlocked ? templates.length : templates.filter((t) => t.freeTier).length;
+    const digestShort = (state.portalDigest || "computing...").slice(0, 18);
+
+    return `
+      <div class="tv-toolbar tv-policy-toolbar no-print">
+        <div class="tv-toolbar-group">
+          <button type="button" class="btn btn-primary" data-action="download-policy-bundle">Download Policy Bundle (.md)</button>
+          <button type="button" class="btn btn-outline" data-action="print-pdf">Print Executive Policy PDF</button>
+        </div>
+        <div class="tv-policy-digest-pill">
+          <span>SHA-256 Digest:</span>
+          <code id="policy-digest-val" class="mono">${escHtml(digestShort)}…</code>
+        </div>
+      </div>
+
+      ${
+        !state.proUnlocked
+          ? `
+            <div class="tv-policy-notice no-print">
+              <div>
+                <strong>Free Forever includes 2 Core Policies (${unlockedCount}/${templates.length}):</strong>
+                <span><code>POL-01</code> (ISMS Baseline) &amp; <code>POL-02</code> (AI Zero-Training) are fully unlocked for preview, copy, and bundle export. Upgrade to Pro (<code>${escHtml(CFG.PROMO_CODE || "FOUNDER30")}</code>) to unlock all 6 policies (<code>POL-01</code>–<code>POL-06</code>).</span>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" data-action="open-pro-modal">Unlock All 6 Policies →</button>
+            </div>
+          `
+          : `
+            <div class="tv-policy-notice unlocked no-print">
+              <div>
+                <strong>All 6 Auditor-Ready Policies Unlocked (${templates.length}/${templates.length}):</strong>
+                <span>Tailored live for <strong>${escHtml(p.company)}</strong> (<code>${escHtml(p.domain)}</code>) with your active ${(p.subprocessors || []).length}-vendor subprocessor registry.</span>
+              </div>
+            </div>
+          `
+      }
+
+      <div id="policies-grid-area" class="tv-policy-grid">
+        ${renderPoliciesGridHtml()}
+      </div>
+    `;
+  }
+
   function renderPricingComparisonHtml(insideModal) {
     const isAnnual = state.billingCycle === "annual";
     const proPrice = isAnnual ? CFG.PRO_PRICE_ANNUAL || "$1,190/yr" : CFG.PRO_PRICE_MONTHLY || "$149/mo";
@@ -1073,6 +1201,7 @@
       ["Interactive B2B Trust Portal (#t= URL)", "✓ (1 Portal)", "✓ Unlimited", "✓ Multi-Product"],
       ["6 Industry Presets & Subprocessor Registry", "✓", "✓", "✓"],
       ["Security Questionnaire Auto-Filler", "✓ (10 Q&As/export)", "✓ Full 64+ KB Unlimited", "✓ Custom 100-Q Vault"],
+      ["6 Auditor-Ready SOC 2 & AI Policies (.md / PDF)", "✓ (2 Core Policies)", "✓ All 6 Policies Unlocked", "✓ All 6 + Custom Legal Review"],
       ["Procurement-Ready .CSV & PDF Exports", "✓ (Up to 10 rows)", "✓ Unlimited", "✓ Unlimited"],
       ["White-Label Portal (trust.yourdomain.com Iframe)", "✕", "✓", "✓ Custom Domain"],
       ["Cryptographic SHA-256 Attestation Headers", "✓", "✓", "✓ + Signed Packet"],
@@ -1104,7 +1233,7 @@
               <ul style="margin:0 0 16px;padding-left:18px;font-size:12.5px;color:var(--tv-text-muted);display:grid;gap:6px;">
                 <li>1 Live Trust Portal (#t= shareable link)</li>
                 <li>Up to 10 auto-answered Q&amp;As per CSV export</li>
-                <li>TrustVault verification footer badge</li>
+                <li>2 Core SOC 2 &amp; AI Policies (.md / PDF)</li>
               </ul>
             </div>
             <button type="button" class="btn btn-outline" data-action="start-free">Use Free Forever ($0)</button>
@@ -1119,7 +1248,7 @@
               <ul style="margin:0 0 16px;padding-left:18px;font-size:12.5px;color:var(--tv-text-muted);display:grid;gap:6px;">
                 <li>Unlimited white-label Portal &amp; iframe embed</li>
                 <li>Full 64+ KB Auto-Filler &amp; unlimited .CSV exports</li>
-                <li>Cryptographic SHA-256 attestation headers</li>
+                <li>All 6 Auditor-Ready SOC 2 &amp; AI Policies (.md / PDF)</li>
               </ul>
             </div>
             <a href="${escHtml(proCheckout.href)}" ${proCheckout.isExternal ? 'target="_blank" rel="noopener noreferrer"' : ""} class="btn btn-primary" data-action="checkout-track" data-plan="pro">Activate Pro (${escHtml(proPrice)}) →</a>
@@ -1462,23 +1591,27 @@
     }
 
     const activePreset = state.portal.presetId || "saas";
-    const tabContentHtml =
-      state.activeTab === "portal"
-        ? `
-          <div class="tv-toolbar no-print">
-            <div class="tv-toolbar-group">
-              <button type="button" class="btn btn-primary" data-action="copy-portal-link">Copy Shareable Trust Portal Link (#t=)</button>
-              <button type="button" class="btn btn-outline" data-action="copy-embed-code">Copy Website Iframe Embed</button>
-            </div>
-            <div class="tv-toolbar-group">
-              <button type="button" class="btn btn-outline" data-action="print-pdf">Print Executive Security PDF</button>
-              <button type="button" class="btn btn-navy" data-action="open-buyer-view">Live Buyer View →</button>
-            </div>
+    let tabContentHtml = "";
+    if (state.activeTab === "portal") {
+      tabContentHtml = `
+        <div class="tv-toolbar no-print">
+          <div class="tv-toolbar-group">
+            <button type="button" class="btn btn-primary" data-action="copy-portal-link">Copy Shareable Trust Portal Link (#t=)</button>
+            <button type="button" class="btn btn-outline" data-action="copy-embed-code">Copy Website Iframe Embed</button>
           </div>
-          <div id="portal-preview-area">${renderTrustPortalCardHtml(false)}</div>
-          ${renderEmbedBadgeCardHtml()}
-        `
-        : renderAutoFillTabHtml();
+          <div class="tv-toolbar-group">
+            <button type="button" class="btn btn-outline" data-action="print-pdf">Print Executive Security PDF</button>
+            <button type="button" class="btn btn-navy" data-action="open-buyer-view">Live Buyer View →</button>
+          </div>
+        </div>
+        <div id="portal-preview-area">${renderTrustPortalCardHtml(false)}</div>
+        ${renderEmbedBadgeCardHtml()}
+      `;
+    } else if (state.activeTab === "autofill") {
+      tabContentHtml = renderAutoFillTabHtml();
+    } else {
+      tabContentHtml = renderPoliciesTabHtml();
+    }
 
     appEl.innerHTML = `
       <header class="tv-header no-print">
@@ -1505,12 +1638,16 @@
           <div>
             <span class="tv-hero-kicker">${renderShieldSvg(14)} Built for B2B SaaS, AI Platforms &amp; Agencies</span>
             <h1>Close Enterprise Deals 3× Faster — Without $15,000/yr GRC Bloat</h1>
-            <p>Launch a verifiable, zero-server <strong>Trust Portal</strong> and auto-fill 20–100+ buyer <strong>SIG-Lite &amp; CSV security questionnaires</strong> in 60 seconds with SHA-256 attestation headers.</p>
+            <p>Launch a verifiable, zero-server <strong>Trust Portal</strong>, auto-fill 20–100+ buyer <strong>SIG-Lite &amp; CSV questionnaires</strong> in 60 seconds, and export <strong>6 auditor-ready SOC 2 &amp; AI Policies</strong>.</p>
           </div>
           <div class="tv-hero-metrics">
             <div class="tv-stat-box">
               <div class="tv-stat-val">64</div>
               <div class="tv-stat-lbl">Curated Security Q&amp;As</div>
+            </div>
+            <div class="tv-stat-box">
+              <div class="tv-stat-val">6 Policies</div>
+              <div class="tv-stat-lbl">SOC 2 &amp; AI Governance</div>
             </div>
             <div class="tv-stat-box">
               <div class="tv-stat-val">$13.8K</div>
@@ -1552,13 +1689,17 @@
           <section class="tv-workspace">
             <div id="readiness-grader-area">${renderReadinessGraderHtml()}</div>
             <div class="tv-tabs no-print" role="tablist">
-              <button type="button" class="tv-tab-btn ${state.activeTab === "portal" ? "active" : ""}" data-tab="portal" role="tab">
+              <button type="button" class="tv-tab-btn ${state.activeTab === "portal" ? "active" : ""}" data-tab="portal" role="tab" aria-selected="${state.activeTab === "portal" ? "true" : "false"}">
                 <span>1. Public Trust Portal &amp; Embed</span>
                 <span class="tv-tab-pill">#t= Link</span>
               </button>
-              <button type="button" class="tv-tab-btn ${state.activeTab === "autofill" ? "active" : ""}" data-tab="autofill" role="tab">
+              <button type="button" class="tv-tab-btn ${state.activeTab === "autofill" ? "active" : ""}" data-tab="autofill" role="tab" aria-selected="${state.activeTab === "autofill" ? "true" : "false"}">
                 <span>2. Security Questionnaire Auto-Filler</span>
                 <span class="tv-tab-pill">64-Q Vault</span>
+              </button>
+              <button type="button" class="tv-tab-btn ${state.activeTab === "policies" ? "active" : ""}" data-tab="policies" role="tab" aria-selected="${state.activeTab === "policies" ? "true" : "false"}">
+                <span>3. SOC 2 &amp; AI Policy Pack</span>
+                <span class="tv-tab-pill">6 Policies</span>
               </button>
             </div>
             ${tabContentHtml}
@@ -1636,11 +1777,80 @@
     });
   }
 
+  function bindModalTriggers(scopeEl) {
+    const root = scopeEl || document;
+    root.querySelectorAll("[data-action='open-pro-modal']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.proModalOpen = true;
+        state.proFocusTier = "pro";
+        render();
+      });
+    });
+    root.querySelectorAll("[data-action='open-dfy-modal']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.proModalOpen = true;
+        state.proFocusTier = "dfy";
+        render();
+      });
+    });
+  }
+
+  function bindPolicyActions(scopeEl) {
+    const root = scopeEl || document;
+    const templates = KB.POLICY_TEMPLATES || [];
+    const buildDoc = KB.buildPolicyDocument || (() => "");
+
+    root.querySelectorAll("[data-action='copy-policy']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const pid = btn.getAttribute("data-policy-id") || "";
+        const pol = templates.find((t) => t.id === pid);
+        if (!pol) return;
+        if (!pol.freeTier && !state.proUnlocked) {
+          state.proModalOpen = true;
+          state.proFocusTier = "pro";
+          render();
+          return;
+        }
+        const md = buildDoc(pol, state.portal);
+        ANALYTICS.track("policy_copied", { policy_id: pol.id });
+        copyText(md, `Copied ${pol.id}: ${pol.title} (Markdown) to clipboard.`);
+      });
+    });
+
+    root.querySelectorAll("[data-action='download-policy']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const pid = btn.getAttribute("data-policy-id") || "";
+        const pol = templates.find((t) => t.id === pid);
+        if (!pol) return;
+        if (!pol.freeTier && !state.proUnlocked) {
+          state.proModalOpen = true;
+          state.proFocusTier = "pro";
+          render();
+          return;
+        }
+        const md = buildDoc(pol, state.portal);
+        const slug = (state.portal.company || "trustvault").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        downloadMarkdownFile(`${slug}-${pol.id.toLowerCase()}.md`, md);
+        ANALYTICS.track("policy_copied", { policy_id: pol.id, export_format: "md" });
+        showToast(`Downloaded ${pol.id} (${pol.title}) as .md.`);
+      });
+    });
+
+    if (scopeEl && scopeEl !== document) {
+      bindModalTriggers(scopeEl);
+    }
+  }
+
   function refreshLivePortalPreviewOnly() {
     const area = document.getElementById("portal-preview-area");
     if (area) {
       area.innerHTML = renderTrustPortalCardHtml(false);
       bindPortalPreviewActions(area);
+    }
+    const policiesArea = document.getElementById("policies-grid-area");
+    if (policiesArea) {
+      policiesArea.innerHTML = renderPoliciesGridHtml();
+      bindPolicyActions(policiesArea);
     }
     const graderArea = document.getElementById("readiness-grader-area");
     if (graderArea) {
@@ -1962,6 +2172,48 @@
       exportCsvBtn.addEventListener("click", exportCsv);
     }
 
+    // SOC 2 & AI Policy Pack actions
+    const downloadBundleBtn = document.querySelector("[data-action='download-policy-bundle']");
+    if (downloadBundleBtn) {
+      downloadBundleBtn.addEventListener("click", () => {
+        const templates = KB.POLICY_TEMPLATES || [];
+        const buildDoc = KB.buildPolicyDocument || (() => "");
+        const included = state.proUnlocked ? templates : templates.filter((t) => t.freeTier);
+        const p = state.portal || {};
+        const isoDate = new Date().toISOString().slice(0, 10);
+        const cover = [
+          `# ${p.company || "Enterprise"} — SOC 2 & AI Governance Policy Pack`,
+          "",
+          `- **Domain:** ${p.domain || ""}`,
+          `- **Compliance Alignment:** ${p.complianceFrame || "SOC 2 Type II & GDPR"}`,
+          `- **Hosting Region:** ${p.hostingRegion || ""}`,
+          `- **Security Contact:** ${p.securityEmail || ""}`,
+          `- **Generated Date:** ${isoDate}`,
+          `- **SHA-256 Attestation Digest:** ${state.portalDigest || ""}`,
+          `- **Policies Included:** ${included.map((t) => t.id).join(", ")} (${included.length} of ${templates.length})`
+        ].join("\n");
+
+        const body = included.map((t) => buildDoc(t, p)).join("\n\n---\n\n");
+        const bundleText = `${cover}\n\n---\n\n${body}\n`;
+        const slug = (p.company || "trustvault").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        downloadMarkdownFile(`${slug}-soc2-ai-policy-pack.md`, bundleText);
+
+        ANALYTICS.track("policy_bundle_downloaded", {
+          count: included.length,
+          pro: state.proUnlocked
+        });
+
+        if (!state.proUnlocked) {
+          showToast(
+            `Downloaded ${included.length} core policies (POL-01, POL-02). Upgrade to Pro (${CFG.PROMO_CODE || "FOUNDER30"}) for all ${templates.length} policies!`
+          );
+        } else {
+          showToast(`Downloaded all ${included.length} Auditor-Ready SOC 2 & AI Policies (.md)!`);
+        }
+      });
+    }
+    bindPolicyActions(document);
+
     // Pricing & modals
     document.querySelectorAll("[data-billing]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1970,20 +2222,7 @@
       });
     });
 
-    document.querySelectorAll("[data-action='open-pro-modal']").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.proModalOpen = true;
-        state.proFocusTier = "pro";
-        render();
-      });
-    });
-    document.querySelectorAll("[data-action='open-dfy-modal']").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        state.proModalOpen = true;
-        state.proFocusTier = "dfy";
-        render();
-      });
-    });
+    bindModalTriggers(document);
     document.querySelectorAll("[data-action='start-free']").forEach((btn) => {
       btn.addEventListener("click", () => {
         state.proModalOpen = false;

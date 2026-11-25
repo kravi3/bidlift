@@ -336,7 +336,7 @@ img {
 
 .tv-hero-metrics {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1573,6 +1573,215 @@ img {
 }
 
 /* ==========================================================================
+   SOC 2 & AI Governance Policy Pack (Tab 3)
+   ========================================================================== */
+
+.tv-policy-toolbar {
+  justify-content: space-between;
+}
+
+.tv-policy-digest-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--tv-navy-950);
+  color: #cbd5e1;
+  font-size: 11.5px;
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+.tv-policy-digest-pill code {
+  color: var(--tv-emerald-400);
+  word-break: break-all;
+}
+
+.tv-policy-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #78350f;
+  border-radius: var(--tv-radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+}
+
+.tv-policy-notice.unlocked {
+  background: var(--tv-emerald-50);
+  border-color: #a7f3d0;
+  color: #064e3b;
+}
+
+.tv-policy-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.tv-policy-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: 16px;
+  box-shadow: var(--tv-shadow-sm);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.tv-policy-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 18px 20px 14px;
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  border-bottom: 1px solid var(--tv-border);
+}
+
+.tv-policy-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
+.tv-policy-id {
+  font-size: 11.5px;
+  font-weight: 700;
+  background: var(--tv-navy-900);
+  color: #ffffff;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.tv-policy-framework {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--tv-navy-700);
+  background: #e2e8f0;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.tv-policy-tier {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.tv-policy-tier.free {
+  background: var(--tv-emerald-100);
+  color: var(--tv-emerald-700);
+}
+
+.tv-policy-tier.pro {
+  background: var(--tv-amber-100);
+  color: var(--tv-amber-600);
+}
+
+.tv-policy-title {
+  margin: 0 0 4px;
+  font-family: var(--tv-font-display);
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--tv-navy-900);
+}
+
+.tv-policy-summary {
+  margin: 0;
+  font-size: 13px;
+  color: var(--tv-text-muted);
+  max-width: 760px;
+}
+
+.tv-policy-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.tv-policy-body {
+  margin: 0;
+  padding: 18px 20px;
+  font-family: var(--tv-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #1e293b;
+  background: #ffffff;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.tv-policy-preview-top {
+  padding-bottom: 8px;
+}
+
+.tv-policy-locked {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+  border-top: 1px dashed var(--tv-border);
+}
+
+.tv-policy-blur {
+  filter: blur(5px);
+  opacity: 0.45;
+  user-select: none;
+  pointer-events: none;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.tv-policy-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(248, 250, 252, 0.96) 55%);
+}
+
+.tv-policy-lock-title {
+  font-family: var(--tv-font-display);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--tv-navy-900);
+  margin-bottom: 6px;
+}
+
+.tv-policy-lock-desc {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--tv-text-muted);
+  max-width: 520px;
+}
+
+.tv-policy-lock-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+/* ==========================================================================
    Partner & vCISO White-Label Strip (#partner-program)
    ========================================================================== */
 
@@ -1661,6 +1870,10 @@ img {
     grid-template-columns: 1fr;
   }
 
+  .tv-hero-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .tv-tiers-grid,
   .tv-partner-grid {
     grid-template-columns: 1fr;
@@ -1721,10 +1934,21 @@ img {
 
   .tv-grader-actions,
   .tv-grader-actions .btn,
-  .tv-embed-badge-card .btn {
+  .tv-embed-badge-card .btn,
+  .tv-policy-card-actions,
+  .tv-policy-card-actions .btn,
+  .tv-policy-lock-btns,
+  .tv-policy-lock-btns .btn,
+  .tv-policy-toolbar .btn {
     width: 100%;
     white-space: normal;
     text-align: center;
+  }
+
+  .tv-policy-card-head,
+  .tv-policy-body {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 }
 
@@ -1763,8 +1987,25 @@ img {
   }
 
   .tv-portal-shell,
-  .tv-card {
+  .tv-card,
+  .tv-policy-card {
     box-shadow: none !important;
     border-color: #cbd5e1 !important;
+  }
+
+  .tv-policy-card.is-locked,
+  .tv-policy-lock-overlay,
+  .tv-policy-notice,
+  .tv-policy-card-actions {
+    display: none !important;
+  }
+
+  .tv-policy-card {
+    margin-bottom: 18px;
+  }
+
+  .tv-policy-body {
+    overflow: visible !important;
+    font-size: 11px !important;
   }
 }

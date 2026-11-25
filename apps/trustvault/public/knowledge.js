@@ -943,13 +943,290 @@ window.TRUSTVAULT_KNOWLEDGE = (function () {
     return results;
   }
 
+  /**
+   * 6 Auditor-Ready Corporate Security & AI Governance Policy Templates
+   */
+  const POLICY_TEMPLATES = [
+    {
+      id: "POL-01",
+      title: "Information Security Policy (ISMS Baseline)",
+      framework: "SOC 2 CC1–CC5 / ISO 27001 A.5",
+      freeTier: true,
+      owner: "Chief Information Security Officer (CISO) / Security Lead",
+      reviewCadence: "Annual & upon material architecture change",
+      summary: "Establishes enterprise ISMS governance, risk assessment cadence, security control baselines, and executive accountability across {{company}}.",
+      body: [
+        "## 1. Purpose",
+        "This Information Security Policy establishes the baseline Information Security Management System (ISMS) governance framework for **{{company}}** (`{{domain}}`). Its objective is to protect the confidentiality, integrity, and availability of customer data, production workloads, and corporate systems aligned with **{{complianceFrame}}**.",
+        "",
+        "## 2. Scope",
+        "This policy applies to all full-time employees, contractors, temporary personnel, production cloud environments hosted in **{{hostingRegion}}**, source code repositories, CI/CD pipelines, and third-party SaaS tools operated by or on behalf of {{company}}.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Security Governance & Risk Management:** {{company}} conducts a formal annual Security Risk Assessment (and ad-hoc assessments prior to major architectural changes) to identify threats, evaluate likelihood/impact, and track remediation owners to closure.",
+        "- **Logical Tenant Isolation:** Multi-tenant customer environments enforce strict tenant-scoped authorization checks at the API and database layers to prevent cross-customer data access.",
+        "- **Secure SDLC & Change Management:** All production code changes require peer review, automated Static Application Security Testing (SAST), Software Composition Analysis (SCA), and secret scanning before deployment.",
+        "- **Workforce Security & Training:** All personnel undergo pre-employment background verification (where permitted by law), sign binding confidentiality agreements, and complete mandatory annual security & privacy awareness training.",
+        "- **Endpoint Hardening:** Corporate endpoints enforce full-disk encryption (FileVault/BitLocker), centralized Mobile Device Management (MDM), Endpoint Detection & Response (EDR), automatic screen lock (<= 10 minutes), and OS patch SLAs.",
+        "- **Vulnerability & Penetration Testing:** Independent third-party penetration tests are executed annually, with executive summaries available to enterprise buyers under NDA via `{{securityEmail}}`.",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **Executive Leadership & CISO / Security Lead:** Approves ISMS policy updates, allocates security budget, and sponsors annual risk reviews.",
+        "- **Engineering & Infrastructure Owners:** Maintain cloud hardening, CI/CD security gates, immutable audit logging, and vulnerability SLA compliance (Critical: 24–72 hours; High: 14 days; Medium: 30 days).",
+        "- **All Personnel:** Adhere to least-privilege access, acceptable use, and immediate security incident reporting to `{{securityEmail}}`.",
+        "- **Review Cadence:** Reviewed and re-attested at least annually (effective **{{effectiveDate}}**) or following any material security event.",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** AICPA Trust Services Criteria `CC1.1–CC1.5` (Control Environment), `CC2.1–CC2.3` (Communication), `CC3.1–CC3.4` (Risk Assessment), `CC4.1–CC4.2` (Monitoring), `CC5.1–CC5.3` (Control Activities); ISO/IEC 27001:2022 `A.5.1` (Policies for Information Security).",
+        "- **Authorized Infrastructure & Subprocessors:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    },
+    {
+      id: "POL-02",
+      title: "AI Data Governance & Zero-Training Policy",
+      framework: "ISO 42001 / OWASP LLM Top 10",
+      freeTier: true,
+      owner: "VP of Engineering & AI Governance Officer",
+      reviewCadence: "Semi-Annual & upon new model/provider onboarding",
+      summary: "Enforces contractual Zero-Data-Retention (ZDR), strict prohibition on foundation model training with customer data, and OWASP LLM Top 10 safeguards.",
+      body: [
+        "## 1. Purpose",
+        "This AI Data Governance & Zero-Training Policy defines mandatory security, privacy, and safety guardrails for any artificial intelligence, machine learning, or Large Language Model (LLM) capabilities operated by **{{company}}** (`{{domain}}`).",
+        "",
+        "## 2. Scope",
+        "Applies to all production AI features, vector stores, prompt pipelines, internal engineering copilots, and upstream model API subprocessors handling customer inputs, outputs, or embeddings within **{{hostingRegion}}**.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Zero-Training Guarantee:** {{company}} strictly prohibits using customer prompts, completions, uploaded files, or fine-tuning telemetry to train, retrain, or improve third-party or shared foundation models.",
+        "- **Contractual Zero-Data-Retention (ZDR):** Upstream enterprise LLM APIs are configured exclusively under contractual ZDR / zero-retention enterprise agreements where prompts and outputs are processed ephemerally in memory and never persisted by the model provider.",
+        "- **Tenant-Isolated Retrieval (RAG):** Embeddings and vector indexes are logically segregated per customer tenant with strict authorization filtering prior to context assembly so cross-tenant prompt leakage cannot occur.",
+        "- **OWASP LLM Top 10 Mitigations:** Production AI pipelines implement input sanitization, system/user prompt boundary separation, output encoding against XSS/SSRF, strict tool-call schema validation, and per-tenant rate/token quotas.",
+        "- **Human-in-the-Loop & PII Redaction:** Sensitive personal or regulated data is minimized or masked prior to inference where feasible, and high-impact automated actions require explicit user confirmation.",
+        "- **Customer Opt-Out & Transparency:** Enterprise customers receive clear documentation of active AI subprocessors and may disable optional AI capabilities without losing core platform functionality.",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **AI Governance Officer / Security Lead (`{{securityEmail}}`):** Approves every new AI model vendor, verifies ZDR DPAs/addenda, and oversees semi-annual prompt-injection red-teaming.",
+        "- **Product & ML Engineering:** Enforces stateless inference configuration, model output guardrails, and telemetry redaction (no raw customer prompts in application logs).",
+        "- **Review Cadence:** Reviewed semi-annually (effective **{{effectiveDate}}**) and before onboarding any new LLM provider or autonomous agent tool.",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** ISO/IEC 42001:2023 (AI Management System `A.6`, `A.7`, `A.8`), OWASP Top 10 for LLM Applications (`LLM01` Prompt Injection, `LLM02` Sensitive Info Disclosure, `LLM06` Excessive Agency), EU AI Act Transparency & Data Governance alignment, and **{{complianceFrame}}**.",
+        "- **Authorized Infrastructure & AI Subprocessors:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    },
+    {
+      id: "POL-03",
+      title: "Access Control, SSO & MFA Policy",
+      framework: "SOC 2 CC6.1–CC6.3",
+      freeTier: false,
+      owner: "Head of Infrastructure & Identity Security",
+      reviewCadence: "Quarterly Access Reviews & Annual Policy Review",
+      summary: "Governs least-privilege RBAC, SAML 2.0 / OIDC SSO, mandatory hardware/TOTP MFA, privileged elevation, and 1-hour offboarding SLA.",
+      body: [
+        "## 1. Purpose",
+        "This Access Control, SSO & MFA Policy ensures that logical access to **{{company}}** (`{{domain}}`) production infrastructure, customer data stores, and corporate applications is restricted strictly to authorized, authenticated individuals under least-privilege principles.",
+        "",
+        "## 2. Scope",
+        "Applies to all workforce accounts, service accounts, API tokens, administrative consoles, cloud IAM roles in **{{hostingRegion}}**, and enterprise customer Single Sign-On (SSO) integrations.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Mandatory Multi-Factor Authentication (MFA):** Phishing-resistant hardware MFA (FIDO2/WebAuthn) or enterprise TOTP MFA is enforced on 100% of workforce identity provider accounts, cloud consoles, source control, and VPN/bastion access—SMS MFA is prohibited.",
+        "- **Enterprise SSO & SCIM Provisioning:** Enterprise customer plans support SAML 2.0 and OIDC Single Sign-On, configurable session timeouts, and automated SCIM deprovisioning.",
+        "- **Least Privilege & Role-Based Access Control (RBAC):** Access is granted on a documented need-to-know basis using role-based groups. Production database write access is restricted to automated CI/CD pipelines or audited Just-In-Time (JIT) break-glass sessions.",
+        "- **Unique Identities & Credential Hygiene:** Shared administrative logins are prohibited. Service secrets and API keys are stored in encrypted Secrets Managers/KMS and rotated at least every 90–180 days.",
+        "- **Quarterly User Access Reviews (UAR):** Managers and the Security Lead certify all production, cloud, and sensitive SaaS entitlements every quarter, immediately revoking stale permissions.",
+        "- **Onboarding & Offboarding SLA:** Access is provisioned only after manager approval. Upon termination or role change, SSO and production credentials are revoked within **1 hour** (immediately for involuntary terminations).",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **Identity & Infrastructure Lead:** Enforces IdP conditional access policies, JIT elevation logs, and quarterly UAR evidence archival.",
+        "- **People Ops / HR:** Triggers automated offboarding tickets prior to or simultaneous with employee/contractor separation.",
+        "- **Security Contact:** Escalations and enterprise SSO configuration inquiries are handled via `{{securityEmail}}`.",
+        "- **Review Cadence:** Access entitlements reviewed quarterly; policy reviewed annually (effective **{{effectiveDate}}**).",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** AICPA SOC 2 `CC6.1` (Logical Access Security), `CC6.2` (User Registration & Authorization), `CC6.3` (Role-Based Access & Revocation); ISO 27001 `A.5.15–A.5.18`, `A.8.2–A.8.5`; **{{complianceFrame}}**.",
+        "- **Authorized Infrastructure & Identity Subprocessors:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    },
+    {
+      id: "POL-04",
+      title: "Incident Response & Breach Notification Plan (24-Hr SLA)",
+      framework: "SOC 2 CC7.4 / GDPR Art. 33",
+      freeTier: false,
+      owner: "CISO / Incident Commander",
+      reviewCadence: "Annual Tabletop Exercise & Post-Incident Review",
+      summary: "Defines 24/7 severity triage, containment playbooks, forensic evidence preservation, and a strict 24-hour enterprise breach notification SLA.",
+      body: [
+        "## 1. Purpose",
+        "This Incident Response & Breach Notification Plan establishes a structured, repeatable lifecycle for detecting, triaging, containing, eradicating, and communicating security incidents affecting **{{company}}** (`{{domain}}`) or its enterprise customers.",
+        "",
+        "## 2. Scope",
+        "Covers all production infrastructure in **{{hostingRegion}}**, application workloads, corporate endpoints, identity providers, and third-party subprocessors where unauthorized access, data exposure, ransomware, or service integrity compromise is suspected.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Detection & Centralized SIEM Alerting:** Authentication, cloud control-plane, WAF, and EDR telemetry are forwarded to immutable centralized logging with automated anomaly alerting.",
+        "- **Severity Classification:**",
+        "  - `SEV-1 (Critical):` Confirmed or highly suspected unauthorized access to customer data or production takeover (Immediate response < 15 mins).",
+        "  - `SEV-2 (High):` Contained security control failure, high-risk vulnerability exploitation attempt, or subprocessor breach notice (< 1 hour response).",
+        "  - `SEV-3 / SEV-4 (Medium/Low):` Isolated endpoint alert or policy violation without data exposure (< 24 hours response).",
+        "- **24-Hour Customer Breach Notification SLA:** Upon confirming a Security Incident impacting customer data, {{company}} notifies affected customer security contacts within **24 hours** (well inside GDPR Art. 33's 72-hour regulatory window), providing root cause, impacted scope, and containment steps.",
+        "- **Containment & Forensic Preservation:** Incident Commanders isolate compromised credentials/instances while preserving immutable log snapshots and cryptographic hashes (`SHA-256`) for forensic root-cause analysis (RCA).",
+        "- **Post-Incident RCA & Testing:** Every SEV-1/SEV-2 event produces a written Blameless Post-Mortem within 5 business days. The Incident Response Plan is validated via an annual tabletop simulation.",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **Incident Commander (CISO / On-Call Lead):** Leads technical containment, declares severity, and authorizes customer/regulatory notifications.",
+        "- **Legal & Privacy Officer:** Coordinates GDPR/state breach notices, DPA obligations, and law enforcement liaison.",
+        "- **External Security Reporting:** Suspected vulnerabilities or incidents can be reported 24/7 to `{{securityEmail}}`.",
+        "- **Review Cadence:** Tested via annual tabletop exercise and reviewed annually (effective **{{effectiveDate}}**).",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** AICPA SOC 2 `CC7.3` (Security Event Evaluation), `CC7.4` (Incident Response Execution), `CC7.5` (Recovery & Lessons Learned); GDPR `Article 33 & 34`; ISO 27001 `A.5.24–A.5.28`; **{{complianceFrame}}**.",
+        "- **Authorized Infrastructure & Incident-Scope Subprocessors:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    },
+    {
+      id: "POL-05",
+      title: "Data Encryption, Backup & Retention Policy",
+      framework: "SOC 2 CC6.7 / A1.2",
+      freeTier: false,
+      owner: "Principal Cloud Architect & Data Protection Lead",
+      reviewCadence: "Annual & Semi-Annual DR Restore Drills",
+      summary: "Specifies AES-256-GCM at rest, TLS 1.3 in transit, KMS key rotation, RPO <= 1 hr / RTO <= 4 hrs immutable backups, and 30-day deletion SLAs.",
+      body: [
+        "## 1. Purpose",
+        "This Data Encryption, Backup & Retention Policy mandates cryptographic protection, business continuity backups, and defensible data disposal across **{{company}}** (`{{domain}}`) systems.",
+        "",
+        "## 2. Scope",
+        "Applies to all customer databases, object storage, search/vector indexes, automated snapshots, network communications, and offboarding workflows operating in **{{hostingRegion}}**.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Encryption at Rest:** 100% of customer data, attachments, logs, and backups are encrypted at rest using **AES-256-GCM** backed by FIPS 140-2/3 validated Cloud KMS / HSM services.",
+        "- **Encryption in Transit:** All public endpoints enforce HTTPS with **TLS 1.3** (minimum TLS 1.2 with AEAD forward-secrecy ciphers) and HSTS. Internal service-to-service traffic uses authenticated TLS / mTLS.",
+        "- **Key Management & Rotation:** Key Encryption Keys (KEKs) are isolated from application compute via strict IAM policies and rotated automatically at least every 365 days (and immediately upon suspected compromise).",
+        "- **Immutable Backups & RPO/RTO Targets:** Automated encrypted snapshots run continuously/daily across multi-AZ storage with cross-region replication and object-lock immutability against ransomware. Recovery targets: **RPO <= 1 hour**, **RTO <= 4 hours**.",
+        "- **Backup Restoration Testing:** Engineering executes documented backup restore and disaster recovery drills at least semi-annually to verify data integrity.",
+        "- **Retention & Deletion SLA:** Upon contract termination or verified GDPR/CCPA erasure request to `{{securityEmail}}`, active customer records are purged within **30 days** and rolling backups cryptographically expire within **35 days**, with a written Certificate of Destruction available upon request.",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **Cloud Infrastructure Team:** Maintains KMS key policies, TLS certificates, immutable backup schedules, and semi-annual restore test evidence.",
+        "- **Data Protection Lead:** Processes verified customer deletion/export requests within statutory and contractual SLAs.",
+        "- **Review Cadence:** Policy reviewed annually (effective **{{effectiveDate}}**); DR restore drills performed every 6 months.",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** AICPA SOC 2 `CC6.1` (Encryption), `CC6.7` (Transmission Security), `A1.2` (Environmental & Backup Recovery), `C1.2` (Confidential Disposal); GDPR `Art. 17 & 32`; **{{complianceFrame}}**.",
+        "- **Authorized Storage & Backup Subprocessors:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    },
+    {
+      id: "POL-06",
+      title: "Third-Party Vendor & Subprocessor Risk Policy",
+      framework: "SOC 2 CC9.2",
+      freeTier: false,
+      owner: "Security & Procurement Compliance Lead",
+      reviewCadence: "Annual Vendor Re-Assessment & Pre-Onboarding Gate",
+      summary: "Requires security due diligence, SOC 2/ISO evidence review, executed DPAs/SCCs, least-data sharing, and 30-day advance customer subprocessor notice.",
+      body: [
+        "## 1. Purpose",
+        "This Third-Party Vendor & Subprocessor Risk Policy ensures that **{{company}}** (`{{domain}}`) evaluates, contracts, monitors, and governs all external vendors and sub-processors that store, process, or transmit customer or corporate data.",
+        "",
+        "## 2. Scope",
+        "Applies to all cloud infrastructure providers, SaaS tools, AI model APIs, payment processors, and managed security vendors onboarded across **{{hostingRegion}}** or globally.",
+        "",
+        "## 3. Control Standards & Requirements",
+        "- **Pre-Onboarding Security Assessment:** Prior to transmitting any customer or confidential data, prospective Tier-1/Tier-2 vendors undergo a security posture review verifying SOC 2 Type II or ISO 27001 certification, encryption standards, and breach history.",
+        "- **Mandatory Contractual Safeguards (DPA & SCCs):** Every subprocessor handling personal or customer data must execute a binding Data Processing Addendum (DPA), Standard Contractual Clauses (SCCs) for cross-border transfers where applicable, and confidentiality obligations.",
+        "- **Least-Data & Scoped API Access:** Integrations follow data minimization principles—only strictly required fields/scopes are shared, using isolated API keys and TLS 1.3 transport.",
+        "- **30-Day Advance Subprocessor Notice:** {{company}} maintains an up-to-date public Subprocessor Registry and provides enterprise customers at least **30 days advance notice** before authorizing any new subprocessor to process customer data, honoring contractual objection rights.",
+        "- **Annual Vendor Re-Evaluation & Offboarding:** Critical vendors are re-reviewed annually for updated SOC 2 / penetration test attestations. Terminated vendors have API access revoked immediately and data destruction certified.",
+        "",
+        "## 4. Roles, Responsibilities & Review Cadence",
+        "- **Security & Legal Compliance (`{{securityEmail}}`):** Conducts vendor risk assessments, tracks DPA/BAA execution, and publishes subprocessor change notices.",
+        "- **Department Heads & Engineering:** Prohibited from connecting unapproved SaaS or AI tools ('Shadow IT') to customer data stores.",
+        "- **Review Cadence:** Critical vendor portfolio reviewed annually (effective **{{effectiveDate}}**); registry updated continuously.",
+        "",
+        "## 5. Subprocessor & Compliance Mapping",
+        "- **Primary Control Mappings:** AICPA SOC 2 `CC9.2` (Vendor & Business Partner Risk Management); GDPR `Article 28` (Processor Obligations); ISO 27001 `A.5.19–A.5.22` (Supplier Relationships); **{{complianceFrame}}**.",
+        "- **Live Authorized Subprocessor Registry:**",
+        "",
+        "{{subprocessorsTable}}"
+      ].join("\n")
+    }
+  ];
+
+  function escapeMarkdownCell(val) {
+    return String(val == null ? "" : val)
+      .replace(/\|/g, "\\|")
+      .replace(/\r?\n+/g, " ")
+      .trim() || "—";
+  }
+
+  function buildSubprocessorsMarkdownTable(subprocessors) {
+    const list = Array.isArray(subprocessors) ? subprocessors : [];
+    const header = "| Subprocessor | Purpose / Data Scope | Hosting Location | DPA / Safeguard |\n| --- | --- | --- | --- |";
+    if (list.length === 0) {
+      return `${header}\n| None configured | No external subprocessors currently listed | N/A | N/A |`;
+    }
+    const rows = list.map((sp) => {
+      const name = escapeMarkdownCell(sp && sp.name);
+      const purpose = escapeMarkdownCell(sp && sp.purpose);
+      const location = escapeMarkdownCell(sp && sp.location);
+      const dpaStatus = escapeMarkdownCell(sp && sp.dpaStatus);
+      return `| ${name} | ${purpose} | ${location} | ${dpaStatus} |`;
+    });
+    return `${header}\n${rows.join("\n")}`;
+  }
+
+  function buildPolicyDocument(policy, portalCtx) {
+    const pol = typeof policy === "string"
+      ? POLICY_TEMPLATES.find((p) => p.id === policy)
+      : policy;
+    if (!pol) return "";
+
+    const ctx = portalCtx || {};
+    const effectiveDate = String(ctx.effectiveDate || new Date().toISOString().slice(0, 10)).trim();
+    const subprocsTable = buildSubprocessorsMarkdownTable(ctx.subprocessors);
+
+    const headerLines = [
+      `# ${pol.id}: ${pol.title}`,
+      "",
+      `- **Organization:** {{company}} (\`{{domain}}\`)`,
+      `- **Framework Mapping:** ${pol.framework}`,
+      `- **Compliance Alignment:** {{complianceFrame}}`,
+      `- **Primary Hosting Region:** {{hostingRegion}}`,
+      `- **Security Contact:** {{securityEmail}}`,
+      `- **Policy Owner:** ${pol.owner || "Security Governance Lead"}`,
+      `- **Review Cadence:** ${pol.reviewCadence || "Annual"}`,
+      `- **Effective Date:** ${effectiveDate}`,
+      "",
+      pol.body || ""
+    ].join("\n");
+
+    const interpolated = applyTemplateVars(headerLines, ctx)
+      .replace(/\{\{effectiveDate\}\}/g, effectiveDate)
+      .replace(/\{\{subprocessorsTable\}\}/g, subprocsTable);
+
+    return interpolated;
+  }
+
   return {
     PILLARS,
     ALL_BADGES,
     INDUSTRY_PRESETS,
     KB_ENTRIES,
     SAMPLE_SIG_LITE,
+    POLICY_TEMPLATES,
     matchSecurityQuestions,
-    applyTemplateVars
+    applyTemplateVars,
+    buildPolicyDocument
   };
 })();
