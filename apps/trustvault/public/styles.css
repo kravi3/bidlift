@@ -1573,6 +1573,84 @@ img {
 }
 
 /* ==========================================================================
+   Partner & vCISO White-Label Strip (#partner-program)
+   ========================================================================== */
+
+.tv-partner-section {
+  max-width: 1380px;
+  margin: 0 auto 36px;
+  padding: 0 20px;
+}
+
+.tv-partner-box {
+  background: linear-gradient(135deg, var(--tv-navy-950) 0%, var(--tv-navy-800) 68%, #0f2c46 100%);
+  color: #ffffff;
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: var(--tv-shadow-md);
+}
+
+.tv-partner-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.tv-partner-head h2 {
+  font-family: var(--tv-font-display);
+  font-size: 22px;
+  font-weight: 800;
+  margin: 6px 0 6px;
+  color: #ffffff;
+}
+
+.tv-partner-sub {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 13.5px;
+  max-width: 720px;
+}
+
+.tv-partner-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.tv-partner-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 14px;
+  padding: 18px;
+}
+
+.tv-partner-metric {
+  font-family: var(--tv-font-mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--tv-emerald-400);
+  margin-bottom: 6px;
+}
+
+.tv-partner-card h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.tv-partner-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+/* ==========================================================================
    Responsive Breakpoints (1280px Desktop & 390px Mobile)
    ========================================================================== */
 
@@ -1583,7 +1661,8 @@ img {
     grid-template-columns: 1fr;
   }
 
-  .tv-tiers-grid {
+  .tv-tiers-grid,
+  .tv-partner-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -1595,9 +1674,14 @@ img {
 
   .tv-container,
   .tv-pricing-section,
+  .tv-partner-section,
   .tv-buyer-wrap {
     padding-left: 12px;
     padding-right: 12px;
+  }
+
+  .tv-partner-box {
+    padding: 18px;
   }
 
   .tv-hero {

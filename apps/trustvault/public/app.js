@@ -1140,6 +1140,7 @@
             <div style="display:grid;gap:8px;">
               <a href="${escHtml(scaleCheckout.href)}" ${scaleCheckout.isExternal ? 'target="_blank" rel="noopener noreferrer"' : ""} class="btn btn-primary" data-action="checkout-track" data-plan="scale">Activate Scale (${escHtml(scalePrice)})</a>
               <a href="${escHtml(dfyCheckout.href)}" ${dfyCheckout.isExternal ? 'target="_blank" rel="noopener noreferrer"' : ""} class="btn btn-dfy btn-sm" data-action="checkout-track" data-plan="dfy">Book 48-Hr DFY Setup (${escHtml(CFG.DFY_SETUP_PRICE || "$1,499")})</a>
+              <a href="mailto:${escHtml(CFG.SUPPORT_EMAIL || "bidliftco@gmail.com")}?subject=Free%2010-Q%20TrustVault%20Pilot&amp;body=Hi%20Ravi%2C%20attaching%20our%20buyer%20security%20questionnaire%20for%20the%20free%2010-Q%2024-hr%20pilot." data-action="pilot-inquiry" style="font-size:12px;color:#a7f3d0;text-align:center;text-decoration:underline;margin-top:2px;">Active SIG-Lite right now? Email for a Free 10-Q Pilot (24-hr) →</a>
             </div>
           </div>
         </div>
@@ -1172,6 +1173,50 @@
     `;
   }
 
+  function renderPartnerProgramHtml() {
+    const supportEmail = CFG.SUPPORT_EMAIL || "bidliftco@gmail.com";
+    const subject = encodeURIComponent("TrustVault vCISO Partner Program");
+    const body = encodeURIComponent(
+      "Hi Ravi,\n\n" +
+        "I'd like to join the TrustVault vCISO / Agency Partner Program (30% recurring + $450 DFY referral).\n\n" +
+        "Firm / Practice: \n" +
+        "Clients served per year: "
+    );
+    return `
+      <section id="partner-program" class="tv-partner-section no-print">
+        <div class="tv-partner-box">
+          <div class="tv-partner-head">
+            <div>
+              <span class="tv-tier-badge" style="background:rgba(52,211,153,0.18);color:var(--tv-emerald-400);">vCISO &amp; Agency Partner Program</span>
+              <h2>Fractional CISO, SOC 2 Advisor, or B2B Agency? Partner &amp; Earn 30% Recurring + $450/DFY</h2>
+              <p class="tv-partner-sub">
+                Equip pre-Series A startups with an instant Trust Portal and 64-control SIG-Lite Auto-Filler during discovery calls instead of stalling deals on $15,000/yr GRC contracts.
+              </p>
+            </div>
+            <a href="mailto:${escHtml(supportEmail)}?subject=${subject}&amp;body=${body}" class="btn btn-primary" data-action="partner-inquiry">Apply as vCISO Partner →</a>
+          </div>
+          <div class="tv-partner-grid">
+            <div class="tv-partner-card">
+              <div class="tv-partner-metric">$0</div>
+              <h3>Free Forever Client Portals</h3>
+              <p>Spin up zero-server #t= Trust Portals for pre-seed clients in 60 seconds during discovery calls with zero backend PII.</p>
+            </div>
+            <div class="tv-partner-card">
+              <div class="tv-partner-metric">30%</div>
+              <h3>Lifetime Recurring Share</h3>
+              <p>Earn $45/mo per Pro Enterprise ($149/mo) or $90/mo per Scale ($299/mo) client account referred through your practice.</p>
+            </div>
+            <div class="tv-partner-card">
+              <div class="tv-partner-metric">$450</div>
+              <h3>Cash Referral Per DFY Setup</h3>
+              <p>Refer any founder needing our 48-Hr Done-For-You 100-Q Vault + Branded Trust Portal ($1,499) and earn $450 per closed setup.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
   function renderModalsHtml() {
     let html = "";
 
@@ -1189,9 +1234,14 @@
             ${renderPricingComparisonHtml(true)}
             <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--tv-border);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <label for="pro-license-input" style="font-size:12.5px;font-weight:600;color:var(--tv-text-muted);">Already have a Pro key?</label>
-                <input id="pro-license-input" type="text" class="tv-input" style="width:200px;" placeholder="TV-PRO-XXXX" />
-                <button type="button" class="btn btn-navy btn-sm" data-action="activate-license">Unlock Key</button>
+                ${
+                  state.proUnlocked
+                    ? `<span class="tv-conf-badge tv-conf-high">Pro Active: ${escHtml(state.proPlanLabel || "TrustVault Pro Enterprise")}</span>
+                       <button type="button" class="btn btn-outline btn-sm" data-action="deactivate-pro">Switch to Free Forever</button>`
+                    : `<label for="pro-license-input" style="font-size:12.5px;font-weight:600;color:var(--tv-text-muted);">Already have a Pro key?</label>
+                       <input id="pro-license-input" type="text" class="tv-input" style="width:200px;" placeholder="TV-PRO-XXXX" />
+                       <button type="button" class="btn btn-navy btn-sm" data-action="activate-license">Unlock Key</button>`
+                }
               </div>
               <span style="font-size:12px;color:var(--tv-text-subtle);">Concierge invoicing &amp; PO support: <a href="mailto:${escHtml(CFG.SUPPORT_EMAIL || "bidliftco@gmail.com")}">${escHtml(CFG.SUPPORT_EMAIL || "bidliftco@gmail.com")}</a></span>
             </div>
@@ -1519,6 +1569,8 @@
       <section id="pricing-compare" class="tv-pricing-section no-print">
         ${renderPricingComparisonHtml(false)}
       </section>
+
+      ${renderPartnerProgramHtml()}
 
       <footer class="tv-footer no-print">
         <div class="tv-footer-inner">
@@ -1973,6 +2025,36 @@
       });
     }
 
+    const deactBtn = document.querySelector("[data-action='deactivate-pro']");
+    if (deactBtn) {
+      deactBtn.addEventListener("click", () => {
+        try {
+          localStorage.removeItem(STORAGE_KEYS.PRO_LICENSE);
+        } catch (e) {}
+        state.proUnlocked = false;
+        state.proPlanLabel = "";
+        if (state.portal) {
+          state.portal.whiteLabel = false;
+          savePortalState();
+        }
+        state.proModalOpen = false;
+        render();
+        showToast("Switched back to Free Forever ($0) plan.");
+      });
+    }
+
+    document.querySelectorAll("[data-action='partner-inquiry']").forEach((link) => {
+      link.addEventListener("click", () => {
+        ANALYTICS.track("partner_cta_clicked", { source: "pricing_strip" });
+      });
+    });
+
+    document.querySelectorAll("[data-action='pilot-inquiry']").forEach((link) => {
+      link.addEventListener("click", () => {
+        ANALYTICS.track("pilot_cta_clicked", { source: "pricing_tier" });
+      });
+    });
+
     document.querySelectorAll("[data-action='close-modals']").forEach((btn) => {
       btn.addEventListener("click", () => {
         state.proModalOpen = false;
@@ -1987,6 +2069,7 @@
         if (e.target === backdrop) {
           state.proModalOpen = false;
           state.ndaModalOpen = false;
+          state.legalModalOpen = false;
           render();
         }
       });
@@ -2071,7 +2154,7 @@
     }
 
     const qPreset = (params.get("preset") || "").trim().toLowerCase();
-    const qBiz = (params.get("biz") || "").trim();
+    const qBiz = (params.get("biz") || params.get("company") || "").trim();
     const qDomain = (params.get("domain") || "").trim();
     const qDemo = params.get("demo") === "1";
 
