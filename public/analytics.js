@@ -11,7 +11,24 @@ window.BidLiftAnalytics = (function () {
   const LOCAL_METRICS_KEY = "bidlift_local_metrics_v1";
   const ENTRY_SOURCE_KEY = "bidlift_entry_source";
 
+  const BOT_UA_RE = /headless|bot|crawler|spider|preview|scanner|proofpoint|mimecast|barracuda|safelinks|lighthouse|curl|wget/i;
+  let humanVerified = false;
+  let humanListenersBound = false;
+
+  function isLikelyBot() {
+    try {
+      if (navigator && navigator.webdriver) return true;
+      const ua = (navigator && navigator.userAgent) || "";
+      if (BOT_UA_RE.test(ua)) return true;
+      if (window.outerWidth === 0 && window.outerHeight === 0) return true;
+    } catch (e) {}
+    return false;
+  }
+
   const ALLOWED_PROPS = new Set([
+    "product",
+    "human_verified",
+    "trigger",
     "template_id",
     "tier_count",
     "addon_count",
@@ -84,6 +101,8 @@ window.BidLiftAnalytics = (function () {
 
   function sanitizeProps(rawProps) {
     const out = {
+      product: "bidlift",
+      human_verified: humanVerified,
       referrer_host: getSafeReferrerHost(),
       viewport_class: getViewportClass()
     };
@@ -135,6 +154,10 @@ window.BidLiftAnalytics = (function () {
     const cleanEvent = eventName.replace(/[^a-zA-Z0-9_:-]/g, "").slice(0, 64);
     if (!cleanEvent) return;
 
+    if (isLikelyBot() && (cleanEvent === "studio_loaded" || cleanEvent === "client_quote_viewed" || cleanEvent === "buyer_demo_opened")) {
+      return;
+    }
+
     const safeProps = sanitizeProps(rawProps);
     recordLocalAggregate(cleanEvent);
 
@@ -171,6 +194,39 @@ window.BidLiftAnalytics = (function () {
       // Never break user flow if telemetry is blocked by an ad-blocker or offline state.
     }
   }
+
+  function bindHumanEngagementListeners() {
+    if (humanListenersBound || isLikelyBot()) return;
+    humanListenersBound = true;
+    const markHuman = (triggerName) => {
+      if (humanVerified) return;
+      humanVerified = true;
+      cleanup();
+      track("human_engaged", { trigger: triggerName });
+    };
+    const onPtr = () => markHuman("pointerdown");
+    const onKey = () => markHuman("keydown");
+    const onTouch = () => markHuman("touchstart");
+    const onScroll = () => {
+      if ((window.scrollY || 0) > 120) markHuman("scroll");
+    };
+    function cleanup() {
+      try {
+        window.removeEventListener("pointerdown", onPtr, true);
+        window.removeEventListener("keydown", onKey, true);
+        window.removeEventListener("touchstart", onTouch, true);
+        window.removeEventListener("scroll", onScroll, true);
+      } catch (e) {}
+    }
+    try {
+      window.addEventListener("pointerdown", onPtr, { capture: true, passive: true });
+      window.addEventListener("keydown", onKey, { capture: true, passive: true });
+      window.addEventListener("touchstart", onTouch, { capture: true, passive: true });
+      window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+    } catch (e) {}
+  }
+
+  bindHumanEngagementListeners();
 
   return {
     track,

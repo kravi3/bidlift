@@ -31,6 +31,7 @@
     buyerSearchQuery: "",
     portalDigest: "computing...",
     qaDigest: "computing...",
+    cachedPortalUrl: "",
     portal: null,
     qa: {
       rawInput: "",
@@ -446,6 +447,324 @@
   function renderShieldSvg(size) {
     const s = size || 20;
     return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>`;
+  }
+
+  function computeReadinessScore(portal) {
+    const p = portal || state.portal || {};
+    const presets = KB.INDUSTRY_PRESETS || {};
+    const defaultCompanies = new Set(
+      Object.keys(presets).map((k) => String((presets[k] && presets[k].defaultCompany) || "").trim().toLowerCase())
+    );
+    const defaultDomains = new Set(
+      Object.keys(presets).map((k) => String((presets[k] && presets[k].defaultDomain) || "").trim().toLowerCase())
+    );
+
+    const companyTrim = String(p.company || "").trim();
+    const cleanDomain = String(p.domain || "")
+      .trim()
+      .replace(/^https?:\/\//i, "")
+      .split("/")[0]
+      .toLowerCase();
+    const domainLabel = cleanDomain || "yourdomain.com";
+
+    let score = 0;
+    const blockers = [];
+
+    // 1. Customized non-default company & domain (15 pts)
+    const isCustomCompany = companyTrim.length >= 2 && !defaultCompanies.has(companyTrim.toLowerCase());
+    const isCustomDomain = cleanDomain.includes(".") && !defaultDomains.has(cleanDomain) && !cleanDomain.endsWith(".onrender.com");
+    const brandPts = (isCustomCompany ? 8 : 0) + (isCustomDomain ? 7 : 0);
+    score += brandPts;
+    if (brandPts < 15) {
+      blockers.push({
+        pts: 15 - brandPts,
+        text: `Using starter preset brand/domain — set your live company & domain for +${15 - brandPts} pts`,
+        fixTarget: "brand"
+      });
+    }
+
+    // 2. Verified corporate security email (10 pts)
+    const email = String(p.securityEmail || "").trim().toLowerCase();
+    const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    const isFreeWebmail = /@(gmail|yahoo|hotmail|outlook|icloud|aol)\.com$/i.test(email);
+    if (validEmail && !isFreeWebmail) {
+      score += 10;
+    } else if (validEmail) {
+      score += 5;
+      blockers.push({
+        pts: 5,
+        text: `Security contact uses consumer webmail — use security@${domainLabel} for +5 pts`,
+        fixTarget: "email"
+      });
+    } else {
+      blockers.push({
+        pts: 10,
+        text: `Missing valid security contact email — add security@${domainLabel} for +10 pts`,
+        fixTarget: "email"
+      });
+    }
+
+    // 3. Compliance badges count (15 pts)
+    const badges = Array.isArray(p.badges) ? p.badges : [];
+    const badgeCount = badges.length;
+    const badgePts = badgeCount >= 4 ? 15 : badgeCount >= 2 ? 9 : badgeCount === 1 ? 4 : 0;
+    score += badgePts;
+    if (badgeCount < 4) {
+      blockers.push({
+        pts: 15 - badgePts,
+        text: `Only ${badgeCount}/4 compliance posture badges enabled — select at least 4 for +${15 - badgePts} pts`,
+        fixTarget: "badges"
+      });
+    }
+
+    // 4. SOC2 / GDPR / AI Zero-Training coverage (15 pts)
+    const badgeSet = new Set(badges.map((b) => String(b).toLowerCase()));
+    const frameLower = String(p.complianceFrame || "").toLowerCase();
+    const hasSoc2 = badgeSet.has("soc2 type ii ready") || /soc\s*2/.test(frameLower);
+    const hasGdpr = badgeSet.has("gdpr") || /gdpr/.test(frameLower);
+    const hasAiZero = badgeSet.has("zero-training ai");
+    if (hasSoc2) {
+      score += 5;
+    } else {
+      blockers.push({ pts: 5, text: "Missing SOC2 Type II Ready badge or framework coverage (+5 pts)", fixTarget: "badges" });
+    }
+    if (hasGdpr) {
+      score += 5;
+    } else {
+      blockers.push({ pts: 5, text: "Missing GDPR compliance posture badge (+5 pts)", fixTarget: "badges" });
+    }
+    if (hasAiZero) {
+      score += 5;
+    } else {
+      blockers.push({ pts: 5, text: "Missing AI Zero-Training badge — enterprise buyers flag AI vendors without ZDR (+5 pts)", fixTarget: "badges" });
+    }
+
+    // 5. Compliance pillar summaries >= 4 filled (15 pts)
+    const pillars = KB.PILLARS || [];
+    const filledPillars = pillars.filter(
+      (pil) => String((p.pillarSummaries && p.pillarSummaries[pil.id]) || "").trim().length >= 25
+    ).length;
+    if (filledPillars >= 6) {
+      score += 15;
+    } else if (filledPillars >= 4) {
+      score += 12;
+      blockers.push({
+        pts: 3,
+        text: `${filledPillars}/6 compliance pillar summaries documented — complete all 6 for +3 pts`,
+        fixTarget: "pillars"
+      });
+    } else {
+      const pPts = Math.round((filledPillars / 4) * 10);
+      score += pPts;
+      blockers.push({
+        pts: 15 - pPts,
+        text: `Only ${filledPillars}/6 compliance pillars filled (need >=4 for buyer review) for +${15 - pPts} pts`,
+        fixTarget: "pillars"
+      });
+    }
+
+    // 6. Subprocessors list >= 3 (15 pts)
+    const validSubprocs = (Array.isArray(p.subprocessors) ? p.subprocessors : []).filter(
+      (sp) => String(sp.name || "").trim().length > 0 && String(sp.purpose || "").trim().length > 0
+    ).length;
+    if (validSubprocs >= 3) {
+      score += 15;
+    } else if (validSubprocs >= 1) {
+      score += 8;
+      blockers.push({
+        pts: 7,
+        text: `Subprocessor registry lists ${validSubprocs}/3 vendors — add at least 3 with DPA status for +7 pts`,
+        fixTarget: "subprocessors"
+      });
+    } else {
+      blockers.push({
+        pts: 15,
+        text: "Subprocessor registry is empty — list >=3 authorized vendors for +15 pts",
+        fixTarget: "subprocessors"
+      });
+    }
+
+    // 7. Custom domain / white-label portal vs free .onrender.com (15 pts)
+    const hasCustomDomainMapping = Boolean(state.proUnlocked && p.whiteLabel);
+    if (hasCustomDomainMapping) {
+      score += 15;
+    } else {
+      blockers.push({
+        pts: 15,
+        text: `Hosting trust portal on .onrender.com — map trust.${domainLabel} for +15 pts`,
+        fixTarget: "dfy"
+      });
+    }
+
+    blockers.sort((a, b) => b.pts - a.pts);
+    const finalScore = Math.max(0, Math.min(100, score));
+    const isReady = finalScore >= 75;
+    return {
+      score: finalScore,
+      statusLabel: isReady ? "Procurement Ready" : "Needs Review",
+      statusTone: isReady ? "ready" : finalScore >= 55 ? "review" : "critical",
+      blockers: blockers.slice(0, 3)
+    };
+  }
+
+  function renderReadinessGraderHtml() {
+    const res = computeReadinessScore(state.portal);
+    const dfyCheckout = getCheckoutHref("dfy");
+    const topFixTarget = res.blockers.length ? res.blockers[0].fixTarget : "dfy";
+    const blockersHtml = res.blockers.length
+      ? res.blockers
+          .map(
+            (b) => `
+            <li class="tv-grader-blocker">
+              <span class="tv-grader-pts">+${b.pts} pts</span>
+              <span>${escHtml(b.text)}</span>
+            </li>
+          `
+          )
+          .join("")
+      : `<li class="tv-grader-blocker pass"><span class="tv-grader-pts pass">100%</span><span>All 7 procurement readiness checks passed — ready for enterprise CISO review.</span></li>`;
+
+    return `
+      <div class="tv-grader-card no-print">
+        <div class="tv-grader-top">
+          <div>
+            <div class="tv-grader-kicker">Enterprise Security Readiness Grader</div>
+            <div class="tv-grader-sub">Live procurement audit based on your active controls, badges, subprocessors &amp; domain posture</div>
+          </div>
+          <div class="tv-score-pill ${res.statusTone}" aria-live="polite">
+            <span class="mono">${res.score} / 100</span>
+            <span>— ${escHtml(res.statusLabel)}</span>
+          </div>
+        </div>
+        <div class="tv-grader-bar-track" aria-hidden="true">
+          <div class="tv-grader-bar-fill ${res.statusTone}" style="width:${res.score}%;"></div>
+        </div>
+        <div class="tv-grader-body">
+          <div class="tv-grader-blockers-wrap">
+            <div class="tv-grader-list-label">${res.blockers.length ? "Top Procurement Blockers" : "Procurement Audit Status"}</div>
+            <ul class="tv-grader-list">${blockersHtml}</ul>
+          </div>
+          <div class="tv-grader-actions">
+            <a href="${escHtml(dfyCheckout.href)}" ${dfyCheckout.isExternal ? 'target="_blank" rel="noopener noreferrer"' : ""} class="btn btn-primary btn-sm" data-action="checkout-track" data-plan="dfy">Fix All Gaps in 48 Hrs (DFY ${escHtml(CFG.DFY_SETUP_PRICE || "$1,499")})</a>
+            <button type="button" class="btn btn-outline btn-sm" data-action="fix-missing-controls" data-fix-target="${escHtml(topFixTarget)}">Add Missing Controls</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function buildWebsiteBadgeHtml(portalUrl) {
+    const p = state.portal || {};
+    const label = state.proUnlocked
+      ? `Verified Security Posture · ${p.company || "Enterprise"}`
+      : "Verified Security Posture · TrustVault";
+    const fallbackUrl =
+      typeof window !== "undefined" && window.location
+        ? window.location.origin + window.location.pathname
+        : "https://trustvault-zdof.onrender.com/";
+    const safeUrl = escHtml(portalUrl || state.cachedPortalUrl || fallbackUrl);
+    const safeLabel = escHtml(label);
+    const safeTitle = escHtml(`${p.company || "Company"} Security Trust Portal`);
+    return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" title="${safeTitle}" style="display:inline-flex;align-items:center;gap:8px;padding:7px 13px;border-radius:999px;background:#071224;color:#ffffff;border:1px solid #10b981;font-family:system-ui,-apple-system,sans-serif;font-size:12px;font-weight:600;text-decoration:none;line-height:1;"><span style="width:8px;height:8px;border-radius:50%;background:#34d399;display:inline-block;"></span><span>${safeLabel}</span></a>`;
+  }
+
+  function renderEmbedBadgeCardHtml() {
+    const p = state.portal || {};
+    const badgeLabel = state.proUnlocked
+      ? `Verified Security Posture · ${p.company || "Enterprise"}`
+      : "Verified Security Posture · TrustVault";
+    const snippet = buildWebsiteBadgeHtml(state.cachedPortalUrl);
+
+    return `
+      <div id="embed-badge-area" class="tv-card tv-embed-badge-card no-print">
+        <div class="tv-card-title">
+          <span>Embed Security Trust Badge on Your Website</span>
+          <span class="tv-conf-badge tv-conf-high">Zero External JS</span>
+        </div>
+        <p class="tv-embed-badge-desc">
+          Paste this minimal inline-style <code>&lt;a&gt;</code> footer badge onto your marketing site, checkout, or pricing page. It links directly to your live <code>#t=</code> Trust Portal URL with zero third-party scripts.
+        </p>
+        <div class="tv-embed-badge-preview-row">
+          <div class="tv-embed-badge-preview-box">
+            <span class="tv-embed-preview-label">Live Footer Preview:</span>
+            <span class="tv-website-badge-preview" id="website-badge-preview-pill">
+              <span class="tv-cert-dot"></span>
+              <span>${escHtml(badgeLabel)}</span>
+            </span>
+          </div>
+          <div class="tv-toolbar-group">
+            <button type="button" class="btn btn-primary btn-sm" data-action="copy-website-badge">Copy Website Badge HTML</button>
+            ${
+              !state.proUnlocked
+                ? `<button type="button" class="btn btn-outline btn-sm" data-action="open-pro-modal">Brand Badge with ${escHtml(p.company || "Your Company")} (Pro)</button>`
+                : ""
+            }
+          </div>
+        </div>
+        <textarea id="badge-html-code" class="tv-textarea tv-badge-code-box" readonly rows="3" aria-label="Embeddable website badge HTML snippet">${escHtml(snippet)}</textarea>
+      </div>
+    `;
+  }
+
+  function refreshWebsiteBadgeSnippet() {
+    if (!CODEC.encodePortal || !state.portal) return;
+    buildShareableUrl(false).then((url) => {
+      state.cachedPortalUrl = url;
+      const box = document.getElementById("badge-html-code");
+      if (box) {
+        box.value = buildWebsiteBadgeHtml(url);
+      }
+    }).catch(() => {});
+  }
+
+  function handleFixMissingControls(target) {
+    if (target === "brand") {
+      const el = document.getElementById("inp-company");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+        showToast("Update Company Name & Primary Domain to earn +15 pts.");
+        return;
+      }
+    }
+    if (target === "email") {
+      const el = document.getElementById("inp-sec-email");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus();
+        showToast("Set a dedicated corporate security email (e.g. security@yourdomain.com).");
+        return;
+      }
+    }
+    if (target === "badges") {
+      const el = document.querySelector("[data-badge-toggle]");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Toggle missing compliance badges (e.g. Zero-Training AI, SOC2, GDPR).");
+        return;
+      }
+    }
+    if (target === "subprocessors") {
+      const el = document.querySelector("[data-action='add-subproc']");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        showToast("Add at least 3 authorized subprocessors with DPA status.");
+        return;
+      }
+    }
+    if (target === "pillars") {
+      if (state.activeTab !== "portal") {
+        state.activeTab = "portal";
+        render();
+      }
+      const el = document.getElementById("portal-preview-area");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      showToast("Click Edit Pillar on any security pillar to complete your summaries.");
+      return;
+    }
+    state.proModalOpen = true;
+    state.proFocusTier = "dfy";
+    render();
   }
 
   function renderTrustPortalCardHtml(isBuyerMode) {
@@ -1107,6 +1426,7 @@
             </div>
           </div>
           <div id="portal-preview-area">${renderTrustPortalCardHtml(false)}</div>
+          ${renderEmbedBadgeCardHtml()}
         `
         : renderAutoFillTabHtml();
 
@@ -1180,6 +1500,7 @@
         <div class="tv-studio-grid">
           ${renderStudioSidebarHtml()}
           <section class="tv-workspace">
+            <div id="readiness-grader-area">${renderReadinessGraderHtml()}</div>
             <div class="tv-tabs no-print" role="tablist">
               <button type="button" class="tv-tab-btn ${state.activeTab === "portal" ? "active" : ""}" data-tab="portal" role="tab">
                 <span>1. Public Trust Portal &amp; Embed</span>
@@ -1220,6 +1541,9 @@
     `;
 
     bindEvents();
+    if (state.activeTab === "portal") {
+      refreshWebsiteBadgeSnippet();
+    }
   }
 
   function applyPreset(presetId) {
@@ -1235,13 +1559,52 @@
     showToast(`Loaded ${(KB.INDUSTRY_PRESETS[presetId] || {}).label || presetId} posture preset.`);
   }
 
+  function bindCheckoutTrackActions(scopeEl) {
+    const root = scopeEl || document;
+    root.querySelectorAll("[data-action='checkout-track']").forEach((link) => {
+      link.addEventListener("click", () => {
+        const plan = link.getAttribute("data-plan") || "pro";
+        ANALYTICS.track("pro_checkout_clicked", {
+          plan,
+          billing_cycle: state.billingCycle,
+          preset_id: state.portal.presetId
+        });
+        showToast(`Opening ${plan.toUpperCase()} activation with promo ${CFG.PROMO_CODE || "FOUNDER30"}...`);
+      });
+    });
+  }
+
+  function bindReadinessActions(scopeEl) {
+    const root = scopeEl || document;
+    bindCheckoutTrackActions(root);
+    root.querySelectorAll("[data-action='fix-missing-controls']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        handleFixMissingControls(btn.getAttribute("data-fix-target") || "brand");
+      });
+    });
+  }
+
   function refreshLivePortalPreviewOnly() {
     const area = document.getElementById("portal-preview-area");
     if (area) {
       area.innerHTML = renderTrustPortalCardHtml(false);
       bindPortalPreviewActions(area);
     }
+    const graderArea = document.getElementById("readiness-grader-area");
+    if (graderArea) {
+      graderArea.innerHTML = renderReadinessGraderHtml();
+      bindReadinessActions(graderArea);
+    }
+    const badgePill = document.getElementById("website-badge-preview-pill");
+    if (badgePill) {
+      const label = state.proUnlocked
+        ? `Verified Security Posture · ${state.portal.company || "Enterprise"}`
+        : "Verified Security Posture · TrustVault";
+      const spans = badgePill.querySelectorAll("span");
+      if (spans.length >= 2) spans[1].textContent = label;
+    }
     refreshPortalDigest();
+    refreshWebsiteBadgeSnippet();
   }
 
   function bindPortalPreviewActions(scopeEl) {
@@ -1420,6 +1783,18 @@
         copyText(snippet, "Copied iframe embed snippet for trust.yourdomain.com!");
       });
     }
+    const copyBadgeBtn = document.querySelector("[data-action='copy-website-badge']");
+    if (copyBadgeBtn) {
+      copyBadgeBtn.addEventListener("click", async () => {
+        const url = await buildShareableUrl(false);
+        state.cachedPortalUrl = url;
+        const snippet = buildWebsiteBadgeHtml(url);
+        const box = document.getElementById("badge-html-code");
+        if (box) box.value = snippet;
+        ANALYTICS.track("badge_copied", { preset_id: state.portal.presetId });
+        copyText(snippet, "Copied Verified Security Posture website badge HTML!");
+      });
+    }
 
     document.querySelectorAll("[data-action='print-pdf']").forEach((btn) => {
       btn.addEventListener("click", () => window.print());
@@ -1566,15 +1941,10 @@
       });
     });
 
-    document.querySelectorAll("[data-action='checkout-track']").forEach((link) => {
-      link.addEventListener("click", () => {
-        const plan = link.getAttribute("data-plan") || "pro";
-        ANALYTICS.track("pro_checkout_clicked", {
-          plan,
-          billing_cycle: state.billingCycle,
-          preset_id: state.portal.presetId
-        });
-        showToast(`Opening ${plan.toUpperCase()} activation with promo ${CFG.PROMO_CODE || "FOUNDER30"}...`);
+    bindCheckoutTrackActions(document);
+    document.querySelectorAll("[data-action='fix-missing-controls']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        handleFixMissingControls(btn.getAttribute("data-fix-target") || "brand");
       });
     });
 

@@ -1902,6 +1902,32 @@
     `;
   }
 
+  function buildFollowupMessages(p, linkUrl) {
+    const first = (p.clientName || "there").trim().split(/\s+/)[0] || "there";
+    const title = p.projectTitle || "your project";
+    const cur = p.currency || "USD";
+    const tiers = getVisibleTiers(p);
+    const midTier = tiers[Math.min(tiers.length - 1, Number(p.recommendedTierIndex ?? 1))] || tiers[0] || { name: "Signature", price: 0 };
+    const midFormatted = formatMoney(midTier.price || 0, cur);
+    const bonusAmt = Number(p.fastActionDiscount) > 0 ? formatMoney(Number(p.fastActionDiscount), cur) : "";
+    const bonusNote = bonusAmt ? ` while claiming the ${bonusAmt} fast-action credit` : "";
+    const url = linkUrl || getBaseStudioUrl();
+    return [
+      {
+        label: "Day 2 — Gentle Check-In",
+        text: `Hi ${first}, quick nudge on the interactive 3-option ${title} proposal (${midFormatted} recommended option). Let me know if you have any scope tweaks—you can compare packages and sign directly here: ${url}`
+      },
+      {
+        label: "Day 5 — Priority Options Note",
+        text: `Hi ${first}, checking in before we lock next week's crew/delivery schedule for ${title}. Most clients pick the ${midTier.name || "Signature"} option at ${midFormatted}—happy to adjust any line items here: ${url}`
+      },
+      {
+        label: "Day 9 — Fast-Action Cutoff",
+        text: `Hi ${first}, your interactive ${title} proposal stays live here: ${url}. If you'd like to hold our priority window${bonusNote}, you can review & approve in 30 seconds above.`
+      }
+    ];
+  }
+
   // =========================================================================
   // Modals HTML (Share/Embed, Saved Drafts, Pro/Pricing, Zelle, Legal)
   // =========================================================================
@@ -1926,6 +1952,7 @@
     const iframeSnippet = `<iframe src="${escapeHtml(embedUrl)}" width="100%" height="920" style="border:0;border-radius:16px;box-shadow:0 12px 32px rgba(0,0,0,0.08);" loading="lazy"></iframe>`;
     const activeShareUrl = state.cloudShareUrl || state.shareUrl;
     const pitchText = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${activeShareUrl}`;
+    const followupSeq = buildFollowupMessages(p, activeShareUrl);
     const waShareUrl = `https://wa.me/?text=${encodeURIComponent(pitchText)}`;
     const cloudReady = Boolean(CLOUD && CLOUD.isConfigured());
     const cloudLoggedIn = Boolean(state.cloudSession && state.cloudSession.user);
@@ -1986,6 +2013,20 @@
               <div style="font-size:12px;font-weight:600;margin-bottom:5px;">Ready-to-Send SMS / WhatsApp / Email Pitch</div>
               <div class="code-box" style="font-family:var(--font-body);">${escapeHtml(pitchText)}</div>
               <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" data-action="copy-pitch-text">${ICONS.copy} Copy Message + Link</button>
+            </div>
+            <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border-subtle);">
+              <div style="font-size:12px;font-weight:700;margin-bottom:8px;">3-Touch Follow-Up Sequence (Day 2 · Day 5 · Day 9)</div>
+              <div style="display:grid;gap:8px;">
+                ${followupSeq.map((step, sIdx) => `
+                  <div class="cloud-status-card" style="padding:10px 12px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+                      <strong style="font-size:11.5px;">${escapeHtml(step.label)}</strong>
+                      <button type="button" class="btn btn-outline btn-xs" data-action="copy-followup-seq" data-seq-idx="${sIdx}">${ICONS.copy} Copy</button>
+                    </div>
+                    <div style="font-size:11.5px;color:var(--text-secondary);line-height:1.45;">${escapeHtml(step.text)}</div>
+                  </div>
+                `).join("")}
+              </div>
             </div>
           </div>
 
@@ -2461,6 +2502,9 @@
           <button type="button" class="btn btn-outline btn-sm" data-action="toggle-theme" title="Toggle Dark/Light Theme">
             ${state.theme === "dark" ? ICONS.sun : ICONS.moon}
           </button>
+          <button type="button" class="btn btn-accent btn-sm" data-action="inperson-sign" title="Hand device to client for immediate ESIGN">
+            ${ICONS.bolt} In-Person Sign
+          </button>
           <button type="button" class="btn btn-primary" data-action="open-share-modal">
             ${ICONS.share} Share Client Link
           </button>
@@ -2884,7 +2928,7 @@
       return;
     }
 
-    if (action === "open-live-client-demo") {
+    if (action === "open-live-client-demo" || action === "inperson-sign") {
       state.demoPreviewReturn = true;
       state.mode = "client";
       state.embedMode = false;
@@ -2892,8 +2936,12 @@
       window.scrollTo({ top: 0, behavior: "smooth" });
       trackEvent("buyer_demo_opened", {
         template_id: state.proposal?.id || "custom",
-        has_financing: Boolean(state.proposal?.financingEnabled)
+        has_financing: Boolean(state.proposal?.financingEnabled),
+        entry_source: action === "inperson-sign" ? "inperson_sign" : undefined
       });
+      if (action === "inperson-sign") {
+        showToast("Ready for client review & signature on this device.");
+      }
       return;
     }
 
@@ -3529,6 +3577,17 @@
       const p = state.proposal;
       const pitch = `Hi ${(p.clientName || "there").split(/\s+/)[0]}, here is your custom interactive proposal for ${p.projectTitle || "your project"}. You can compare packages, toggle optional upgrades, and lock in your start date in 60 seconds: ${state.cloudShareUrl || state.shareUrl}`;
       copyText(pitch, "Pitch message + link copied!");
+      return;
+    }
+
+    if (action === "copy-followup-seq") {
+      const idx = Number(target.dataset.seqIdx);
+      const steps = buildFollowupMessages(state.proposal, state.cloudShareUrl || state.shareUrl);
+      const picked = steps[idx];
+      if (picked) {
+        copyText(picked.text, `${picked.label} copied!`);
+        trackEvent("share_link_created", { share_mode: `followup_day_${idx + 1}` });
+      }
       return;
     }
 

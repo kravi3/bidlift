@@ -1362,6 +1362,217 @@ img {
 }
 
 /* ==========================================================================
+   Enterprise Security Readiness Grader & Embeddable Website Badge
+   ========================================================================== */
+
+.tv-grader-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  box-shadow: var(--tv-shadow-sm);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.tv-grader-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.tv-grader-kicker {
+  font-family: var(--tv-font-display);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--tv-navy-900);
+}
+
+.tv-grader-sub {
+  font-size: 12px;
+  color: var(--tv-text-subtle);
+  margin-top: 2px;
+}
+
+.tv-score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.tv-score-pill.ready {
+  background: var(--tv-emerald-100);
+  color: var(--tv-emerald-700);
+  border: 1px solid rgba(5, 150, 105, 0.3);
+}
+
+.tv-score-pill.review {
+  background: var(--tv-amber-100);
+  color: var(--tv-amber-600);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.tv-score-pill.critical {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.tv-grader-bar-track {
+  height: 7px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.tv-grader-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+.tv-grader-bar-fill.ready {
+  background: linear-gradient(90deg, var(--tv-emerald-500), var(--tv-emerald-600));
+}
+
+.tv-grader-bar-fill.review {
+  background: linear-gradient(90deg, #f59e0b, var(--tv-amber-600));
+}
+
+.tv-grader-bar-fill.critical {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+.tv-grader-body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.tv-grader-blockers-wrap {
+  flex: 1 1 380px;
+  min-width: 0;
+}
+
+.tv-grader-list-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tv-text-subtle);
+  margin-bottom: 6px;
+}
+
+.tv-grader-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.tv-grader-blocker {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--tv-text-muted);
+  line-height: 1.4;
+}
+
+.tv-grader-blocker.pass {
+  color: var(--tv-emerald-700);
+  font-weight: 600;
+}
+
+.tv-grader-pts {
+  font-family: var(--tv-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--tv-amber-600);
+  background: var(--tv-amber-100);
+  padding: 2px 6px;
+  border-radius: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tv-grader-pts.pass {
+  background: var(--tv-emerald-100);
+  color: var(--tv-emerald-700);
+}
+
+.tv-grader-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tv-embed-badge-card {
+  margin-top: 16px;
+}
+
+.tv-embed-badge-desc {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--tv-text-muted);
+}
+
+.tv-embed-badge-preview-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tv-embed-badge-preview-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tv-embed-preview-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--tv-text-subtle);
+}
+
+.tv-website-badge-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: var(--tv-navy-900);
+  color: #ffffff;
+  border: 1px solid var(--tv-emerald-500);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.tv-badge-code-box {
+  font-family: var(--tv-font-mono);
+  font-size: 11.5px;
+  background: var(--tv-surface-muted);
+  color: var(--tv-navy-900);
+  word-break: break-all;
+}
+
+/* ==========================================================================
    Responsive Breakpoints (1280px Desktop & 390px Mobile)
    ========================================================================== */
 
@@ -1418,6 +1629,18 @@ img {
 
   .tv-tab-btn {
     min-width: 100%;
+  }
+
+  .tv-grader-blockers-wrap {
+    flex-basis: 100%;
+  }
+
+  .tv-grader-actions,
+  .tv-grader-actions .btn,
+  .tv-embed-badge-card .btn {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
   }
 }
 

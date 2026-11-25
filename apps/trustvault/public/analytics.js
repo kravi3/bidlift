@@ -11,6 +11,8 @@ window.TrustVaultAnalytics = (function () {
   const LOCAL_METRICS_KEY = "trustvault_local_metrics_v1";
   const ENTRY_SOURCE_KEY = "trustvault_entry_source";
 
+  let humanVerified = false;
+
   const ALLOWED_PROPS = new Set([
     "product",
     "preset_id",
@@ -29,8 +31,24 @@ window.TrustVaultAnalytics = (function () {
     "viewport_class",
     "entry_source",
     "demo_mode",
-    "calc_acv"
+    "calc_acv",
+    "human_verified",
+    "trigger"
   ]);
+
+  function isLikelyBot() {
+    try {
+      if (typeof navigator !== "undefined" && navigator.webdriver) return true;
+      const ua = typeof navigator !== "undefined" ? (navigator.userAgent || "") : "";
+      if (/headless|bot|crawler|spider|preview|scanner|proofpoint|mimecast|barracuda|safelinks|lighthouse|curl|wget/i.test(ua)) {
+        return true;
+      }
+      if (typeof window !== "undefined" && window.outerWidth === 0 && window.outerHeight === 0) {
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
 
   function getSessionDistinctId() {
     try {
@@ -84,14 +102,15 @@ window.TrustVaultAnalytics = (function () {
     const out = {
       product: "trustvault",
       referrer_host: getSafeReferrerHost(),
-      viewport_class: getViewportClass()
+      viewport_class: getViewportClass(),
+      human_verified: humanVerified
     };
     const entrySrc = getEntrySource();
     if (entrySrc) out.entry_source = entrySrc;
     if (!rawProps || typeof rawProps !== "object") return out;
 
     for (const key of Object.keys(rawProps)) {
-      if (!ALLOWED_PROPS.has(key) || key === "product") continue;
+      if (!ALLOWED_PROPS.has(key) || key === "product" || key === "human_verified") continue;
       const val = rawProps[key];
       if (typeof val === "string") {
         out[key] = val.slice(0, 64);
@@ -132,6 +151,10 @@ window.TrustVaultAnalytics = (function () {
     const safeProps = sanitizeProps(rawProps);
     recordLocalAggregate(cleanEvent);
 
+    if (isLikelyBot() && (cleanEvent === "studio_loaded" || cleanEvent === "client_demo_opened")) {
+      return;
+    }
+
     try {
       const cfg = window.TRUSTVAULT_CONFIG && window.TRUSTVAULT_CONFIG.ANALYTICS;
       const apiKey = cfg && typeof cfg.POSTHOG_PROJECT_KEY === "string" ? cfg.POSTHOG_PROJECT_KEY.trim() : "";
@@ -165,6 +188,36 @@ window.TrustVaultAnalytics = (function () {
       // Telemetry never interrupts user workflows.
     }
   }
+
+  function attachHumanEngagementListener() {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", onPointerDown, true);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("touchstart", onTouchStart, true);
+      window.removeEventListener("scroll", onScroll, true);
+    };
+    const markHuman = (trigger) => {
+      if (humanVerified) return;
+      humanVerified = true;
+      cleanup();
+      track("human_engaged", { trigger });
+    };
+    const onPointerDown = () => markHuman("pointerdown");
+    const onKeyDown = () => markHuman("keydown");
+    const onTouchStart = () => markHuman("touchstart");
+    const onScroll = () => {
+      if ((window.scrollY || window.pageYOffset || 0) > 120) {
+        markHuman("scroll");
+      }
+    };
+    window.addEventListener("pointerdown", onPointerDown, { passive: true, capture: true });
+    window.addEventListener("keydown", onKeyDown, { passive: true, capture: true });
+    window.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+    window.addEventListener("scroll", onScroll, { passive: true, capture: true });
+  }
+
+  attachHumanEngagementListener();
 
   return {
     track,

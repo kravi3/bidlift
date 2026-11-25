@@ -38,6 +38,7 @@
     co: null,
     drafts: [],
     generatedShareUrl: "",
+    followupOpen: false,
     receipt: null,
     sigHasStroke: false
   };
@@ -121,7 +122,7 @@
     const prior = Math.max(0, Number(co.priorApprovedCos) || 0);
     const delta = recalcCoDelta(co);
     const revised = Math.round((orig + prior + delta) * 100) / 100;
-    return { orig, prior, delta, revised };
+    return { orig, prior, delta, revised, revisedTotal: revised };
   }
 
   function cloneTemplate(tplId) {
@@ -496,6 +497,7 @@
           <div class="topbar-actions">
             ${proPill}
             <a class="btn btn-ghost btn-sm" href="./calculator.html?ref=studio_nav">Margin Leak Calculator</a>
+            <button type="button" class="btn btn-accent btn-sm" data-action="inperson-sign" title="Hand phone or iPad to client for immediate on-site signature">In-Person Sign</button>
             <button type="button" class="btn btn-outline btn-sm" data-action="open-demo">Try Live Client Sign-Off View</button>
             <button type="button" class="btn btn-ghost btn-sm" data-action="save-draft">Save Draft</button>
             <button type="button" class="btn btn-ghost btn-sm" data-action="toggle-theme" aria-label="Toggle color theme">${state.theme === "dark" ? "☀ Light" : "☾ Dark"}</button>
@@ -711,6 +713,68 @@
           </div>
         </div>
       </div>
+    `;
+  }
+
+  function buildFollowupMessages(co, totals, shareUrl) {
+    const client = (co.clientName || "").trim() || "there";
+    const biz = (co.businessName || "").trim() || "our team";
+    const coNum = (co.coNumber || "CO-01").trim();
+    const deltaStr = formatMoney(co.coDeltaPrice, co.currency);
+    const revisedStr = formatMoney(totals.revisedTotal, co.currency);
+    const days = Math.max(0, Math.round(Number(co.scheduleDeltaDays) || 0));
+    const schedStr = `+${days} days`;
+    const urlForCopy = shareUrl || "[Client Sign-Off #c= Link]";
+    const urlPreview = shareUrl
+      ? (shareUrl.length > 68 ? `${shareUrl.slice(0, 68)}...` : shareUrl)
+      : "[Auto-generates #c= link on Copy]";
+
+    return [
+      {
+        touch: 1,
+        label: "Touch 1 (Same-Day Text)",
+        text: `Hi ${client}, ${biz} just sent ${coNum} for review (${deltaStr} change, revised total ${revisedStr}, ${schedStr} schedule impact). Review & sign here: ${urlForCopy}`,
+        preview: `Hi ${client}, ${biz} just sent ${coNum} for review (${deltaStr} change, revised total ${revisedStr}, ${schedStr} schedule impact). Review & sign here: ${urlPreview}`
+      },
+      {
+        touch: 2,
+        label: "Touch 2 (Day 2 Nudge)",
+        text: `Hi ${client} — quick nudge from ${biz} on ${coNum} (${deltaStr}, revised total ${revisedStr}, ${schedStr}). Tap to review scope & photos and sign in 30 seconds: ${urlForCopy}`,
+        preview: `Hi ${client} — quick nudge from ${biz} on ${coNum} (${deltaStr}, revised total ${revisedStr}, ${schedStr}). Tap to review scope & photos and sign in 30 seconds: ${urlPreview}`
+      },
+      {
+        touch: 3,
+        label: "Touch 3 (Schedule-Hold Notice)",
+        text: `Hi ${client}, ${biz} is holding crew/material scheduling for ${coNum} (${deltaStr}, revised total ${revisedStr}, ${schedStr}). Please authorize today via this link to keep your target date: ${urlForCopy}`,
+        preview: `Hi ${client}, ${biz} is holding crew/material scheduling for ${coNum} (${deltaStr}, revised total ${revisedStr}, ${schedStr}). Please authorize today via this link to keep your target date: ${urlPreview}`
+      }
+    ];
+  }
+
+  function renderFollowupSequenceCardsHtml(co, totals, shareUrl) {
+    const msgs = buildFollowupMessages(co, totals, shareUrl);
+    return msgs.map((m) => `
+      <div class="followup-item">
+        <div class="followup-item-head">
+          <span class="followup-touch-label">${escapeHtml(m.label)}</span>
+          <button type="button" class="btn btn-outline btn-sm followup-copy-btn" data-action="copy-followup" data-touch="${m.touch}">Copy</button>
+        </div>
+        <div class="followup-msg-preview">${escapeHtml(m.preview)}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderFollowupBlockHtml(co, totals, shareUrl) {
+    return `
+      <details class="followup-details" id="followup-details" ${state.followupOpen ? "open" : ""}>
+        <summary class="followup-summary">
+          <span>3-Touch Approval Follow-Up Texts</span>
+          <span class="followup-badge">SMS / Text</span>
+        </summary>
+        <div id="followup-sequence-body" class="followup-body">
+          ${renderFollowupSequenceCardsHtml(co, totals, shareUrl)}
+        </div>
+      </details>
     `;
   }
 
@@ -998,6 +1062,8 @@
                   <div class="mono" style="margin-top:4px;">${escapeHtml(state.generatedShareUrl.slice(0, 140))}${state.generatedShareUrl.length > 140 ? "..." : ""}</div>
                 </div>
               ` : ""}
+
+              ${renderFollowupBlockHtml(co, totals, state.generatedShareUrl)}
 
               <hr style="border:0;border-top:1px solid var(--border-subtle);margin:4px 0;" />
 
@@ -1463,11 +1529,22 @@
         </div>
       `;
     }
+
+    const followupBody = document.getElementById("followup-sequence-body");
+    if (followupBody) {
+      followupBody.innerHTML = renderFollowupSequenceCardsHtml(state.co, totals, state.generatedShareUrl);
+    }
   }
 
   function bindEvents() {
     const app = document.getElementById("app");
     if (!app) return;
+
+    app.addEventListener("toggle", (e) => {
+      if (e.target && e.target.id === "followup-details") {
+        state.followupOpen = Boolean(e.target.open);
+      }
+    }, true);
 
     app.addEventListener("input", (e) => {
       const target = e.target;
@@ -1618,6 +1695,7 @@
           const encoded = await CODEC.encodeChangeOrder(state.co);
           const url = `${window.location.origin}${window.location.pathname}#c=${encoded}`;
           state.generatedShareUrl = url;
+          state.followupOpen = true;
           copyToClipboard(url, "Client sign-off link copied to clipboard!");
           if (TELEMETRY) {
             TELEMETRY.track("co_link_created", {
@@ -1631,6 +1709,51 @@
         } catch (err) {
           showToast(err.message || "Payload exceeds 24,000-char limit.");
         }
+      } else if (action === "copy-followup") {
+        const touchNum = Number(btn.dataset.touch) || 1;
+        let shareUrl = state.generatedShareUrl;
+        let encodedNow = false;
+        if (!shareUrl) {
+          try {
+            const encoded = await CODEC.encodeChangeOrder(state.co);
+            shareUrl = `${window.location.origin}${window.location.pathname}#c=${encoded}`;
+            state.generatedShareUrl = shareUrl;
+            state.followupOpen = true;
+            encodedNow = true;
+          } catch (err) {
+            showToast(err.message || "Payload exceeds 24,000-char limit.");
+            return;
+          }
+        }
+        const totals = computeLedgerTotals(state.co);
+        const msgs = buildFollowupMessages(state.co, totals, shareUrl);
+        const picked = msgs.find((m) => m.touch === touchNum) || msgs[0];
+        copyToClipboard(picked.text, `${picked.label} copied to clipboard!`);
+        if (TELEMETRY) {
+          TELEMETRY.track("followup_copied", {
+            template_id: state.co.id || "custom",
+            reason_code: state.co.reasonCode,
+            method: `touch_${picked.touch}`
+          });
+        }
+        if (encodedNow) {
+          render();
+        }
+      } else if (action === "inperson-sign") {
+        state.mode = "client";
+        state.isDemoPreview = true;
+        state.isSharedLink = false;
+        state.receipt = null;
+        if (TELEMETRY) {
+          TELEMETRY.track("client_demo_opened", {
+            template_id: state.co.id || "custom",
+            reason_code: state.co.reasonCode,
+            is_demo: true,
+            method: "inperson_sign"
+          });
+        }
+        render();
+        window.scrollTo({ top: 0, behavior: "smooth" });
       } else if (action === "open-demo") {
         state.mode = "client";
         state.isDemoPreview = true;

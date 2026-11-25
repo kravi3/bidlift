@@ -64,8 +64,33 @@ window.ScopeLockTelemetry = (function () {
     "has_payment_link",
     "quick_co_used",
     "schedule_delta_days",
-    "is_demo"
+    "is_demo",
+    "human_verified",
+    "trigger"
   ]);
+
+  const HUMAN_VERIFIED_KEY = "scopelock_human_verified";
+  let humanVerified = false;
+  try {
+    humanVerified = sessionStorage.getItem(HUMAN_VERIFIED_KEY) === "1";
+  } catch (e) {
+    humanVerified = false;
+  }
+
+  function isLikelyBot() {
+    try {
+      if (typeof navigator !== "undefined") {
+        if (navigator.webdriver) return true;
+        if (/headless|bot|crawler|spider|preview|scanner|proofpoint|mimecast|barracuda|safelinks|lighthouse|curl|wget/i.test(navigator.userAgent || "")) {
+          return true;
+        }
+      }
+      if (typeof window !== "undefined" && window.outerWidth === 0 && window.outerHeight === 0) {
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
 
   function getKeys() {
     return (window.SCOPELOCK_CONFIG && window.SCOPELOCK_CONFIG.STORAGE_KEYS) || {};
@@ -127,6 +152,7 @@ window.ScopeLockTelemetry = (function () {
       referrer_host: getSafeReferrerHost(),
       viewport_class: getViewportClass()
     };
+    if (humanVerified) out.human_verified = true;
     const entrySrc = getEntrySource();
     if (entrySrc) out.entry_source = entrySrc;
     if (!rawProps || typeof rawProps !== "object") return out;
@@ -163,6 +189,10 @@ window.ScopeLockTelemetry = (function () {
     const cleanEvent = eventName.replace(/[^a-zA-Z0-9_:-]/g, "").slice(0, 64);
     if (!cleanEvent) return;
 
+    if ((cleanEvent === "studio_loaded" || cleanEvent === "client_demo_opened") && isLikelyBot()) {
+      return;
+    }
+
     const safeProps = sanitizeProps(rawProps);
     recordLocalAggregate(cleanEvent);
 
@@ -198,8 +228,49 @@ window.ScopeLockTelemetry = (function () {
     }
   }
 
+  function initHumanEngagementListener() {
+    if (humanVerified || isLikelyBot()) return;
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+
+    let fired = false;
+
+    function markEngaged(trigger) {
+      if (fired) return;
+      fired = true;
+      humanVerified = true;
+      try {
+        sessionStorage.setItem(HUMAN_VERIFIED_KEY, "1");
+      } catch (e) {}
+      cleanup();
+      track("human_engaged", { trigger });
+    }
+
+    function onPointerDown() { markEngaged("pointerdown"); }
+    function onKeyDown() { markEngaged("keydown"); }
+    function onTouchStart() { markEngaged("touchstart"); }
+    function onScroll() {
+      const y = window.scrollY || window.pageYOffset || (document.documentElement && document.documentElement.scrollTop) || 0;
+      if (y > 120) markEngaged("scroll");
+    }
+
+    function cleanup() {
+      window.removeEventListener("pointerdown", onPointerDown, true);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("touchstart", onTouchStart, true);
+      window.removeEventListener("scroll", onScroll, true);
+    }
+
+    window.addEventListener("pointerdown", onPointerDown, { capture: true, passive: true });
+    window.addEventListener("keydown", onKeyDown, { capture: true, passive: true });
+    window.addEventListener("touchstart", onTouchStart, { capture: true, passive: true });
+    window.addEventListener("scroll", onScroll, { capture: true, passive: true });
+  }
+
+  initHumanEngagementListener();
+
   return {
     track,
-    getEntrySource
+    getEntrySource,
+    isLikelyBot
   };
 })();
