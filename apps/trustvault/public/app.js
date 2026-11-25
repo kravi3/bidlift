@@ -1206,6 +1206,9 @@
           </div>
           <div class="tv-footer-links">
             <a href="calculator.html">Deal-Velocity &amp; GRC Calculator</a>
+            <a href="sig-lite-security-questionnaire-autofill.html">SIG-Lite Auto-Filler</a>
+            <a href="vanta-safebase-alternative-trust-center.html">Vanta/SafeBase Alternative</a>
+            <a href="ai-vendor-security-trust-portal-template.html">AI Trust Portal Template</a>
             <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Proposals</a>
             <a href="${escHtml((CFG.CROSS_LINKS && CFG.CROSS_LINKS.SCOPELOCK_URL) || "https://scopelock-kgt9.onrender.com/")}" target="_blank" rel="noopener noreferrer">ScopeLock SOWs</a>
             <button type="button" class="btn btn-outline btn-xs" style="color:#e2e8f0;border-color:rgba(255,255,255,0.22);background:transparent;" data-action="open-legal-modal">Privacy &amp; 14-Day Refund</button>

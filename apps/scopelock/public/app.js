@@ -775,6 +775,12 @@
             <span class="hero-eyebrow">Zero-Server • Photo-Backed • SHA-256 ESIGN</span>
             <h1>Lock Scope Changes Before Crew Hours Vanish</h1>
             <p>Turn jobsite discoveries or out-of-scope client requests into a sequential contract rollup ledger with compressed photo proof, schedule impact, and 1-tap ESIGN authorization.</p>
+            <div style="margin-top:12px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;font-size:12px;">
+              <span style="color:rgba(255,255,255,0.72);font-weight:600;">Guides:</span>
+              <a href="./construction-change-order-template.html" style="color:#fde68a;font-weight:600;text-decoration:underline;">Construction CO</a>
+              <a href="./roofing-decking-change-order-template.html" style="color:#fde68a;font-weight:600;text-decoration:underline;">Roofing Decking CO</a>
+              <a href="./agency-scope-creep-change-order-template.html" style="color:#fde68a;font-weight:600;text-decoration:underline;">Agency Scope-Creep CO</a>
+            </div>
           </div>
           <div class="hero-quick-panel">
             <label for="quick-co-input">Quick-CO Single-Line Parser</label>
@@ -1018,6 +1024,9 @@
           <span><strong>ScopeLock</strong> — Zero-Server Change-Order Authorization Studio</span>
           <div class="footer-links">
             <a href="./calculator.html?ref=footer">Scope-Creep Margin Calculator</a>
+            <a href="./construction-change-order-template.html">Construction CO Template</a>
+            <a href="./roofing-decking-change-order-template.html">Roofing Decking CO</a>
+            <a href="./agency-scope-creep-change-order-template.html">Agency Scope-Creep CO</a>
             <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.BIDLIFT_URL) || "https://bidlift-5ias.onrender.com/")}" target="_blank" rel="noopener noreferrer">BidLift Quoting</a>
             <a href="${escapeHtml((CONFIG.CROSS_LINKS && CONFIG.CROSS_LINKS.TRUSTVAULT_URL) || "https://trustvault-zdof.onrender.com/")}" target="_blank" rel="noopener noreferrer">TrustVault</a>
             <button type="button" class="btn btn-ghost btn-sm" data-action="open-modal" data-modal="modal-legal">Privacy &amp; 14-Day Refund</button>
