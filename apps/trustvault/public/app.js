@@ -8,6 +8,8 @@
   const CFG = window.TRUSTVAULT_CONFIG || {};
   const KB = window.TRUSTVAULT_KNOWLEDGE || {};
   const CODEC = window.TrustVaultCodec || {};
+  const SCANNER = window.TrustVaultScanner || null;
+  const XLSX = window.TrustVaultXlsx || null;
   const ANALYTICS = window.TrustVaultAnalytics || { track: function () {} };
 
   const STORAGE_KEYS = CFG.STORAGE_KEYS || {
@@ -33,6 +35,11 @@
     qaDigest: "computing...",
     cachedPortalUrl: "",
     portal: null,
+    dnsScan: {
+      loading: false,
+      error: "",
+      result: null
+    },
     qa: {
       rawInput: "",
       filterConfidence: "all",
@@ -378,6 +385,113 @@
       showToast(`Exported ${freeCap}/${rows.length} Q&As (Free Forever cap). Unlock Pro (${CFG.PROMO_CODE}) for unlimited exports.`);
     } else {
       showToast(`Exported ${exportRows.length} attested answers to CSV.`);
+    }
+  }
+
+  function exportXlsx() {
+    if (!XLSX || typeof XLSX.buildXlsxBlob !== "function") {
+      showToast("Excel engine loading — try again in a moment.");
+      return;
+    }
+    const rows = state.qa.rows || [];
+    if (rows.length === 0) {
+      showToast("Load or auto-fill a questionnaire before exporting Excel (.xlsx).");
+      return;
+    }
+
+    const freeCap = 10;
+    const isCapped = !state.proUnlocked && rows.length > freeCap;
+    const exportRows = isCapped ? rows.slice(0, freeCap) : rows;
+
+    const blob = XLSX.buildXlsxBlob({
+      company: state.portal.company,
+      domain: state.portal.domain,
+      digest: state.qaDigest,
+      dnsAudit: state.dnsScan.result,
+      rows: exportRows
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const slug = (state.portal.company || "trustvault").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    a.href = url;
+    a.download = `${slug}-sig-lite-attested.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    ANALYTICS.track("csv_exported", {
+      preset_id: state.portal.presetId,
+      question_count: exportRows.length,
+      export_format: "xlsx"
+    });
+
+    if (isCapped) {
+      showToast(`Exported ${freeCap}/${rows.length} Q&As to Excel (.xlsx) — Free cap. Unlock Pro (${CFG.PROMO_CODE}) for unlimited.`);
+    } else {
+      showToast(`Exported ${exportRows.length} attested answers + Live Attestation tab to .XLSX!`);
+    }
+  }
+
+  async function runLiveDomainScan(rawDomain, triggerName) {
+    if (!SCANNER || typeof SCANNER.scanDomain !== "function") {
+      showToast("Live DNS Verifier module not loaded.");
+      return null;
+    }
+    const clean = SCANNER.sanitizeDomain(rawDomain || (state.portal && state.portal.domain));
+    if (!clean) {
+      state.dnsScan.error = "Enter a valid domain (e.g. stripe.com or yourcompany.com).";
+      render();
+      showToast(state.dnsScan.error);
+      return null;
+    }
+
+    state.dnsScan.loading = true;
+    state.dnsScan.error = "";
+    if (state.portal) {
+      state.portal.domain = clean;
+      if (!state.portal.securityEmail || /@(acmecloud\.io|synthetix\.ai|vanguardmsp\.com)$/i.test(state.portal.securityEmail)) {
+        state.portal.securityEmail = `security@${clean}`;
+      }
+      savePortalState();
+    }
+    render();
+
+    try {
+      const result = await SCANNER.scanDomain(clean);
+      state.dnsScan.loading = false;
+      state.dnsScan.result = result;
+      state.dnsScan.error = "";
+      if (state.portal) {
+        state.portal.dnsAudit = {
+          g: result.grade,
+          s: result.score,
+          dm: result.checks.dmarc.status,
+          sp: result.checks.spf.status,
+          ca: result.checks.caa.status,
+          ds: result.checks.dnssec.status,
+          at: result.checkedAt
+        };
+        state.portal.updatedAt = Date.now();
+        savePortalState();
+        refreshPortalDigest();
+      }
+      ANALYTICS.track("dns_scan_completed", {
+        preset_id: state.portal ? state.portal.presetId : "saas",
+        dns_grade: result.grade,
+        subproc_count: result.discoveredSubprocessors.length,
+        trigger: triggerName || "manual"
+      });
+      render();
+      showToast(`Verified ${result.domain} via ${result.resolver}: Grade ${result.grade} (${result.score}/100).`);
+      return result;
+    } catch (err) {
+      state.dnsScan.loading = false;
+      state.dnsScan.error = (err && err.message) || "Unable to resolve live DNS records right now.";
+      render();
+      showToast(state.dnsScan.error);
+      return null;
     }
   }
 
@@ -781,6 +895,132 @@
     render();
   }
 
+  function renderLiveDnsPanelHtml(isBuyerMode) {
+    const scan = state.dnsScan || {};
+    const res = scan.result;
+    const savedAudit = state.portal && state.portal.dnsAudit;
+
+    if (scan.loading) {
+      return `
+        <div class="tv-dns-panel no-print">
+          <div class="tv-dns-head">
+            <div>
+              <strong>Verifying Live DNS Posture via Cloudflare DNS-over-HTTPS…</strong>
+              <div style="font-size:12px;color:var(--tv-text-muted);">Querying DMARC, SPF, CAA, MX &amp; DNSSEC directly from your browser (zero server proxy).</div>
+            </div>
+            <span class="tv-dns-grade">Scanning…</span>
+          </div>
+        </div>
+      `;
+    }
+
+    if (!res) {
+      if (isBuyerMode) {
+        if (!savedAudit || !savedAudit.g) return "";
+        const bTone = savedAudit.s >= 78 ? "" : savedAudit.s >= 60 ? "warn" : "fail";
+        return `
+          <div class="tv-dns-panel" style="margin-top:18px;">
+            <div class="tv-dns-head">
+              <div>
+                <strong>Cryptographic DNS Posture Snapshot (${escHtml(state.portal.domain)})</strong>
+                <div style="font-size:12px;color:var(--tv-text-muted);">Attested ${escHtml((savedAudit.at || "").slice(0, 10))} · Enterprise buyers can re-verify live via DNS-over-HTTPS</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span class="tv-dns-grade ${bTone}">Grade ${escHtml(savedAudit.g)} (${escHtml(savedAudit.s)}/100)</span>
+                <button type="button" class="btn btn-outline btn-sm no-print" data-action="reverify-buyer-dns">Re-Verify Live DNS Now</button>
+              </div>
+            </div>
+            <div class="tv-dns-grid">
+              <div class="tv-dns-card"><div class="tv-dns-card-title">DMARC</div><div class="tv-dns-card-status">${escHtml(savedAudit.dm)}</div></div>
+              <div class="tv-dns-card"><div class="tv-dns-card-title">SPF</div><div class="tv-dns-card-status">${escHtml(savedAudit.sp)}</div></div>
+              <div class="tv-dns-card"><div class="tv-dns-card-title">CAA SSL Lock</div><div class="tv-dns-card-status">${escHtml(savedAudit.ca)}</div></div>
+              <div class="tv-dns-card"><div class="tv-dns-card-title">DNSSEC</div><div class="tv-dns-card-status">${escHtml(savedAudit.ds)}</div></div>
+            </div>
+          </div>
+        `;
+      }
+      if (!scan.error) return "";
+      return `
+        <div class="tv-dns-panel no-print">
+          <div class="tv-dns-head" style="margin-bottom:0;">
+            <div>
+              <strong>Live DNS Verifier Error:</strong> ${escHtml(scan.error)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    const gradeTone = res.score >= 78 ? "" : res.score >= 60 ? "warn" : "fail";
+    const cards = [res.checks.dmarc, res.checks.spf, res.checks.caa, res.checks.dnssec];
+    const discovered = res.discoveredSubprocessors || [];
+
+    return `
+      <div class="tv-dns-panel" style="${isBuyerMode ? "margin-top:18px;" : ""}">
+        <div class="tv-dns-head">
+          <div>
+            <strong>Live DNS-Verified Security Posture: <span class="mono">${escHtml(res.domain)}</span></strong>
+            <div style="font-size:12px;color:var(--tv-text-muted);">
+              Queried live via <strong>${escHtml(res.resolver)}</strong> at ${escHtml(res.checkedAt)} — tamper-evident proof buyers can re-verify in 1 click.
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span class="tv-dns-grade ${gradeTone}">Grade ${escHtml(res.grade)} · ${escHtml(res.score)}/100</span>
+            ${
+              !isBuyerMode
+                ? `<button type="button" class="btn btn-outline btn-sm no-print" data-action="copy-dns-audit-link">Copy Live Audit Link</button>`
+                : `<button type="button" class="btn btn-outline btn-sm no-print" data-action="reverify-buyer-dns">Re-Verify Now</button>`
+            }
+          </div>
+        </div>
+        <div class="tv-dns-grid">
+          ${cards
+            .map(
+              (c) => `
+              <div class="tv-dns-card ${escHtml(c.tone || "")}">
+                <div class="tv-dns-card-title">${escHtml(c.label)} (${c.pts}/${c.maxPts})</div>
+                <div class="tv-dns-card-status">${escHtml(c.status)}</div>
+                <div class="tv-dns-card-sub">${escHtml(c.summary)}</div>
+              </div>
+            `
+            )
+            .join("")}
+        </div>
+        ${
+          !isBuyerMode && discovered.length > 0
+            ? `
+              <div class="tv-dns-subproc-bar no-print">
+                <div>
+                  <strong>${discovered.length} Subprocessor${discovered.length === 1 ? "" : "s"} Auto-Discovered from DNS:</strong>
+                  <span style="color:var(--tv-text-muted);">${escHtml(discovered.map((d) => d.name).join(", "))}</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" data-action="apply-dns-subprocs">Add Verified Subprocessors to Portal →</button>
+              </div>
+            `
+            : ""
+        }
+        ${
+          !isBuyerMode && res.fixes && res.fixes.length > 0
+            ? res.fixes
+                .slice(0, 2)
+                .map(
+                  (f, fIdx) => `
+                  <div class="tv-dns-fix no-print">
+                    <div style="flex:1 1 320px;">
+                      <strong>Recommended Fix — ${escHtml(f.label)}</strong> (${escHtml(f.type)} on <code>${escHtml(f.host)}</code>)
+                      <code>${escHtml(f.value)}</code>
+                    </div>
+                    <button type="button" class="btn btn-outline btn-sm" data-action="copy-dns-fix" data-fix-idx="${fIdx}">Copy DNS Record</button>
+                  </div>
+                `
+                )
+                .join("")
+            : ""
+        }
+      </div>
+    `;
+  }
+
   function renderTrustPortalCardHtml(isBuyerMode) {
     const p = state.portal;
     const pillars = KB.PILLARS || [];
@@ -929,6 +1169,7 @@
               </tbody>
             </table>
           </div>
+          ${isBuyerMode ? renderLiveDnsPanelHtml(true) : ""}
           ${buyerControlsSection}
         </div>
         <div class="tv-portal-footer">
@@ -988,7 +1229,8 @@
             <button type="button" class="tv-filter-pill ${filter === "review" ? "active" : ""}" data-filter="review">Needs Review (${revCount})</button>
           </div>
           <div class="tv-toolbar-group">
-            <button type="button" class="btn btn-primary" data-action="export-csv">Export Procurement-Ready .CSV</button>
+            <button type="button" class="btn btn-primary" data-action="export-xlsx">Export Procurement .XLSX (Excel)</button>
+            <button type="button" class="btn btn-outline" data-action="export-csv">Export .CSV</button>
             <button type="button" class="btn btn-outline" data-action="print-pdf">Print Executive Q&amp;A PDF</button>
           </div>
         </div>
@@ -1060,8 +1302,8 @@
         <div class="tv-qa-actions">
           <button type="button" class="btn btn-primary" data-action="load-sig-sample">Load 20-Question Enterprise SIG-Lite Sample</button>
           <label class="btn btn-outline" style="cursor:pointer;">
-            Upload Buyer .CSV
-            <input id="qa-csv-upload" type="file" accept=".csv,.txt" class="sr-only" />
+            Upload Buyer .XLSX / .CSV
+            <input id="qa-csv-upload" type="file" accept=".xlsx,.csv,.txt" class="sr-only" />
           </label>
           <button type="button" class="btn btn-navy" data-action="run-autofill">Auto-Fill Pasted Questions</button>
           <button type="button" class="btn btn-outline" data-action="clear-qa">Clear</button>
@@ -1715,9 +1957,13 @@
           <div>
             <span class="tv-hero-kicker">${renderShieldSvg(14)} Built for B2B SaaS, AI Platforms &amp; Agencies</span>
             <h1>Close Enterprise Deals 3× Faster — Without $15,000/yr GRC Bloat</h1>
-            <p>Launch a verifiable, zero-server <strong>Trust Portal</strong>, auto-fill 20–100+ buyer <strong>SIG-Lite &amp; CSV questionnaires</strong> in 60 seconds, and export <strong>6 auditor-ready SOC 2 &amp; AI Policies</strong>.</p>
+            <p>Verify live <strong>DMARC / SPF / CAA / DNSSEC</strong> posture in 2 seconds, auto-fill native Excel <strong>.XLSX &amp; .CSV SIG-Lite</strong> questionnaires across 64 controls, and share a zero-server <strong>Trust Portal</strong>.</p>
+            <form id="hero-scan-form" class="tv-hero-scan-form">
+              <input id="hero-scan-domain" type="text" class="tv-hero-scan-input" placeholder="Enter your domain (e.g. stripe.com) to verify live DNS..." value="${escHtml(state.portal ? state.portal.domain : "")}" aria-label="Domain to verify live DNS security posture" />
+              <button type="button" class="btn btn-primary" data-action="run-domain-scan">🔍 Live Verify Domain DNS (2s)</button>
+            </form>
             <div class="tv-hero-cta-row">
-              <button type="button" class="btn btn-primary" data-action="instant-sig-demo">⚡ Auto-Fill 20-Q SIG-Lite Live (5-Sec Demo) →</button>
+              <button type="button" class="btn btn-ghost-dark" data-action="instant-sig-demo">⚡ Auto-Fill 20-Q SIG-Lite Live (5-Sec Demo) →</button>
               <a href="#vs-competitors" class="btn btn-ghost-dark">Compare vs. Vanta &amp; Drata ($13.8K/yr Saved)</a>
             </div>
           </div>
@@ -1768,6 +2014,7 @@
         <div class="tv-studio-grid">
           ${renderStudioSidebarHtml()}
           <section class="tv-workspace">
+            <div id="dns-scan-area">${renderLiveDnsPanelHtml(false)}</div>
             <div id="readiness-grader-area">${renderReadinessGraderHtml()}</div>
             <div class="tv-tabs no-print" role="tablist">
               <button type="button" class="tv-tab-btn ${state.activeTab === "portal" ? "active" : ""}" data-tab="portal" role="tab" aria-selected="${state.activeTab === "portal" ? "true" : "false"}">
@@ -2186,6 +2433,61 @@
     }
 
     // Questionnaire Auto-Filler actions
+    const scanForm = document.getElementById("hero-scan-form");
+    const runScanClick = () => {
+      const inp = document.getElementById("hero-scan-domain");
+      const val = inp ? inp.value : state.portal.domain;
+      runLiveDomainScan(val, "hero_scanner");
+    };
+    if (scanForm) {
+      scanForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        runScanClick();
+      });
+    }
+    document.querySelectorAll("[data-action='run-domain-scan']").forEach((btn) => {
+      btn.addEventListener("click", runScanClick);
+    });
+    document.querySelectorAll("[data-action='reverify-buyer-dns']").forEach((btn) => {
+      btn.addEventListener("click", () => runLiveDomainScan(state.portal && state.portal.domain, "buyer_reverify"));
+    });
+    const applySubBtn = document.querySelector("[data-action='apply-dns-subprocs']");
+    if (applySubBtn) {
+      applySubBtn.addEventListener("click", () => {
+        const discovered = (state.dnsScan.result && state.dnsScan.result.discoveredSubprocessors) || [];
+        if (!discovered.length) return;
+        const existingNames = new Set((state.portal.subprocessors || []).map((s) => String(s.name || "").toLowerCase()));
+        let added = 0;
+        discovered.forEach((d) => {
+          if (!existingNames.has(d.name.toLowerCase())) {
+            state.portal.subprocessors.unshift(Object.assign({}, d));
+            existingNames.add(d.name.toLowerCase());
+            added++;
+          }
+        });
+        savePortalState();
+        refreshPortalDigest();
+        render();
+        showToast(added > 0 ? `Added ${added} DNS-verified subprocessor${added === 1 ? "" : "s"} to Portal.` : "All discovered subprocessors already in registry.");
+      });
+    }
+    const copyAuditBtn = document.querySelector("[data-action='copy-dns-audit-link']");
+    if (copyAuditBtn) {
+      copyAuditBtn.addEventListener("click", () => {
+        const dom = (state.dnsScan.result && state.dnsScan.result.domain) || (state.portal && state.portal.domain) || "";
+        const base = window.location.origin + window.location.pathname;
+        const url = `${base}?domain=${encodeURIComponent(dom)}&scan=1`;
+        copyText(url, `Copied live audit link for ${dom}!`);
+      });
+    }
+    document.querySelectorAll("[data-action='copy-dns-fix']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const idx = Number(btn.getAttribute("data-fix-idx"));
+        const fix = state.dnsScan.result && state.dnsScan.result.fixes && state.dnsScan.result.fixes[idx];
+        if (fix) copyText(`${fix.host} ${fix.type} "${fix.value}"`, `Copied ${fix.label} DNS record!`);
+      });
+    });
+
     document.querySelectorAll("[data-action='instant-sig-demo']").forEach((btn) => {
       btn.addEventListener("click", () => {
         state.activeTab = "autofill";
@@ -2230,9 +2532,29 @@
     }
     const csvUpload = document.getElementById("qa-csv-upload");
     if (csvUpload) {
-      csvUpload.addEventListener("change", () => {
+      csvUpload.addEventListener("change", async () => {
         const file = csvUpload.files && csvUpload.files[0];
         if (!file) return;
+        const fname = String(file.name || "").toLowerCase();
+        if (fname.endsWith(".xlsx")) {
+          if (!XLSX || typeof XLSX.parseXlsxQuestions !== "function") {
+            showToast("Excel parser unavailable.");
+            return;
+          }
+          try {
+            const buf = await file.arrayBuffer();
+            const parsed = await XLSX.parseXlsxQuestions(buf);
+            if (!parsed.questions.length) {
+              showToast("No valid questions detected inside .xlsx workbook.");
+              return;
+            }
+            runAutoFill(parsed.questions.join("\n"));
+            showToast(`Parsed ${parsed.questions.length} buyer questions from ${parsed.sheetCount} Excel sheet(s).`);
+          } catch (err) {
+            showToast((err && err.message) || "Unable to read .xlsx workbook.");
+          }
+          return;
+        }
         const reader = new FileReader();
         reader.onload = () => {
           const qs = parseCsvQuestions(reader.result);
@@ -2264,6 +2586,11 @@
         }
       });
     });
+
+    const exportXlsxBtn = document.querySelector("[data-action='export-xlsx']");
+    if (exportXlsxBtn) {
+      exportXlsxBtn.addEventListener("click", exportXlsx);
+    }
 
     const exportCsvBtn = document.querySelector("[data-action='export-csv']");
     if (exportCsvBtn) {
@@ -2540,6 +2867,13 @@
         demo_mode: true,
         is_embed: state.isEmbed
       });
+    }
+
+    if (params.get("scan") === "1") {
+      const scanDom = qDomain || (state.portal && state.portal.domain);
+      if (scanDom) {
+        runLiveDomainScan(scanDom, "url_param");
+      }
     }
 
     window.addEventListener("hashchange", async () => {

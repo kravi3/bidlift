@@ -33,7 +33,9 @@ window.TrustVaultAnalytics = (function () {
     "demo_mode",
     "calc_acv",
     "human_verified",
-    "trigger"
+    "trigger",
+    "dns_grade",
+    "subproc_count"
   ]);
 
   function isLikelyBot() {

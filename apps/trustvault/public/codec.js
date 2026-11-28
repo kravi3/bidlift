@@ -54,7 +54,16 @@ window.TrustVaultCodec = (function () {
         d: String(s.dpaStatus || "DPA Executed").slice(0, 40)
       })),
       wh: Boolean(p.whiteLabel),
-      ua: Number(p.updatedAt || Date.now())
+      ua: Number(p.updatedAt || Date.now()),
+      da: p.dnsAudit && p.dnsAudit.g ? {
+        g: String(p.dnsAudit.g || "").slice(0, 4),
+        s: Number(p.dnsAudit.s || 0),
+        dm: String(p.dnsAudit.dm || "").slice(0, 32),
+        sp: String(p.dnsAudit.sp || "").slice(0, 32),
+        ca: String(p.dnsAudit.ca || "").slice(0, 32),
+        ds: String(p.dnsAudit.ds || "").slice(0, 32),
+        at: String(p.dnsAudit.at || "").slice(0, 32)
+      } : undefined
     };
   }
 
@@ -100,7 +109,8 @@ window.TrustVaultCodec = (function () {
           }))
         : [],
       whiteLabel: Boolean(m.wh),
-      updatedAt: Number(m.ua) || Date.now()
+      updatedAt: Number(m.ua) || Date.now(),
+      dnsAudit: m.da && typeof m.da === "object" ? m.da : null
     };
   }
 
