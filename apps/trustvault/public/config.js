@@ -12,7 +12,7 @@ window.TRUSTVAULT_CONFIG = {
   SCALE_PRICE_ANNUAL: "$2,490/yr",
   DFY_SETUP_PRICE: "$1,499",
   PROMO_CODE: "FOUNDER30",
-  PROMO_LABEL: "30% Off Thru Nov 30",
+  PROMO_LABEL: "30% Off Thru Dec 7",
   SUPPORT_EMAIL: "bidliftco@gmail.com",
   LICENSE_PREFIX: "TV-PRO-",
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_9zw6rx3cVFk3gXM3EHvwKSD9BtFQ09j5QlUZS0zHwRj",

@@ -13,7 +13,7 @@ window.SCOPELOCK_CONFIG = {
   SUITE_PRICE_ANNUAL: "$249/yr",
   DFY_PRICE: "$499",
   PROMO_CODE: "PH30",
-  PROMO_DEADLINE_LABEL: "Extended through Nov 30",
+  PROMO_DEADLINE_LABEL: "Launch Offer · 30% Off Thru Dec 7",
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_vw3jh8FmH5R6IeLTQ7khlYnbDDQhgIj8MWagM1i6Qs2",
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_U9tev0C5eYeEdWFRPemJUpwr92JTP76GYL3q52Wg1vz",
   CHECKOUT_SUITE_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_DRpXrTa6Futy9tmH6RK960bo0u2f1TV3Z1noS2VrQQb",

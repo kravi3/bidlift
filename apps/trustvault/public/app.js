@@ -1186,6 +1186,83 @@
     `;
   }
 
+  function renderCompetitorComparisonHtml() {
+    const promo = CFG.PROMO_CODE || "FOUNDER30";
+    return `
+      <div class="tv-comp-box">
+        <div class="tv-comp-head">
+          <div>
+            <span class="tv-tier-badge">Zero-PII Enterprise Advantage</span>
+            <h2>TrustVault vs. Vanta, Drata (+SafeBase), Conveyor &amp; Whistic</h2>
+            <p style="margin:0;color:var(--tv-text-muted);font-size:13.5px;">
+              Built for pre-Series A startups, AI platforms &amp; agencies that need procurement-ready Trust Portals and SIG-Lite answers today—without $10K–$68K/yr GRC contracts.
+            </p>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary btn-sm" data-action="instant-sig-demo">⚡ Test 20-Q SIG-Lite Live</button>
+            <button type="button" class="btn btn-outline btn-sm" data-action="open-pro-modal">Unlock Pro · ${escHtml(promo)}</button>
+          </div>
+        </div>
+        <div class="tv-table-wrap">
+          <table class="tv-matrix-table" aria-label="TrustVault Competitor Comparison">
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Annual Cost</th>
+                <th>Time to Live</th>
+                <th>Privacy Architecture</th>
+                <th>SIG-Lite &amp; Policy Capabilities</th>
+                <th>Net Buyer ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="tv-comp-row-us">
+                <td><strong>TrustVault</strong></td>
+                <td><strong>$0 Free · $1,190/yr Pro</strong> ($149/mo)</td>
+                <td><strong>60 seconds</strong> (Zero signup)</td>
+                <td>100% Browser-Local (Zero server PII; #t= hash)</td>
+                <td>64-Control SIG-Lite Auto-Fill + 6 SOC 2 &amp; AI Governance Policies (.csv / .md / PDF)</td>
+                <td>Save ~$13,800+/yr vs. legacy GRC + 18+ eng hrs saved per questionnaire</td>
+              </tr>
+              <tr>
+                <td>Vanta</td>
+                <td>$10,000–$50,000+/yr ($30K–$80K+ Ent.)</td>
+                <td>Weeks + auditor onboarding</td>
+                <td>Cloud-hosted agent telemetry</td>
+                <td>Continuous compliance + Trust Center; AI Q&amp;As metered (25–144+/yr by tier)</td>
+                <td>Best once mandated for formal multi-framework SOC 2 Type II audits</td>
+              </tr>
+              <tr>
+                <td>Drata (+ SafeBase)</td>
+                <td>$15,000–$68,000+/yr (up to $100K+ Ent.)</td>
+                <td>Weeks + sales cycle</td>
+                <td>Cloud-hosted GRC suite</td>
+                <td>Continuous evidence collection + SafeBase Trust Center + tiered AI Q&amp;A</td>
+                <td>High annual lock-in; overbuilt for early-stage security review velocity</td>
+              </tr>
+              <tr>
+                <td>Conveyor</td>
+                <td>$9,600–$48,000+/yr ($800–$4,000/mo)</td>
+                <td>Days (portal setup)</td>
+                <td>Cloud-hosted knowledge base</td>
+                <td>AI-native security questionnaire parsing + OneTrust/ServiceNow extension</td>
+                <td>$8.4K–$46.8K/yr higher fixed spend vs. TrustVault Pro</td>
+              </tr>
+              <tr>
+                <td>Whistic</td>
+                <td>~$15,000–$40,000+/yr (~$1,200+/mo)</td>
+                <td>Days–weeks</td>
+                <td>Network Trust Catalog</td>
+                <td>Vendor TPRM &amp; Whistic Profile sharing across buyer network</td>
+                <td>Custom annual contract vs. $0 Free / $149/mo self-serve unlock</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  }
+
   function renderPricingComparisonHtml(insideModal) {
     const isAnnual = state.billingCycle === "annual";
     const proPrice = isAnnual ? CFG.PRO_PRICE_ANNUAL || "$1,190/yr" : CFG.PRO_PRICE_MONTHLY || "$149/mo";
@@ -1639,6 +1716,10 @@
             <span class="tv-hero-kicker">${renderShieldSvg(14)} Built for B2B SaaS, AI Platforms &amp; Agencies</span>
             <h1>Close Enterprise Deals 3× Faster — Without $15,000/yr GRC Bloat</h1>
             <p>Launch a verifiable, zero-server <strong>Trust Portal</strong>, auto-fill 20–100+ buyer <strong>SIG-Lite &amp; CSV questionnaires</strong> in 60 seconds, and export <strong>6 auditor-ready SOC 2 &amp; AI Policies</strong>.</p>
+            <div class="tv-hero-cta-row">
+              <button type="button" class="btn btn-primary" data-action="instant-sig-demo">⚡ Auto-Fill 20-Q SIG-Lite Live (5-Sec Demo) →</button>
+              <a href="#vs-competitors" class="btn btn-ghost-dark">Compare vs. Vanta &amp; Drata ($13.8K/yr Saved)</a>
+            </div>
           </div>
           <div class="tv-hero-metrics">
             <div class="tv-stat-box">
@@ -1706,6 +1787,10 @@
           </section>
         </div>
       </main>
+
+      <section id="vs-competitors" class="tv-comp-section no-print">
+        ${renderCompetitorComparisonHtml()}
+      </section>
 
       <section id="pricing-compare" class="tv-pricing-section no-print">
         ${renderPricingComparisonHtml(false)}
@@ -2101,6 +2186,19 @@
     }
 
     // Questionnaire Auto-Filler actions
+    document.querySelectorAll("[data-action='instant-sig-demo']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.activeTab = "autofill";
+        const sampleText = (KB.SAMPLE_SIG_LITE || []).join("\n");
+        runAutoFill(sampleText);
+        ANALYTICS.track("qa_autofill_run", {
+          preset_id: state.portal.presetId,
+          trigger: "hero_instant_demo"
+        });
+        const tabsEl = document.querySelector(".tv-tabs");
+        if (tabsEl) tabsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
     const loadSigBtn = document.querySelector("[data-action='load-sig-sample']");
     if (loadSigBtn) {
       loadSigBtn.addEventListener("click", () => {

@@ -13,7 +13,7 @@ window.BIDLIFT_CONFIG = {
   PRO_ADVANCED_PRICE_ANNUAL: "$249/yr",
   DFY_SETUP_PRICE: "$1,499",
   PROMO_CODE: "PH30",
-  PROMO_DEADLINE_LABEL: "Extended through Thanksgiving Week (Ends Nov 30)",
+  PROMO_DEADLINE_LABEL: "Launch Offer · 30% Off Thru Dec 7",
   CHECKOUT_PRO_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_CmzuvzfKFA3NJsP5hBbWpQg1EwRRLmGfxaQuO0yifJp",
   CHECKOUT_PRO_ANNUAL_LINK: "https://buy.polar.sh/polar_cl_YUHqZm7ZgtUXy2DDTccTVquP3tKMIEQ8hvL4j3an9Lk",
   CHECKOUT_SUITE_MONTHLY_LINK: "https://buy.polar.sh/polar_cl_DRpXrTa6Futy9tmH6RK960bo0u2f1TV3Z1noS2VrQQb",

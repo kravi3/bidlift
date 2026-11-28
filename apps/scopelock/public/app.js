@@ -572,7 +572,7 @@
 
     const innerHtml = `
       <div class="thanksgiving-banner">
-        <strong>Promo Extended Through Nov 30:</strong> Use code <span class="thanksgiving-code">${escapeHtml(promo)}</span> for <strong>30% Off ScopeLock Pro or Margin Suite</strong>. Need $0? Stay on <strong>Free Forever</strong> with unlimited Change Orders.
+        <strong>${escapeHtml(CONFIG.PROMO_DEADLINE_LABEL || "Launch Offer · 30% Off Thru Dec 7")}:</strong> Use code <span class="thanksgiving-code">${escapeHtml(promo)}</span> for <strong>30% Off ScopeLock Pro or Margin Suite</strong>. Need $0? Stay on <strong>Free Forever</strong> with unlimited Change Orders.
       </div>
 
       ${isModal ? "" : `
@@ -611,7 +611,7 @@
           <ul class="plan-bullets">
             <li>Everything in Free Forever</li>
             <li>Removes all ScopeLock footer/header branding</li>
-            <li>30% off with code <strong>${escapeHtml(promo)}</strong> thru Nov 30</li>
+            <li>30% off with code <strong>${escapeHtml(promo)}</strong> thru Dec 7</li>
           </ul>
           <div style="display:grid;gap:6px;margin-top:auto;">
             <button type="button" class="btn btn-accent btn-sm" data-action="checkout-plan" data-plan="pro_annual">Get Pro Annual (${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$179/yr")})</button>
@@ -658,6 +658,47 @@
           </tbody>
         </table>
       </div>
+
+      ${!isModal ? `
+        <div class="pricing-compare-wrap" style="margin-top:16px;">
+          <table class="pricing-compare-table" aria-label="ScopeLock vs Buildertrend, HoneyBook and Bonsai">
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Annual Cost</th>
+                <th>Payment Cut</th>
+                <th>Scope-Creep Capture &amp; ROI vs. ScopeLock</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:rgba(15,41,74,0.05);font-weight:600;">
+                <td><strong>ScopeLock</strong> (Free / Pro)</td>
+                <td><strong>$0 Free · $179/yr Pro</strong> ($29/mo)</td>
+                <td><strong>0% cut</strong> (your own link)</td>
+                <td>Photo-backed CO ledger + schedule shift + SHA-256 ESIGN in 60s (1 signed $1,200 CO = 6.7× annual ROI)</td>
+              </tr>
+              <tr>
+                <td>Buildertrend</td>
+                <td>$4,000–$13,000+/yr ($340–$1,100+/mo)</td>
+                <td>Custom + onboarding</td>
+                <td>Full residential construction ERP + Change Order module; heavy onboarding for field/agency speed</td>
+              </tr>
+              <tr>
+                <td>HoneyBook</td>
+                <td>$348–$1,548/yr ($29–$129/mo)</td>
+                <td>2.7–2.9% card · 1.5% ACH</td>
+                <td>Creative clientflow CRM; scope additions rely on secondary standalone invoices without field CO ledger</td>
+              </tr>
+              <tr>
+                <td>Bonsai (Zoom)</td>
+                <td>$180–$708/user/yr ($15–$59/user/mo)</td>
+                <td>Per-seat billing</td>
+                <td>Solo consultant contracts, time tracking &amp; invoicing without compressed photo CO evidence</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
     `;
 
     if (isModal) return innerHtml;

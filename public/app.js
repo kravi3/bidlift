@@ -2275,7 +2275,7 @@
     const innerHtml = `
       <div class="thanksgiving-banner">
         <div>
-          <strong>Thanksgiving Deal Extended (Ends Nov 30):</strong> Use code <span class="thanksgiving-code">${escapeHtml(promoCode)}</span> for <strong>30% Off Pro</strong>. Need $0? You can stay on <strong>Free Forever</strong> with unlimited quotes.
+          <strong>${escapeHtml(CONFIG.PROMO_DEADLINE_LABEL || "Launch Offer · 30% Off Thru Dec 7")}:</strong> Use code <span class="thanksgiving-code">${escapeHtml(promoCode)}</span> for <strong>30% Off Pro</strong>. Need $0? You can stay on <strong>Free Forever</strong> with unlimited quotes.
         </div>
       </div>
 
@@ -2313,7 +2313,7 @@
           <ul class="plan-bullets">
             <li>Everything in Free Forever</li>
             <li>Removes all BidLift branding on client quotes</li>
-            <li>Instant checkout unlock (code <strong>${escapeHtml(promoCode)}</strong> thru Nov 30)</li>
+            <li>Instant checkout unlock (code <strong>${escapeHtml(promoCode)}</strong> thru Dec 7)</li>
           </ul>
           <div style="display:grid;gap:6px;margin-top:auto;">
             <button type="button" class="btn btn-accent btn-sm" data-action="checkout-pro" data-plan="annual">Get Pro Annual (${escapeHtml(CONFIG.PRO_PRICE_ANNUAL || "$99/yr")})</button>
@@ -2372,6 +2372,59 @@
           </tbody>
         </table>
       </div>
+
+      ${!isModal ? `
+        <div class="pricing-compare-wrap" style="margin-top:16px;">
+          <table class="pricing-compare-table" aria-label="BidLift vs Jobber, Housecall Pro, PandaDoc and Proposify">
+            <thead>
+              <tr>
+                <th>Platform</th>
+                <th>Annual Cost</th>
+                <th>Payment Cut</th>
+                <th>Setup &amp; Signup</th>
+                <th>Interactive Upsells &amp; Buyer ROI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:rgba(15,41,74,0.05);font-weight:600;">
+                <td><strong>BidLift</strong> (Free / Pro)</td>
+                <td><strong>$0 Free · $99/yr Pro</strong> ($19/mo)</td>
+                <td><strong>0% cut</strong> (your own link)</td>
+                <td>0 signup (URL-hash private)</td>
+                <td>Native GBB + toggle upsells + SHA-256 ESIGN (+$840 lift on one $3K job = 8.5× annual ROI)</td>
+              </tr>
+              <tr>
+                <td>Jobber</td>
+                <td>$348–$8,388/yr ($29–$699/mo)</td>
+                <td>Card &amp; ACH fees</td>
+                <td>Full FSM workspace</td>
+                <td>Basic quoting on Core; scale workflows require Connect/Grow</td>
+              </tr>
+              <tr>
+                <td>Housecall Pro</td>
+                <td>$708–$3,588+/yr ($59–$299+/mo)</td>
+                <td>Processing fees</td>
+                <td>Full FSM account</td>
+                <td>Multi-option estimates restricted to higher tiers</td>
+              </tr>
+              <tr>
+                <td>PandaDoc</td>
+                <td>$228–$588+/user/yr ($19–$49/user/mo)</td>
+                <td>Per-seat billing</td>
+                <td>Free capped at 5 docs/mo</td>
+                <td>Document workflows; CRM sync requires $49/user/mo Business</td>
+              </tr>
+              <tr>
+                <td>Proposify</td>
+                <td>$468–$12,800+/yr ($39–$65+/user/mo)</td>
+                <td>Per-seat billing</td>
+                <td>Team onboarding</td>
+                <td>Enterprise approval flows; built for larger corporate sales teams</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ` : ""}
     `;
 
     return isModal
