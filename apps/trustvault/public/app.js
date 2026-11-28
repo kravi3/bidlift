@@ -88,8 +88,22 @@
       pillarSummaries: Object.assign({}, p.pillarSummaries || {}),
       subprocessors: (p.subprocessors || []).map((s) => Object.assign({}, s)),
       whiteLabel: Boolean(ov.whiteLabel),
-      updatedAt: Date.now()
+      updatedAt: Date.now(),
+      euAiActTier: String(ov.euAiActTier || (p.id === "ai_platform" ? "limited" : "minimal")),
+      aibom: (KB.DEFAULT_AIBOM || []).map((a) => Object.assign({}, a)),
+      agentGates: (KB.DEFAULT_AGENT_GATES || []).map((g) => Object.assign({}, g))
     };
+  }
+
+  function ensureAiFields(p) {
+    if (!p) return;
+    if (!p.euAiActTier) p.euAiActTier = p.presetId === "ai_platform" ? "limited" : "minimal";
+    if (!Array.isArray(p.aibom) || p.aibom.length === 0) {
+      p.aibom = (KB.DEFAULT_AIBOM || []).map((a) => Object.assign({}, a));
+    }
+    if (!Array.isArray(p.agentGates) || p.agentGates.length === 0) {
+      p.agentGates = (KB.DEFAULT_AGENT_GATES || []).map((g) => Object.assign({}, g));
+    }
   }
 
   function computeFnv1aHex(inputStr) {
@@ -158,7 +172,10 @@
       domain: state.portal.domain,
       badges: state.portal.badges,
       pillarSummaries: state.portal.pillarSummaries,
-      subprocessors: state.portal.subprocessors
+      subprocessors: state.portal.subprocessors,
+      euAiActTier: state.portal.euAiActTier,
+      aibom: state.portal.aibom,
+      agentGates: state.portal.agentGates
     };
     CODEC.computeAttestationDigest(payload).then((hex) => {
       state.portalDigest = hex;
@@ -408,6 +425,7 @@
       domain: state.portal.domain,
       digest: state.qaDigest,
       dnsAudit: state.dnsScan.result,
+      portal: state.portal,
       rows: exportRows
     });
 
@@ -430,8 +448,71 @@
     if (isCapped) {
       showToast(`Exported ${freeCap}/${rows.length} Q&As to Excel (.xlsx) — Free cap. Unlock Pro (${CFG.PROMO_CODE}) for unlimited.`);
     } else {
-      showToast(`Exported ${exportRows.length} attested answers + Live Attestation tab to .XLSX!`);
+      showToast(`Exported ${exportRows.length} attested answers + 3rd AIBOM/Agentic sheet to .XLSX!`);
     }
+  }
+
+  function exportAibomJson() {
+    const p = state.portal || {};
+    ensureAiFields(p);
+    const slug = (p.company || "trustvault").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const bom = {
+      bomFormat: "CycloneDX",
+      specVersion: "1.6",
+      serialNumber: `urn:uuid:${Date.now()}-${slug}`,
+      version: 1,
+      metadata: {
+        timestamp: new Date().toISOString(),
+        component: {
+          type: "application",
+          name: p.company || "Enterprise Vendor",
+          supplier: { name: p.company || "Enterprise Vendor" }
+        },
+        properties: [
+          { name: "trustvault:domain", value: p.domain || "" },
+          { name: "trustvault:sha256_attestation", value: state.portalDigest || "" },
+          { name: "eu_ai_act:classification", value: p.euAiActTier || "limited" },
+          { name: "iso_42001:aligned", value: "true" }
+        ]
+      },
+      components: (p.aibom || []).map((item, idx) => ({
+        "bom-ref": `ai-model-${idx + 1}`,
+        type: "machine-learning-model",
+        name: item.model || "LLM Endpoint",
+        supplier: { name: item.provider || "External API" },
+        description: item.purpose || "",
+        properties: [
+          { name: "zero_data_retention", value: item.zdr || "Yes" },
+          { name: "prompt_retention", value: item.retention || "0 days" },
+          { name: "inference_region", value: item.region || "US/EU" }
+        ]
+      })),
+      services: (p.agentGates || []).map((g, idx) => ({
+        "bom-ref": `agent-gate-${idx + 1}`,
+        name: g.capability || "Agent Tool",
+        description: `Scope: ${g.scope || ""} | Auth: ${g.authModel || ""}`,
+        properties: [
+          { name: "hitl_gate", value: g.hitlGate || "" },
+          { name: "owasp_guardrail", value: g.guardrail || "" }
+        ]
+      }))
+    };
+
+    const blob = new Blob([JSON.stringify(bom, null, 2)], { type: "application/json;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${slug}-aibom-cyclonedx.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    ANALYTICS.track("aibom_exported", {
+      preset_id: p.presetId,
+      export_format: "cyclonedx_json"
+    });
+    showToast(`Exported CycloneDX AIBOM + Agentic HITL specification (.json)!`);
   }
 
   async function runLiveDomainScan(rawDomain, triggerName) {
@@ -1170,6 +1251,38 @@
             </table>
           </div>
           ${isBuyerMode ? renderLiveDnsPanelHtml(true) : ""}
+          ${(() => {
+            ensureAiFields(p);
+            const euObj = (KB.EU_AI_ACT_TIERS || []).find((t) => t.id === p.euAiActTier) || { label: "Limited Risk (Art. 50 Transparency)" };
+            const aibomRows = (p.aibom || [])
+              .map(
+                (m) => `<tr><td><strong>${escHtml(m.provider)}</strong></td><td>${escHtml(m.model)}</td><td>${escHtml(m.zdr)}</td><td>${escHtml(m.region)}</td></tr>`
+              )
+              .join("");
+            const gateRows = (p.agentGates || [])
+              .map(
+                (g) => `<tr><td><strong>${escHtml(g.capability)}</strong></td><td class="mono">${escHtml(g.scope)}</td><td>${escHtml(g.hitlGate)}</td><td>${escHtml(g.guardrail)}</td></tr>`
+              )
+              .join("");
+            return `
+              <div class="tv-section-heading" style="margin-top:22px;">
+                <span>2026 AI Bill of Materials (AIBOM) &amp; Agentic HITL Controls</span>
+                <span class="tv-eu-pill">EU AI Act: ${escHtml(euObj.label)} · ISO 42001</span>
+              </div>
+              <div class="tv-table-wrap" style="margin-bottom:14px;">
+                <table class="tv-table">
+                  <thead><tr><th>Model Provider</th><th>Model / Vector Component</th><th>Zero-Data Retention</th><th>Hosting Region</th></tr></thead>
+                  <tbody>${aibomRows}</tbody>
+                </table>
+              </div>
+              <div class="tv-table-wrap">
+                <table class="tv-table">
+                  <thead><tr><th>Agent Capability</th><th>OAuth / MCP Scope</th><th>HITL Approval Gate</th><th>OWASP Guardrail</th></tr></thead>
+                  <tbody>${gateRows}</tbody>
+                </table>
+              </div>
+            `;
+          })()}
           ${buyerControlsSection}
         </div>
         <div class="tv-portal-footer">
@@ -1296,11 +1409,12 @@
     return `
       <div class="tv-qa-input-card no-print">
         <div class="tv-card-title">
-          <span>Security Questionnaire Auto-Filler (64-Control Enterprise Vault)</span>
+          <span>Security &amp; AI Questionnaire Auto-Filler (84-Control 2026 Vault)</span>
           <span style="font-size:12px;font-weight:600;color:var(--tv-emerald-700);">100% Browser-Local · Zero Buyer PII Sent</span>
         </div>
         <div class="tv-qa-actions">
-          <button type="button" class="btn btn-primary" data-action="load-sig-sample">Load 20-Question Enterprise SIG-Lite Sample</button>
+          <button type="button" class="btn btn-primary" data-action="load-sig-sample">Load 20-Q SIG-Lite Sample</button>
+          <button type="button" class="btn btn-outline" data-action="load-ai-sample">Load 15-Q 2026 AI &amp; Agentic Sample</button>
           <label class="btn btn-outline" style="cursor:pointer;">
             Upload Buyer .XLSX / .CSV
             <input id="qa-csv-upload" type="file" accept=".xlsx,.csv,.txt" class="sr-only" />
@@ -1424,6 +1538,108 @@
 
       <div id="policies-grid-area" class="tv-policy-grid">
         ${renderPoliciesGridHtml()}
+      </div>
+    `;
+  }
+
+  function renderAiGovernanceTabHtml() {
+    const p = state.portal || {};
+    ensureAiFields(p);
+    const euTiers = KB.EU_AI_ACT_TIERS || [];
+    const activeTier = euTiers.find((t) => t.id === p.euAiActTier) || euTiers[1] || { label: "Limited Risk", summary: "" };
+    const aibom = p.aibom || [];
+    const gates = p.agentGates || [];
+
+    return `
+      <div class="tv-toolbar no-print">
+        <div class="tv-toolbar-group">
+          <button type="button" class="btn btn-primary" data-action="export-aibom-json">Export CycloneDX AIBOM (.json)</button>
+          <button type="button" class="btn btn-outline" data-action="load-ai-sample">Test 15-Q AI &amp; Agentic Auto-Fill →</button>
+        </div>
+        <div class="tv-toolbar-group">
+          <button type="button" class="btn btn-outline" data-action="print-pdf">Print AI Governance PDF</button>
+          <button type="button" class="btn btn-navy" data-action="open-buyer-view">Live Buyer View →</button>
+        </div>
+      </div>
+
+      <div class="tv-aigov-grid">
+        <div class="tv-aigov-card">
+          <div class="tv-card-title">
+            <span>1. EU AI Act Classification &amp; ISO/IEC 42001 Posture</span>
+            <span class="tv-eu-pill">ISO 42001 · NIST AI RMF · CSA AI-CAIQ</span>
+          </div>
+          <div class="tv-field-row">
+            <div class="tv-field">
+              <label class="tv-label" for="sel-eu-ai-act">EU AI Act System Risk Tier</label>
+              <select id="sel-eu-ai-act" class="tv-input">
+                ${euTiers
+                  .map(
+                    (t) => `<option value="${escHtml(t.id)}" ${t.id === p.euAiActTier ? "selected" : ""}>${escHtml(t.label)}</option>`
+                  )
+                  .join("")}
+              </select>
+            </div>
+            <div class="tv-field">
+              <label class="tv-label">Deployer Obligations Summary</label>
+              <div style="font-size:12.5px;color:var(--tv-text-muted);padding:8px 10px;background:var(--tv-surface-muted);border:1px solid var(--tv-border);border-radius:8px;">
+                ${escHtml(activeTier.summary)}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tv-aigov-card">
+          <div class="tv-card-title">
+            <span>2. AI Bill of Materials (AIBOM) Model Registry (${aibom.length})</span>
+            <button type="button" class="btn btn-outline btn-sm" data-action="add-aibom">+ Add AI Model</button>
+          </div>
+          ${aibom
+            .map(
+              (item, idx) => `
+              <div class="tv-aibom-row">
+                <div class="tv-aibom-fields">
+                  <input type="text" class="tv-input" placeholder="Provider (e.g. Anthropic)" value="${escHtml(item.provider)}" data-aibom-idx="${idx}" data-aibom-key="provider" />
+                  <input type="text" class="tv-input" placeholder="Model / Weights" value="${escHtml(item.model)}" data-aibom-idx="${idx}" data-aibom-key="model" />
+                  <input type="text" class="tv-input" placeholder="Use Case" value="${escHtml(item.purpose)}" data-aibom-idx="${idx}" data-aibom-key="purpose" />
+                </div>
+                <div class="tv-aibom-fields">
+                  <input type="text" class="tv-input" placeholder="ZDR Guarantee" value="${escHtml(item.zdr)}" data-aibom-idx="${idx}" data-aibom-key="zdr" />
+                  <input type="text" class="tv-input" placeholder="Retention Window" value="${escHtml(item.retention)}" data-aibom-idx="${idx}" data-aibom-key="retention" />
+                  <div style="display:flex;gap:6px;">
+                    <input type="text" class="tv-input" placeholder="Inference Region" value="${escHtml(item.region)}" data-aibom-idx="${idx}" data-aibom-key="region" />
+                    <button type="button" class="btn btn-danger-soft btn-sm" data-action="remove-aibom" data-idx="${idx}" title="Remove model">×</button>
+                  </div>
+                </div>
+              </div>
+            `
+            )
+            .join("")}
+        </div>
+
+        <div class="tv-aigov-card">
+          <div class="tv-card-title">
+            <span>3. Agentic AI Permission &amp; Human-in-the-Loop (HITL) Matrix (${gates.length})</span>
+            <button type="button" class="btn btn-outline btn-sm" data-action="add-agent-gate">+ Add Agent Scope</button>
+          </div>
+          ${gates
+            .map(
+              (g, idx) => `
+              <div class="tv-aibom-row">
+                <div class="tv-aibom-fields">
+                  <input type="text" class="tv-input" placeholder="Agent Capability" value="${escHtml(g.capability)}" data-gate-idx="${idx}" data-gate-key="capability" />
+                  <input type="text" class="tv-input" placeholder="OAuth / MCP Scope" value="${escHtml(g.scope)}" data-gate-idx="${idx}" data-gate-key="scope" />
+                  <input type="text" class="tv-input" placeholder="Permission Model" value="${escHtml(g.authModel)}" data-gate-idx="${idx}" data-gate-key="authModel" />
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;">
+                  <input type="text" class="tv-input" placeholder="HITL Approval Gate" value="${escHtml(g.hitlGate)}" data-gate-idx="${idx}" data-gate-key="hitlGate" />
+                  <input type="text" class="tv-input" placeholder="OWASP Agentic Guardrail" value="${escHtml(g.guardrail)}" data-gate-idx="${idx}" data-gate-key="guardrail" />
+                  <button type="button" class="btn btn-danger-soft btn-sm" data-action="remove-agent-gate" data-idx="${idx}" title="Remove scope">×</button>
+                </div>
+              </div>
+            `
+            )
+            .join("")}
+        </div>
       </div>
     `;
   }
@@ -1928,6 +2144,8 @@
       `;
     } else if (state.activeTab === "autofill") {
       tabContentHtml = renderAutoFillTabHtml();
+    } else if (state.activeTab === "aigov") {
+      tabContentHtml = renderAiGovernanceTabHtml();
     } else {
       tabContentHtml = renderPoliciesTabHtml();
     }
@@ -1969,8 +2187,8 @@
           </div>
           <div class="tv-hero-metrics">
             <div class="tv-stat-box">
-              <div class="tv-stat-val">64</div>
-              <div class="tv-stat-lbl">Curated Security Q&amp;As</div>
+              <div class="tv-stat-val">84</div>
+              <div class="tv-stat-lbl">Security &amp; AI Controls</div>
             </div>
             <div class="tv-stat-box">
               <div class="tv-stat-val">6 Policies</div>
@@ -2023,11 +2241,15 @@
               </button>
               <button type="button" class="tv-tab-btn ${state.activeTab === "autofill" ? "active" : ""}" data-tab="autofill" role="tab" aria-selected="${state.activeTab === "autofill" ? "true" : "false"}">
                 <span>2. Security Questionnaire Auto-Filler</span>
-                <span class="tv-tab-pill">64-Q Vault</span>
+                <span class="tv-tab-pill">84-Q Vault</span>
               </button>
               <button type="button" class="tv-tab-btn ${state.activeTab === "policies" ? "active" : ""}" data-tab="policies" role="tab" aria-selected="${state.activeTab === "policies" ? "true" : "false"}">
                 <span>3. SOC 2 &amp; AI Policy Pack</span>
                 <span class="tv-tab-pill">6 Policies</span>
+              </button>
+              <button type="button" class="tv-tab-btn ${state.activeTab === "aigov" ? "active" : ""}" data-tab="aigov" role="tab" aria-selected="${state.activeTab === "aigov" ? "true" : "false"}">
+                <span>4. AI Governance &amp; AIBOM</span>
+                <span class="tv-tab-pill">2026 Ready</span>
               </button>
             </div>
             ${tabContentHtml}
@@ -2508,6 +2730,113 @@
         runAutoFill(sampleText);
       });
     }
+    document.querySelectorAll("[data-action='load-ai-sample']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.activeTab = "autofill";
+        const sampleText = (KB.SAMPLE_AI_CAIQ || []).join("\n");
+        runAutoFill(sampleText);
+        ANALYTICS.track("qa_autofill_run", {
+          preset_id: state.portal.presetId,
+          trigger: "ai_governance_sample"
+        });
+        const tabsEl = document.querySelector(".tv-tabs");
+        if (tabsEl) tabsEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    const exportAibomBtn = document.querySelector("[data-action='export-aibom-json']");
+    if (exportAibomBtn) {
+      exportAibomBtn.addEventListener("click", exportAibomJson);
+    }
+
+    const euSel = document.getElementById("sel-eu-ai-act");
+    if (euSel) {
+      euSel.addEventListener("change", () => {
+        state.portal.euAiActTier = euSel.value;
+        state.portal.updatedAt = Date.now();
+        savePortalState();
+        refreshPortalDigest();
+        render();
+        showToast("Updated EU AI Act risk classification.");
+      });
+    }
+
+    const addAibomBtn = document.querySelector("[data-action='add-aibom']");
+    if (addAibomBtn) {
+      addAibomBtn.addEventListener("click", () => {
+        ensureAiFields(state.portal);
+        state.portal.aibom.push({
+          provider: "Custom Model Provider",
+          model: "Enterprise Inference Model",
+          purpose: "Workflow Copilot",
+          zdr: "Yes (ZDR Active)",
+          retention: "0 days",
+          region: "US / EU"
+        });
+        savePortalState();
+        refreshPortalDigest();
+        render();
+      });
+    }
+    document.querySelectorAll("[data-action='remove-aibom']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        ensureAiFields(state.portal);
+        state.portal.aibom.splice(Number(btn.getAttribute("data-idx")), 1);
+        savePortalState();
+        refreshPortalDigest();
+        render();
+      });
+    });
+    document.querySelectorAll("[data-aibom-idx]").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        ensureAiFields(state.portal);
+        const idx = Number(inp.getAttribute("data-aibom-idx"));
+        const key = inp.getAttribute("data-aibom-key");
+        if (state.portal.aibom[idx] && key) {
+          state.portal.aibom[idx][key] = inp.value;
+          savePortalState();
+          refreshPortalDigest();
+        }
+      });
+    });
+
+    const addGateBtn = document.querySelector("[data-action='add-agent-gate']");
+    if (addGateBtn) {
+      addGateBtn.addEventListener("click", () => {
+        ensureAiFields(state.portal);
+        state.portal.agentGates.push({
+          capability: "New Agent Action",
+          scope: "execute:scoped",
+          authModel: "Least-Privilege Token",
+          hitlGate: "Mandatory Human Approval",
+          guardrail: "Schema Validation + Audit Log"
+        });
+        savePortalState();
+        refreshPortalDigest();
+        render();
+      });
+    }
+    document.querySelectorAll("[data-action='remove-agent-gate']").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        ensureAiFields(state.portal);
+        state.portal.agentGates.splice(Number(btn.getAttribute("data-idx")), 1);
+        savePortalState();
+        refreshPortalDigest();
+        render();
+      });
+    });
+    document.querySelectorAll("[data-gate-idx]").forEach((inp) => {
+      inp.addEventListener("input", () => {
+        ensureAiFields(state.portal);
+        const idx = Number(inp.getAttribute("data-gate-idx"));
+        const key = inp.getAttribute("data-gate-key");
+        if (state.portal.agentGates[idx] && key) {
+          state.portal.agentGates[idx][key] = inp.value;
+          savePortalState();
+          refreshPortalDigest();
+        }
+      });
+    });
     const runAfBtn = document.querySelector("[data-action='run-autofill']");
     if (runAfBtn) {
       runAfBtn.addEventListener("click", () => {
@@ -2849,6 +3178,7 @@
     } catch (e) {}
 
     refreshPortalDigest();
+    ensureAiFields(state.portal);
     refreshQaDigest();
     render();
     if (unlockedToast) {

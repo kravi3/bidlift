@@ -398,6 +398,45 @@ window.TrustVaultXlsx = (function () {
       attTable.push(["Live DNS Security Scan", "Not run in session (Click Live Verify Domain DNS before export)"]);
     }
 
+    const p = o.portal || {};
+    const euTierLabel = p.euAiActTier === "high"
+      ? "High-Risk Readiness (Annex III / Art. 26)"
+      : p.euAiActTier === "minimal"
+      ? "Minimal Risk (Art. 50 Exempt)"
+      : "Limited Risk (Art. 50 Transparency)";
+
+    const aiTable = [
+      ["2026 AI Governance & Agentic Section", "Provider / Capability", "Model / Scope", "Zero-Training / Auth Model", "Retention / HITL Gate", "Region / OWASP Guardrail"]
+    ];
+    aiTable.push([
+      "EU AI Act & ISO 42001 Posture",
+      String(o.company || "Vendor"),
+      euTierLabel,
+      "ISO/IEC 42001 & NIST AI RMF Aligned",
+      "CSA AI-CAIQ Verified",
+      String(p.hostingRegion || "Multi-Region")
+    ]);
+    (Array.isArray(p.aibom) ? p.aibom : []).forEach((a) => {
+      aiTable.push([
+        "AIBOM Model Entry",
+        String(a.provider || ""),
+        String(a.model || ""),
+        String(a.zdr || ""),
+        String(a.retention || ""),
+        String(a.region || "")
+      ]);
+    });
+    (Array.isArray(p.agentGates) ? p.agentGates : []).forEach((g) => {
+      aiTable.push([
+        "Agentic HITL Permission",
+        String(g.capability || ""),
+        String(g.scope || ""),
+        String(g.authModel || ""),
+        String(g.hitlGate || ""),
+        String(g.guardrail || "")
+      ]);
+    });
+
     const stylesXml =
       '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
@@ -430,6 +469,7 @@ window.TrustVaultXlsx = (function () {
       '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
       '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
       '<Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
+      '<Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>' +
       '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
       "</Types>";
 
@@ -445,6 +485,7 @@ window.TrustVaultXlsx = (function () {
       "<sheets>" +
       '<sheet name="Security_Questionnaire" sheetId="1" r:id="rId1"/>' +
       '<sheet name="Live_Attestation" sheetId="2" r:id="rId2"/>' +
+      '<sheet name="AIBOM_Agentic_Gov" sheetId="3" r:id="rId3"/>' +
       "</sheets>" +
       "</workbook>";
 
@@ -453,11 +494,13 @@ window.TrustVaultXlsx = (function () {
       '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
       '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>' +
       '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>' +
-      '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>' +
+      '<Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
       "</Relationships>";
 
     const sheet1Xml = buildWorksheetXml(qaTable, [7, 46, 16, 26, 28, 68], 1);
     const sheet2Xml = buildWorksheetXml(attTable, [32, 68], 1);
+    const sheet3Xml = buildWorksheetXml(aiTable, [26, 28, 28, 28, 26, 30], 1);
 
     return buildZipBlob({
       "[Content_Types].xml": contentTypesXml,
@@ -466,7 +509,8 @@ window.TrustVaultXlsx = (function () {
       "xl/_rels/workbook.xml.rels": workbookRelsXml,
       "xl/styles.xml": stylesXml,
       "xl/worksheets/sheet1.xml": sheet1Xml,
-      "xl/worksheets/sheet2.xml": sheet2Xml
+      "xl/worksheets/sheet2.xml": sheet2Xml,
+      "xl/worksheets/sheet3.xml": sheet3Xml
     });
   }
 

@@ -487,6 +487,49 @@ img {
   color: var(--tv-navy-900);
 }
 
+/* 2026 AI Governance, AIBOM & Agentic HITL Styles */
+.tv-aigov-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.tv-aigov-card {
+  background: var(--tv-surface);
+  border: 1px solid var(--tv-border);
+  border-radius: var(--tv-radius);
+  box-shadow: var(--tv-shadow-sm);
+  padding: 18px;
+}
+
+.tv-aibom-row {
+  border: 1px solid var(--tv-border);
+  background: var(--tv-surface-muted);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.tv-aibom-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.tv-eu-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.12);
+  color: #1d4ed8;
+  border: 1px solid rgba(59, 130, 246, 0.28);
+}
+
 .tv-hero-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -736,6 +779,7 @@ img {
 .tv-tabs {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   background: var(--tv-surface);
   border: 1px solid var(--tv-border);
@@ -2105,7 +2149,8 @@ img {
   .tv-field-row,
   .tv-badge-grid,
   .tv-subproc-grid,
-  .tv-dns-grid {
+  .tv-dns-grid,
+  .tv-aibom-fields {
     grid-template-columns: 1fr;
   }
 

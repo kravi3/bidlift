@@ -63,7 +63,23 @@ window.TrustVaultCodec = (function () {
         ca: String(p.dnsAudit.ca || "").slice(0, 32),
         ds: String(p.dnsAudit.ds || "").slice(0, 32),
         at: String(p.dnsAudit.at || "").slice(0, 32)
-      } : undefined
+      } : undefined,
+      eu: String(p.euAiActTier || "limited").slice(0, 24),
+      ab: (Array.isArray(p.aibom) ? p.aibom : []).slice(0, 8).map((a) => ({
+        pr: String(a.provider || "").slice(0, 60),
+        md: String(a.model || "").slice(0, 80),
+        pu: String(a.purpose || "").slice(0, 100),
+        zd: String(a.zdr || "").slice(0, 40),
+        rt: String(a.retention || "").slice(0, 40),
+        rg: String(a.region || "").slice(0, 48)
+      })),
+      ag: (Array.isArray(p.agentGates) ? p.agentGates : []).slice(0, 8).map((g) => ({
+        cp: String(g.capability || "").slice(0, 80),
+        sc: String(g.scope || "").slice(0, 60),
+        au: String(g.authModel || "").slice(0, 60),
+        hi: String(g.hitlGate || "").slice(0, 60),
+        gr: String(g.guardrail || "").slice(0, 80)
+      }))
     };
   }
 
@@ -83,7 +99,11 @@ window.TrustVaultCodec = (function () {
         pillarSummaries: m.pillarSummaries && typeof m.pillarSummaries === "object" ? m.pillarSummaries : {},
         subprocessors: Array.isArray(m.subprocessors) ? m.subprocessors.slice(0, 20) : [],
         whiteLabel: Boolean(m.whiteLabel),
-        updatedAt: Number(m.updatedAt) || Date.now()
+        updatedAt: Number(m.updatedAt) || Date.now(),
+        dnsAudit: m.dnsAudit && typeof m.dnsAudit === "object" ? m.dnsAudit : null,
+        euAiActTier: String(m.euAiActTier || "limited"),
+        aibom: Array.isArray(m.aibom) ? m.aibom.slice(0, 8) : null,
+        agentGates: Array.isArray(m.agentGates) ? m.agentGates.slice(0, 8) : null
       };
     }
 
@@ -110,7 +130,27 @@ window.TrustVaultCodec = (function () {
         : [],
       whiteLabel: Boolean(m.wh),
       updatedAt: Number(m.ua) || Date.now(),
-      dnsAudit: m.da && typeof m.da === "object" ? m.da : null
+      dnsAudit: m.da && typeof m.da === "object" ? m.da : null,
+      euAiActTier: String(m.eu || "limited"),
+      aibom: Array.isArray(m.ab)
+        ? m.ab.slice(0, 8).map((a) => ({
+            provider: String(a.pr || ""),
+            model: String(a.md || ""),
+            purpose: String(a.pu || ""),
+            zdr: String(a.zd || ""),
+            retention: String(a.rt || ""),
+            region: String(a.rg || "")
+          }))
+        : null,
+      agentGates: Array.isArray(m.ag)
+        ? m.ag.slice(0, 8).map((g) => ({
+            capability: String(g.cp || ""),
+            scope: String(g.sc || ""),
+            authModel: String(g.au || ""),
+            hitlGate: String(g.hi || ""),
+            guardrail: String(g.gr || "")
+          }))
+        : null
     };
   }
 

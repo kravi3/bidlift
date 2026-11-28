@@ -734,7 +734,261 @@ window.TRUSTVAULT_KNOWLEDGE = (function () {
       keywords: [["eu ai act", 5], ["nist ai rmf", 5], ["ai regulation", 4], ["iso 42001", 5], ["ai risk", 4]],
       answer: "{{company}} maps its AI governance controls to the NIST AI Risk Management Framework (RMF) and EU AI Act transparency obligations, maintaining an inventory of approved models, risk assessments, and human oversight controls.",
       evidenceTag: "NIST AI RMF & EU AI Act Mapping"
+    },
+    {
+      id: "AIG-11",
+      pillar: "AI Governance & Zero-Training",
+      question: "Do you maintain an AI Bill of Materials (AIBOM) listing all foundational models, embeddings, and inference providers?",
+      keywords: [["aibom", 5], ["bill of materials", 5], ["model provenance", 5], ["foundation model", 4], ["model lineage", 5]],
+      answer: "Yes. {{company}} maintains a machine-readable CycloneDX-compatible AIBOM documenting every foundation model, fine-tuned checkpoint, embedding model, and inference subprocessor, along with contractual ZDR status and hosting region.",
+      evidenceTag: "CycloneDX AIBOM · Model Lineage Registry"
+    },
+    {
+      id: "AIG-12",
+      pillar: "AI Governance & Zero-Training",
+      question: "Do you publish Model Cards documenting evaluation benchmarks, known limitations, and drift monitoring?",
+      keywords: [["model card", 5], ["drift", 4], ["evaluation", 3], ["benchmark", 3], ["failure modes", 4]],
+      answer: "{{company}} documents internal Model Cards for each production AI capability specifying benchmark performance, hallucination guardrails, continuous quality/drift monitoring thresholds, and documented failure modes.",
+      evidenceTag: "Model Cards & Continuous Drift Evals"
+    },
+    {
+      id: "AIG-13",
+      pillar: "AI Governance & Zero-Training",
+      question: "How do you screen AI training or fine-tuning datasets for copyright infringement, PII contamination, and bias?",
+      keywords: [["copyright", 4], ["training dataset", 5], ["pii contamination", 5], ["bias", 4], ["fairness", 4]],
+      answer: "{{company}} relies on licensed zero-retention enterprise model endpoints rather than scraping third-party data, and applies automated PII redaction and copyright/bias evaluation gates before any internal model customization.",
+      evidenceTag: "Dataset Governance & PII Redaction Gate"
+    },
+    {
+      id: "AIG-14",
+      pillar: "AI Governance & Zero-Training",
+      question: "How are customer RAG documents, vector embeddings, and prompt caches isolated and cryptographically erased upon offboarding?",
+      keywords: [["vector", 5], ["embedding", 5], ["rag", 5], ["cryptographic erasure", 5], ["cache", 3]],
+      answer: "All RAG chunks and vector embeddings are logically isolated per tenant namespace (metadata + tenant KMS key boundary). Upon contract termination, tenant vector namespaces and encryption keys are cryptographically erased within contractual deletion SLAs.",
+      evidenceTag: "Tenant-Isolated Vector Store · Crypto Erasure"
+    },
+    {
+      id: "AIG-15",
+      pillar: "AI Governance & Zero-Training",
+      question: "Can LLM inference and vector processing be pinned strictly to US or EU regional endpoints?",
+      keywords: [["inference region", 5], ["regional inference", 5], ["eu inference", 4], ["data residency", 4], ["residency", 3]],
+      answer: "Yes. Enterprise workspaces can pin LLM inference and vector storage exclusively to regional AWS Bedrock / Azure US or EU deployments within {{hostingRegion}}, avoiding cross-border prompt routing.",
+      evidenceTag: "Regional Inference Pinning · GDPR"
+    },
+    {
+      id: "AIG-16",
+      pillar: "AI Governance & Zero-Training",
+      question: "Does your product operate autonomous or agentic AI workflows, and how are execution boundaries enforced?",
+      keywords: [["agentic", 5], ["autonomous", 5], ["agent workflow", 5], ["blast radius", 4], ["boundary", 3]],
+      answer: "{{company}} enforces strict capability sandboxing on all agentic workflows: agents only invoke explicitly allowlisted tools with typed JSON schemas and runtime policy checks—never arbitrary OS shell or unrestricted network calls.",
+      evidenceTag: "OWASP Agentic Security · Capability Sandbox"
+    },
+    {
+      id: "AIG-17",
+      pillar: "AI Governance & Zero-Training",
+      question: "How are OAuth scopes, API tokens, and MCP tool connections scoped to enforce runtime least privilege?",
+      keywords: [["oauth", 4], ["mcp", 5], ["tool scope", 5], ["least privilege", 4], ["permission inheritance", 5]],
+      answer: "AI agents inherit the invoking user's exact RBAC and OAuth scopes at runtime—preventing confused-deputy privilege escalation—and use short-lived, read-only-by-default tool tokens separated by environment.",
+      evidenceTag: "Runtime RBAC / OAuth Inheritance · MCP Governance"
+    },
+    {
+      id: "AIG-18",
+      pillar: "AI Governance & Zero-Training",
+      question: "Do you enforce mandatory Human-in-the-Loop (HITL) approval gates before agents perform external or irreversible actions?",
+      keywords: [["human-in-the-loop", 5], ["hitl", 5], ["approval gate", 5], ["irreversible", 4], ["human approval", 5]],
+      answer: "Yes. High-impact or irreversible agent actions (sending external emails, issuing refunds, modifying records, or deleting data) pause for explicit cryptographic/UI Human-in-the-Loop (HITL) approval before execution.",
+      evidenceTag: "Mandatory HITL Action Confirmation Gates"
+    },
+    {
+      id: "AIG-19",
+      pillar: "AI Governance & Zero-Training",
+      question: "What architectural defenses protect against direct and indirect prompt injection across untrusted documents and web content?",
+      keywords: [["prompt injection", 5], ["indirect injection", 5], ["dual-llm", 4], ["jailbreak", 5], ["owasp llm", 4]],
+      answer: "{{company}} mitigates OWASP LLM01 prompt injection through structured system-vs-data delimiter separation, input sanitization, output schema validation, and secondary classifier guardrails before tool execution.",
+      evidenceTag: "OWASP LLM01 · Prompt-Injection Guardrails"
+    },
+    {
+      id: "AIG-20",
+      pillar: "AI Governance & Zero-Training",
+      question: "Are all AI agent tool invocations, parameters, and approvals logged with an emergency kill switch?",
+      keywords: [["kill switch", 5], ["tool audit", 4], ["agent log", 4], ["invocation", 3], ["immutable log", 4]],
+      answer: "Yes. Every agent reasoning step, tool call, argument hash, and human approval decision is recorded in tamper-evident audit logs, backed by an admin circuit breaker / kill switch to halt agent loops immediately.",
+      evidenceTag: "Immutable Agent Telemetry & Kill Switch"
+    },
+    {
+      id: "AIG-21",
+      pillar: "AI Governance & Zero-Training",
+      question: "If your AI executes generated code or scripts, how is the execution sandbox isolated?",
+      keywords: [["sandbox", 5], ["code execution", 5], ["container isolation", 4], ["microvm", 4], ["ephemeral", 3]],
+      answer: "Any AI-generated code runs inside ephemeral, network-egress-restricted containers/microVMs with strict CPU/memory timeouts and zero access to host secrets or other customers' data.",
+      evidenceTag: "Ephemeral MicroVM / Container Sandbox"
+    },
+    {
+      id: "AIG-22",
+      pillar: "AI Governance & Zero-Training",
+      question: "How frequently do you run AI red-teaming and adversarial robustness testing against LLM and agent endpoints?",
+      keywords: [["red-team", 5], ["red team", 5], ["adversarial", 5], ["penetration test", 3], ["robustness", 4]],
+      answer: "{{company}} executes automated adversarial prompt/jailbreak regression suites before major prompt or model updates plus annual independent third-party penetration testing covering LLM & agent tool endpoints.",
+      evidenceTag: "AI Red-Teaming & Regression Evaluations"
+    },
+    {
+      id: "AIG-23",
+      pillar: "AI Governance & Zero-Training",
+      question: "How is your AI system classified under the EU AI Act (Prohibited, High-Risk Annex III, or Limited Transparency Risk)?",
+      keywords: [["annex iii", 5], ["prohibited", 4], ["high-risk", 5], ["classification", 4], ["eu ai act", 4]],
+      answer: "{{company}} has documented its EU AI Act risk classification (`Limited Risk / Minimal Risk` or Enterprise High-Risk Annex III deployer support) and strictly prohibits unacceptable-risk biometric or social-scoring use cases.",
+      evidenceTag: "EU AI Act Risk Classification Statement"
+    },
+    {
+      id: "AIG-24",
+      pillar: "AI Governance & Zero-Training",
+      question: "Can you supply Article 26 technical documentation and instructions for use to support enterprise EU AI Act deployer obligations?",
+      keywords: [["article 26", 5], ["article 25", 4], ["conformity assessment", 5], ["deployer", 4], ["technical documentation", 4]],
+      answer: "Yes. Upon request, {{company}} provides deployer technical documentation, intended-purpose instructions, human-oversight guidance, and control mappings required for Article 26 conformity reviews.",
+      evidenceTag: "EU AI Act Art. 26 Deployer Dossier"
+    },
+    {
+      id: "AIG-25",
+      pillar: "AI Governance & Zero-Training",
+      question: "Have you implemented ISO/IEC 42001 (Artificial Intelligence Management System) controls or Statement of Applicability?",
+      keywords: [["iso 42001", 5], ["iso/iec 42001", 5], ["aims", 4], ["statement of applicability", 5], ["management system", 4]],
+      answer: "{{company}} aligns its AI Governance Management System with ISO/IEC 42001 requirements, maintaining defined AI policy ownership, risk assessments, impact evaluations, and control Statement of Applicability (SoA).",
+      evidenceTag: "ISO/IEC 42001 AIMS SoA Mapping"
+    },
+    {
+      id: "AIG-26",
+      pillar: "AI Governance & Zero-Training",
+      question: "Are your AI security controls mapped to the Cloud Security Alliance (CSA) AI Controls Matrix / AI-CAIQ?",
+      keywords: [["ai-caiq", 5], ["csa", 5], ["ai controls matrix", 5], ["caiq", 5], ["cloud security alliance", 5]],
+      answer: "Yes. {{company}}'s security vault maps directly to the CSA AI Controls Matrix (AICM) and AI-CAIQ across model lifecycle security, zero-training boundaries, and tenant isolation.",
+      evidenceTag: "CSA AI-CAIQ & AICM Control Mapping"
+    },
+    {
+      id: "AIG-27",
+      pillar: "AI Governance & Zero-Training",
+      question: "What is your SLA for notifying enterprise customers of serious AI incidents, severe bias drift, or model provider breaches?",
+      keywords: [["serious ai incident", 5], ["ai incident", 5], ["provider breach", 4], ["model outage", 3], ["sla", 3]],
+      answer: "{{company}} commits to notifying affected enterprise customers within 24 hours of any confirmed security incident or upstream foundation model provider breach, and proactively communicates material model version transitions.",
+      evidenceTag: "24-Hr AI & Security Incident SLA"
+    },
+    {
+      id: "AIG-28",
+      pillar: "AI Governance & Zero-Training",
+      question: "What controls prevent employees from using unauthorized Shadow AI tools with customer data?",
+      keywords: [["shadow ai", 5], ["unauthorized ai", 5], ["acceptable use", 4], ["corporate policy", 3]],
+      answer: "{{company}}'s Acceptable Use and AI Zero-Training Policy (POL-02) strictly forbids pasting customer data into unapproved consumer AI tools, backed by DNS/SSO controls and enterprise ZDR API workspaces.",
+      evidenceTag: "POL-02 · Shadow AI Prohibition"
+    },
+    {
+      id: "AIG-29",
+      pillar: "AI Governance & Zero-Training",
+      question: "How do you mitigate LLM hallucinations and provide verifiable source grounding for generated responses?",
+      keywords: [["hallucination", 5], ["grounding", 5], ["citation", 4], ["confidence score", 4], ["deterministic", 3]],
+      answer: "{{company}} pairs retrieval-augmented generation (RAG) with source citations, deterministic schema validation, and explicit confidence indicators so reviewers can audit every generated answer before submission.",
+      evidenceTag: "Citation Grounding & Confidence Scoring"
+    },
+    {
+      id: "AIG-30",
+      pillar: "AI Governance & Zero-Training",
+      question: "How do you satisfy AI transparency and disclosure requirements (e.g., EU AI Act Article 50) for end users?",
+      keywords: [["article 50", 5], ["transparency", 4], ["disclosure", 4], ["synthetic", 5], ["watermark", 3]],
+      answer: "End users are clearly informed whenever interacting with AI-driven interfaces, and generated enterprise packets carry metadata and cryptographic SHA-256 provenance digests identifying AI-assisted drafts.",
+      evidenceTag: "EU AI Act Art. 50 Transparency Notice"
     }
+  ];
+
+  const EU_AI_ACT_TIERS = [
+    {
+      id: "minimal",
+      label: "Minimal Risk (Art. 50 Exempt)",
+      summary: "Deterministic workflow, search, or internal security tooling with no biometric/Annex III profiling."
+    },
+    {
+      id: "limited",
+      label: "Limited Risk (Art. 50 Transparency)",
+      summary: "Interactive AI assistant / copilot; clearly discloses AI interaction and synthetic outputs to users."
+    },
+    {
+      id: "high",
+      label: "High-Risk Readiness (Annex III / Art. 26)",
+      summary: "Supplies technical documentation, logging, dataset governance & HITL oversight for regulated deployers."
+    }
+  ];
+
+  const DEFAULT_AIBOM = [
+    {
+      provider: "Anthropic",
+      model: "Claude Enterprise API",
+      purpose: "Reasoning & Document Drafting",
+      zdr: "Yes (Contractual 0-Day)",
+      retention: "0 days · No Training",
+      region: "US / EU Endpoints"
+    },
+    {
+      provider: "OpenAI",
+      model: "GPT Enterprise API",
+      purpose: "Structured Extraction & Fallback",
+      zdr: "Yes (ZDR Addendum)",
+      retention: "0 days · No Training",
+      region: "US Dedicated"
+    },
+    {
+      provider: "AWS / pgvector",
+      model: "Tenant-Isolated Vector Index",
+      purpose: "Customer RAG Knowledge Retrieval",
+      zdr: "Yes (Tenant KMS Key)",
+      retention: "Customer-Controlled Purge",
+      region: "Customer Pinned VPC"
+    }
+  ];
+
+  const DEFAULT_AGENT_GATES = [
+    {
+      capability: "CRM & Docs Retrieval",
+      scope: "read:records (user-scoped)",
+      authModel: "OAuth User Inheritance",
+      hitlGate: "Auto-Allowed (Read-Only)",
+      guardrail: "Tenant ACL + PII Redaction"
+    },
+    {
+      capability: "Outbound Email / Slack Drafts",
+      scope: "write:messages",
+      authModel: "Least-Privilege Token",
+      hitlGate: "Mandatory Human Approval",
+      guardrail: "Dual-LLM Prompt Shield"
+    },
+    {
+      capability: "DB Mutations, Billing & Refunds",
+      scope: "write:finance / schema",
+      authModel: "Scoped Role + Audit ID",
+      hitlGate: "Explicit Admin Sign-Off",
+      guardrail: "Amount Cap + Kill Switch"
+    },
+    {
+      capability: "External MCP / Webhook Tools",
+      scope: "execute:allowlist",
+      authModel: "Isolated Sandbox Token",
+      hitlGate: "Policy / Human Gate",
+      guardrail: "Strict Domain Allowlist"
+    }
+  ];
+
+  const SAMPLE_AI_CAIQ = [
+    "1. Do you maintain an AI Bill of Materials (AIBOM) listing all foundational models and inference providers?",
+    "2. Is customer prompt or RAG data ever used to train models, and is Zero-Data-Retention (ZDR) enforced?",
+    "3. How are customer vector embeddings isolated and cryptographically erased upon offboarding?",
+    "4. Can LLM inference and vector storage be pinned strictly to US or EU regional endpoints?",
+    "5. Do autonomous or agentic features enforce execution boundaries and sandboxing?",
+    "6. How are OAuth scopes and MCP tool connections scoped for runtime least privilege?",
+    "7. Do you enforce mandatory Human-in-the-Loop (HITL) approval gates before irreversible actions?",
+    "8. What defenses protect against direct and indirect prompt injection (OWASP LLM01)?",
+    "9. Are all AI agent tool invocations logged with an emergency kill switch?",
+    "10. How frequently do you run AI red-teaming and adversarial jailbreak testing?",
+    "11. How is your system classified under the EU AI Act (Minimal, Limited, or High-Risk Annex III)?",
+    "12. Can you supply Article 26 technical documentation to support EU AI Act deployers?",
+    "13. Have you implemented ISO/IEC 42001 AI Management System controls or Statement of Applicability?",
+    "14. Are your AI controls mapped to the CSA AI Controls Matrix / AI-CAIQ?",
+    "15. What is your SLA for notifying customers of serious AI incidents or model provider breaches?"
   ];
 
   /**
@@ -1224,6 +1478,10 @@ window.TRUSTVAULT_KNOWLEDGE = (function () {
     INDUSTRY_PRESETS,
     KB_ENTRIES,
     SAMPLE_SIG_LITE,
+    SAMPLE_AI_CAIQ,
+    EU_AI_ACT_TIERS,
+    DEFAULT_AIBOM,
+    DEFAULT_AGENT_GATES,
     POLICY_TEMPLATES,
     matchSecurityQuestions,
     applyTemplateVars,
